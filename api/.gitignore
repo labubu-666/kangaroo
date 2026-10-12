@@ -1,0 +1,10 @@
+__pycache__/
+.venv/
+build/
+dist/
+wheels/
+
+*.py[oc]
+.env
+*.egg-info
+kangaroo.db

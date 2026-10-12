@@ -1,0 +1,33 @@
+[project]
+name = "kangaroo"
+version = "0.0.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "click==8.5.0",
+    "fastapi==0.143.0",
+    "httpx2==2.13.1",
+    "markdown>=3.11",
+    "nh3>=0.3.7",
+    "pydantic==2.14.1",
+    "pydantic-settings==2.15.0",
+    "sqlalchemy==2.1.4",
+    "uvicorn==0.54.0",
+]
+
+[project.scripts]
+kangaroo = "kangaroo:main"
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx==0.28.1",
+    "pytest==9.1.1",
+    "ruff==0.17.0",
+    "starlette==1.7.0",
+    "ty==0.0.86",
+]

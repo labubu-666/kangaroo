@@ -1,0 +1,44 @@
+{
+  "name": "kangaroo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint && oxfmt --check",
+    "lint:fix": "oxlint --fix && oxfmt",
+    "format": "oxfmt",
+    "test:ct": "playwright test -c playwright-ct.config.ts",
+    "test:ct:coverage": "rm -rf coverage && COVERAGE=1 npm run test:ct && node playwright/coverage-report.mjs",
+    "test:ct:coverage:report": "xdg-open coverage/report/index.html",
+    "preview": "vite preview",
+    "start": "npm run dev"
+  },
+  "dependencies": {
+    "@dnd-kit/react": "0.5.0",
+    "@tailwindcss/vite": "4.3.3",
+    "@tanstack/react-query": "5.104.0",
+    "@tanstack/react-router": "1.170.42",
+    "@uiw/react-codemirror": "^4.25.12",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-hook-form": "7.90.0",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@playwright/experimental-ct-react": "1.62.1",
+    "@playwright/test": "1.64.0",
+    "@tanstack/react-router-devtools": "1.167.2",
+    "@tanstack/router-plugin": "1.168.42",
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "6.1.1",
+    "monocart-coverage-reports": "2.13.2",
+    "oxfmt": "0.73.0",
+    "oxlint": "1.81.0",
+    "typescript": "6.0.2",
+    "vite": "8.3.0"
+  }
+}

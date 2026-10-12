@@ -1,0 +1,34 @@
+import { expect, test } from "../../../playwright/fixtures.ts";
+import { StatusBadge } from "./StatusBadge";
+
+test.describe("StatusBadge", () => {
+  test("renders the label and colour for each status", async ({ mount }) => {
+    const component = await mount(
+      <div>
+        <StatusBadge
+          status={{ id: "s-open", name: "Open", category: "todo" }}
+        />
+        <StatusBadge
+          status={{
+            id: "s-prog",
+            name: "In progress",
+            category: "in_progress",
+          }}
+        />
+        <StatusBadge
+          status={{ id: "s-done", name: "Done", category: "done" }}
+        />
+      </div>,
+    );
+
+    await expect(component.getByText("Open", { exact: true })).toHaveClass(
+      /bg-yellow-100 text-yellow-800/,
+    );
+    await expect(
+      component.getByText("In progress", { exact: true }),
+    ).toHaveClass(/bg-blue-100 text-blue-800/);
+    await expect(component.getByText("Done", { exact: true })).toHaveClass(
+      /bg-green-100 text-green-800/,
+    );
+  });
+});
