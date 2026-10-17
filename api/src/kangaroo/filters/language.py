@@ -67,7 +67,11 @@ def parse_filter(text: str | None) -> Predicate:
 
 
 def _skip_spaces(text: str, pos: int) -> int:
-    return _SPACES.match(text, pos).end()  # type: ignore[union-attr]
+    match = _SPACES.match(text, pos)
+    # \s* always matches (possibly empty), so this is never None.
+    if match is None:
+        return pos
+    return match.end()
 
 
 def _tokenize(text: str) -> list[Token]:

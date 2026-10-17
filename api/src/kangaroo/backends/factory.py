@@ -1,3 +1,8 @@
+from dataclasses import dataclass
+
+from sqlalchemy import Engine
+from sqlalchemy.orm import Session
+
 from kangaroo.backends.base import (
     BoardBackend,
     FunctionBackend,
@@ -6,15 +11,6 @@ from kangaroo.backends.base import (
     StatusTransitionBackend,
     WorkItemBackend,
     WorkItemTypeBackend,
-)
-from kangaroo.backends.memory import (
-    InMemoryBoardBackend,
-    InMemoryFunctionBackend,
-    InMemoryProjectBackend,
-    InMemoryStatusBackend,
-    InMemoryStatusTransitionBackend,
-    InMemoryWorkItemBackend,
-    InMemoryWorkItemTypeBackend,
 )
 from kangaroo.backends.sqlite import (
     SQLiteBoardBackend,
@@ -28,46 +24,52 @@ from kangaroo.backends.sqlite import (
 )
 
 
-def create_backends(
-    database_url: str,
-) -> tuple[
-    WorkItemBackend,
-    ProjectBackend,
-    BoardBackend,
-    StatusBackend,
-    WorkItemTypeBackend,
-    StatusTransitionBackend,
-    FunctionBackend,
-]:
+@dataclass(frozen=True)
+class Backends:
+    """Every storage backend the app uses, all sharing one database."""
+
+    work_items: WorkItemBackend
+    projects: ProjectBackend
+    boards: BoardBackend
+    statuses: StatusBackend
+    types: WorkItemTypeBackend
+    transitions: StatusTransitionBackend
+    functions: FunctionBackend
+    engine: Engine
+
+    def bound(self, session: Session) -> Backends:
+        """Copies of every backend that all run inside ``session``."""
+        return Backends(
+            work_items=self.work_items.bind(session),
+            projects=self.projects.bind(session),
+            boards=self.boards.bind(session),
+            statuses=self.statuses.bind(session),
+            types=self.types.bind(session),
+            transitions=self.transitions.bind(session),
+            functions=self.functions.bind(session),
+            engine=self.engine,
+        )
+
+
+def create_backends(database_url: str) -> Backends:
     """Build every backend for a DATABASE_URL.
 
-    Returns the work item, project, board, status, work item type, status
-    transition and function backends, in that order. ``memory://`` selects the
-    in-memory backends. ``sqlite://...`` selects the SQLite backends, which share
-    one engine.
+    ``sqlite://...`` selects the SQLite backends, which share one engine.
+    ``sqlite://memory`` is a shared in-memory database.
 
     Raises:
         ValueError: If the URL is not supported.
     """
-    if database_url == "memory://":
-        return (
-            InMemoryWorkItemBackend(),
-            InMemoryProjectBackend(),
-            InMemoryBoardBackend(),
-            InMemoryStatusBackend(),
-            InMemoryWorkItemTypeBackend(),
-            InMemoryStatusTransitionBackend(),
-            InMemoryFunctionBackend(),
-        )
-    if database_url.startswith("sqlite://"):
-        engine = create_sqlite_engine(database_url)
-        return (
-            SQLiteWorkItemBackend(engine),
-            SQLiteProjectBackend(engine),
-            SQLiteBoardBackend(engine),
-            SQLiteStatusBackend(engine),
-            SQLiteWorkItemTypeBackend(engine),
-            SQLiteStatusTransitionBackend(engine),
-            SQLiteFunctionBackend(engine),
-        )
-    raise ValueError(f"Unsupported DATABASE_URL: {database_url}")
+    if not database_url.startswith("sqlite://"):
+        raise ValueError(f"Unsupported DATABASE_URL: {database_url}")
+    engine = create_sqlite_engine(database_url)
+    return Backends(
+        work_items=SQLiteWorkItemBackend(engine),
+        projects=SQLiteProjectBackend(engine),
+        boards=SQLiteBoardBackend(engine),
+        statuses=SQLiteStatusBackend(engine),
+        types=SQLiteWorkItemTypeBackend(engine),
+        transitions=SQLiteStatusTransitionBackend(engine),
+        functions=SQLiteFunctionBackend(engine),
+        engine=engine,
+    )

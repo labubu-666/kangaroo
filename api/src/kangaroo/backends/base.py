@@ -38,62 +38,6 @@ from kangaroo.schemas import (
 )
 
 
-class ProjectSpec:
-    """What the project backends store and how they can be searched and filtered."""
-
-    entity = "Project"
-    filter_fields = frozenset(Project.model_fields)
-    search_fields = ("name", "description")
-
-
-class BoardSpec:
-    """What the board backends store and how they can be searched and filtered."""
-
-    entity = "Board"
-    filter_fields = frozenset(Board.model_fields)
-    search_fields = ("name", "description")
-
-
-class StatusSpec:
-    """What the status backends store and how they can be searched and filtered."""
-
-    entity = "Status"
-    filter_fields = frozenset(ProjectStatus.model_fields)
-    search_fields = ("name",)
-
-
-class WorkItemTypeSpec:
-    """What the work item type backends store and how they can be searched and filtered."""
-
-    entity = "Work item type"
-    filter_fields = frozenset(WorkItemType.model_fields)
-    search_fields = ("name",)
-
-
-class StatusTransitionSpec:
-    """What the transition backends store and how they can be filtered."""
-
-    entity = "Status transition"
-    filter_fields = frozenset(StatusTransition.model_fields)
-    search_fields = ()
-
-
-class FunctionSpec:
-    """What the function backends store and how they can be searched and filtered."""
-
-    entity = "Function"
-    filter_fields = frozenset(Function.model_fields)
-    search_fields = ("name", "description")
-
-
-class WorkItemSpec:
-    """What the work item backends store and how they can be searched and filtered."""
-
-    entity = "Work item"
-    filter_fields = frozenset(WorkItem.model_fields)
-    search_fields = ("title", "description")
-
-
 class BaseBackend[M: BaseModel, C: BaseModel, U: BaseModel, R: BaseModel](ABC):
     """Storage for one kind of entity.
 
@@ -110,6 +54,10 @@ class BaseBackend[M: BaseModel, C: BaseModel, U: BaseModel, R: BaseModel](ABC):
     @abstractmethod
     def create(self, item: C) -> M:
         """Create a new entity with an assigned ID and metadata."""
+
+    @abstractmethod
+    def bind(self, session: Any) -> BaseBackend[M, C, U, R]:
+        """Return a copy of this backend whose calls all run inside ``session``."""
 
     @abstractmethod
     def get_by_id(self, item_id: UUID) -> M:

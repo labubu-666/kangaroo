@@ -8,16 +8,7 @@ from kangaroo.backends.base import (
     WorkItemBackend,
     WorkItemTypeBackend,
 )
-from kangaroo.backends.factory import create_backends
-from kangaroo.backends.memory import (
-    InMemoryBoardBackend,
-    InMemoryFunctionBackend,
-    InMemoryProjectBackend,
-    InMemoryStatusBackend,
-    InMemoryStatusTransitionBackend,
-    InMemoryWorkItemBackend,
-    InMemoryWorkItemTypeBackend,
-)
+from kangaroo.backends.factory import Backends, create_backends
 from kangaroo.backends.sqlite import (
     SQLiteBoardBackend,
     SQLiteFunctionBackend,
@@ -29,16 +20,10 @@ from kangaroo.backends.sqlite import (
 )
 
 __all__ = [
+    "Backends",
     "BaseBackend",
     "BoardBackend",
     "FunctionBackend",
-    "InMemoryBoardBackend",
-    "InMemoryFunctionBackend",
-    "InMemoryProjectBackend",
-    "InMemoryStatusBackend",
-    "InMemoryStatusTransitionBackend",
-    "InMemoryWorkItemBackend",
-    "InMemoryWorkItemTypeBackend",
     "ProjectBackend",
     "SQLiteBoardBackend",
     "SQLiteFunctionBackend",

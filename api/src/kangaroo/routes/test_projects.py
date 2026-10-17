@@ -4,68 +4,18 @@ import pytest
 from fastapi.testclient import TestClient
 
 from kangaroo.app import app
-from kangaroo.backends import (
-    InMemoryProjectBackend,
-    InMemoryStatusBackend,
-    InMemoryStatusTransitionBackend,
-    InMemoryWorkItemBackend,
-    InMemoryWorkItemTypeBackend,
+from kangaroo.backends.sqlite import (
+    SQLiteStatusBackend,
+    SQLiteWorkItemTypeBackend,
 )
-from kangaroo.routes.dependencies import (
-    get_project_backend,
-    get_status_backend,
-    get_status_transition_backend,
-    get_work_item_backend,
-    get_work_item_type_backend,
-)
+from kangaroo.routes.dependencies import get_backends
 from kangaroo.testing import type_id
 
 
 @pytest.fixture
-def fresh_project_backend():
-    """Provide a fresh in-memory project backend for each test."""
-    return InMemoryProjectBackend()
-
-
-@pytest.fixture
-def fresh_work_item_backend():
-    """Provide a fresh in-memory work item backend for each test."""
-    return InMemoryWorkItemBackend()
-
-
-@pytest.fixture
-def fresh_status_backend():
-    return InMemoryStatusBackend()
-
-
-@pytest.fixture
-def fresh_work_item_type_backend():
-    return InMemoryWorkItemTypeBackend()
-
-
-@pytest.fixture
-def fresh_status_transition_backend():
-    return InMemoryStatusTransitionBackend()
-
-
-@pytest.fixture
-def client(
-    fresh_project_backend,
-    fresh_work_item_backend,
-    fresh_status_backend,
-    fresh_work_item_type_backend,
-    fresh_status_transition_backend,
-):
-    """Provide a TestClient with overridden backend dependencies."""
-    app.dependency_overrides[get_project_backend] = lambda: fresh_project_backend
-    app.dependency_overrides[get_work_item_backend] = lambda: fresh_work_item_backend
-    app.dependency_overrides[get_status_backend] = lambda: fresh_status_backend
-    app.dependency_overrides[get_work_item_type_backend] = lambda: (
-        fresh_work_item_type_backend
-    )
-    app.dependency_overrides[get_status_transition_backend] = lambda: (
-        fresh_status_transition_backend
-    )
+def client(backends):
+    """Provide a TestClient that uses fresh backends for each test."""
+    app.dependency_overrides[get_backends] = lambda: backends
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -320,3 +270,49 @@ def test_replace_project_labels(client):
 
     cleared = client.put(f"/api/v1/projects/{project_id}", json={"name": "New"})
     assert cleared.json()["labels"] == []
+
+
+def test_failed_create_request_saves_nothing(client, backends, monkeypatch):
+    """A request that fails part-way saves none of its rows."""
+    real_create = SQLiteStatusBackend.create
+    calls = []
+
+    def fail_on_second(self, item):
+        calls.append(item)
+        if len(calls) == 2:
+            raise RuntimeError("disk full")
+        return real_create(self, item)
+
+    monkeypatch.setattr(SQLiteStatusBackend, "create", fail_on_second)
+    client_no_raise = TestClient(app, raise_server_exceptions=False)
+    response = client_no_raise.post("/api/v1/projects", json={"name": "Partial"})
+    assert response.status_code == 500
+    assert backends.projects.count() == 0
+    assert backends.types.count() == 0
+    assert backends.statuses.count() == 0
+    assert backends.transitions.count() == 0
+
+
+def test_failed_delete_request_keeps_everything(client, backends, monkeypatch):
+    """A delete request that fails part-way keeps the project and its template."""
+    project_id = client.post("/api/v1/projects", json={"name": "Keep"}).json()["id"]
+    before = (
+        backends.projects.count(),
+        backends.statuses.count(),
+        backends.types.count(),
+    )
+    real_delete = SQLiteWorkItemTypeBackend.delete
+
+    def fail(self, item_id):
+        raise RuntimeError("disk full")
+
+    monkeypatch.setattr(SQLiteWorkItemTypeBackend, "delete", fail)
+    client_no_raise = TestClient(app, raise_server_exceptions=False)
+    response = client_no_raise.delete(f"/api/v1/projects/{project_id}")
+    monkeypatch.setattr(SQLiteWorkItemTypeBackend, "delete", real_delete)
+    assert response.status_code == 500
+    assert (
+        backends.projects.count(),
+        backends.statuses.count(),
+        backends.types.count(),
+    ) == before

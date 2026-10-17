@@ -4,7 +4,6 @@ from uuid import UUID
 import pytest
 from sqlalchemy import inspect
 
-from kangaroo.backends import sqlite as sqlite_module
 from kangaroo.backends.sqlite import (
     SQLiteProjectBackend,
     SQLiteStatusBackend,
@@ -12,6 +11,7 @@ from kangaroo.backends.sqlite import (
     SQLiteWorkItemTypeBackend,
     create_sqlite_engine,
 )
+from kangaroo.backends.sqlite import migrations as sqlite_module
 from kangaroo.filters import parse_filter
 from kangaroo.schemas import ProjectCreate
 
@@ -294,9 +294,7 @@ def test_unknown_status_moves_to_first_todo_with_warning(tmp_path, caplog):
     _old_database(path, [("x", "Weird", "p1", "task", None, "blocked")])
     with caplog.at_level("WARNING"):
         engine = _open(path)
-    item = SQLiteWorkItemBackend(engine).get_by_id(
-        "x" if False else _id_of(engine, "Weird")
-    )
+    item = SQLiteWorkItemBackend(engine).get_by_id(_id_of(engine, "Weird"))
     statuses = {s.id: s.name for s in SQLiteStatusBackend(engine).list_all()}
     assert statuses[item.status_id] == "Open"
     assert "blocked" in caplog.text
