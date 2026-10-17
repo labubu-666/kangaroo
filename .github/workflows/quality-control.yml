@@ -1,0 +1,29 @@
+name: quality-control
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: astral-sh/setup-uv@v8.0.0
+        name: Setup uv
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Test
+        run: uv run pytest -vvv
