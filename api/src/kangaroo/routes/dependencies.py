@@ -4,9 +4,19 @@ from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends, Query
+from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
-from kangaroo.backends import Backends, create_backends
+from kangaroo.repositories import (
+    BoardRepository,
+    FunctionRepository,
+    ProjectRepository,
+    StatusRepository,
+    StatusTransitionRepository,
+    WorkItemRepository,
+    WorkItemTypeRepository,
+    create_engine_for,
+)
 from kangaroo.runners import BaseRunner, create_runner
 from kangaroo.services import (
     BoardService,
@@ -43,86 +53,84 @@ def list_params(
 
 
 @lru_cache
-def get_backends() -> Backends:
-    """Build the backends from DATABASE_URL on first use, then reuse them."""
-    return create_backends(settings.database_url)
+def get_engine() -> Engine:
+    """Create the database engine from DATABASE_URL on first use, then reuse it."""
+    return create_engine_for(settings.database_url)
 
 
-def get_request_backends(
-    backends: Annotated[Backends, Depends(get_backends)],
-) -> Iterator[Backends]:
-    """One transaction per request: every backend call the request makes shares it.
+def get_session(engine: Annotated[Engine, Depends(get_engine)]) -> Iterator[Session]:
+    """One transaction per request: every repository call the request makes shares it.
 
     The changes are committed when the route returns normally, and rolled back
     if it raises, so a failed request saves nothing.
     """
-    with Session(backends.engine, expire_on_commit=False) as session, session.begin():
-        yield backends.bound(session)
+    with Session(engine, expire_on_commit=False) as session, session.begin():
+        yield session
 
 
 def get_function_service(
-    backends: Annotated[Backends, Depends(get_request_backends)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> FunctionService:
-    return FunctionService(backends.functions, get_function_runner())
+    return FunctionService(FunctionRepository(session), get_function_runner())
 
 
 def get_work_item_service(
-    backends: Annotated[Backends, Depends(get_request_backends)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> WorkItemService:
     return WorkItemService(
-        work_items=backends.work_items,
-        projects=backends.projects,
-        statuses=backends.statuses,
-        types=backends.types,
-        transitions=backends.transitions,
+        work_items=WorkItemRepository(session),
+        projects=ProjectRepository(session),
+        statuses=StatusRepository(session),
+        types=WorkItemTypeRepository(session),
+        transitions=StatusTransitionRepository(session),
     )
 
 
 def get_project_service(
-    backends: Annotated[Backends, Depends(get_request_backends)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> ProjectService:
     return ProjectService(
-        projects=backends.projects,
-        work_items=backends.work_items,
-        boards=backends.boards,
-        statuses=backends.statuses,
-        types=backends.types,
-        transitions=backends.transitions,
+        projects=ProjectRepository(session),
+        work_items=WorkItemRepository(session),
+        boards=BoardRepository(session),
+        statuses=StatusRepository(session),
+        types=WorkItemTypeRepository(session),
+        transitions=StatusTransitionRepository(session),
     )
 
 
 def get_workflow_service(
-    backends: Annotated[Backends, Depends(get_request_backends)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> WorkflowService:
     return WorkflowService(
-        projects=backends.projects,
-        statuses=backends.statuses,
-        types=backends.types,
-        transitions=backends.transitions,
-        work_items=backends.work_items,
+        projects=ProjectRepository(session),
+        statuses=StatusRepository(session),
+        types=WorkItemTypeRepository(session),
+        transitions=StatusTransitionRepository(session),
+        work_items=WorkItemRepository(session),
     )
 
 
 def get_board_service(
-    backends: Annotated[Backends, Depends(get_request_backends)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> BoardService:
     return BoardService(
-        boards=backends.boards,
-        work_items=backends.work_items,
-        projects=backends.projects,
-        statuses=backends.statuses,
-        types=backends.types,
+        boards=BoardRepository(session),
+        work_items=WorkItemRepository(session),
+        projects=ProjectRepository(session),
+        statuses=StatusRepository(session),
+        types=WorkItemTypeRepository(session),
     )
 
 
 def get_report_service(
-    backends: Annotated[Backends, Depends(get_request_backends)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> ReportService:
     return ReportService(
-        work_items=backends.work_items,
-        projects=backends.projects,
-        boards=backends.boards,
-        statuses=backends.statuses,
+        work_items=WorkItemRepository(session),
+        projects=ProjectRepository(session),
+        boards=BoardRepository(session),
+        statuses=StatusRepository(session),
     )
 
 

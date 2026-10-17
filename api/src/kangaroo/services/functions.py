@@ -1,7 +1,7 @@
 from uuid import UUID
 
-from kangaroo.backends import (
-    FunctionBackend,
+from kangaroo.repositories import (
+    FunctionRepository,
 )
 from kangaroo.runners import BaseRunner
 from kangaroo.schemas import (
@@ -18,7 +18,7 @@ from kangaroo.schemas import (
 class FunctionService:
     """Stores saved scripts and runs them through a runner."""
 
-    def __init__(self, functions: FunctionBackend, runner: BaseRunner) -> None:
+    def __init__(self, functions: FunctionRepository, runner: BaseRunner) -> None:
         self._functions = functions
         self._runner = runner
 

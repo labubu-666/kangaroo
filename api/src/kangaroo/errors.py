@@ -1,4 +1,4 @@
-"""Domain errors shared by the backends, the service layer and the app.
+"""Domain errors shared by the repositories, the service layer and the app.
 
 All of them subclass ValueError so code that catches ValueError keeps working.
 """

@@ -1,16 +1,16 @@
 from uuid import UUID
 
-from kangaroo.backends import (
-    BoardBackend,
-    ProjectBackend,
-    StatusBackend,
-    StatusTransitionBackend,
-    WorkItemBackend,
-    WorkItemTypeBackend,
-)
 from kangaroo.errors import (
     ConflictError,
     InvalidTemplateError,
+)
+from kangaroo.repositories import (
+    BoardRepository,
+    ProjectRepository,
+    StatusRepository,
+    StatusTransitionRepository,
+    WorkItemRepository,
+    WorkItemTypeRepository,
 )
 from kangaroo.schemas import (
     PaginatedResponse,
@@ -30,12 +30,12 @@ class ProjectService:
 
     def __init__(
         self,
-        projects: ProjectBackend,
-        work_items: WorkItemBackend,
-        boards: BoardBackend,
-        statuses: StatusBackend,
-        types: WorkItemTypeBackend,
-        transitions: StatusTransitionBackend,
+        projects: ProjectRepository,
+        work_items: WorkItemRepository,
+        boards: BoardRepository,
+        statuses: StatusRepository,
+        types: WorkItemTypeRepository,
+        transitions: StatusTransitionRepository,
     ) -> None:
         self._projects = projects
         self._work_items = work_items

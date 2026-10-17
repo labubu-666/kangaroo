@@ -1,8 +1,8 @@
-from kangaroo.backends import (
-    BoardBackend,
-    ProjectBackend,
-    StatusBackend,
-    WorkItemBackend,
+from kangaroo.repositories import (
+    BoardRepository,
+    ProjectRepository,
+    StatusRepository,
+    WorkItemRepository,
 )
 from kangaroo.schemas import (
     ReportSummary,
@@ -16,10 +16,10 @@ class ReportService:
 
     def __init__(
         self,
-        work_items: WorkItemBackend,
-        projects: ProjectBackend,
-        boards: BoardBackend,
-        statuses: StatusBackend,
+        work_items: WorkItemRepository,
+        projects: ProjectRepository,
+        boards: BoardRepository,
+        statuses: StatusRepository,
     ) -> None:
         self._work_items = work_items
         self._projects = projects

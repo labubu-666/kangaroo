@@ -8,36 +8,6 @@ from kangaroo.testing import seed_project
 
 
 @pytest.fixture
-def projects(backends):
-    return backends.projects
-
-
-@pytest.fixture
-def work_items(backends):
-    return backends.work_items
-
-
-@pytest.fixture
-def boards(backends):
-    return backends.boards
-
-
-@pytest.fixture
-def statuses(backends):
-    return backends.statuses
-
-
-@pytest.fixture
-def types(backends):
-    return backends.types
-
-
-@pytest.fixture
-def transitions(backends):
-    return backends.transitions
-
-
-@pytest.fixture
 def seeded(projects, statuses, types):
     """A project with the To Do List statuses and types."""
     return seed_project(projects, statuses, types)

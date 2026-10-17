@@ -36,7 +36,7 @@ class UTCDateTime(TypeDecorator):
 
 
 class Base(DeclarativeBase):
-    """Declarative base for the SQLite tables."""
+    """Declarative base for the tables."""
 
     trashed: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=false()
