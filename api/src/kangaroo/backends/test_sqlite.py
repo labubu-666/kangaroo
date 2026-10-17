@@ -283,32 +283,6 @@ def test_database_rejects_orphan_work_item(engine, seeded):
             session.commit()
 
 
-def test_startup_adds_missing_labels_column(tmp_path):
-    """An existing database without labels columns gets them on startup."""
-    url = f"sqlite:///{tmp_path / 'old.db'}"
-    engine = create_sqlite_engine(url)
-    with engine.begin() as conn:
-        for table in ("projects", "boards", "work_items"):
-            conn.exec_driver_sql(f"ALTER TABLE {table} DROP COLUMN labels")
-    engine.dispose()
-
-    engine = create_sqlite_engine(url)
-    project = SQLiteProjectBackend(engine).create(ProjectCreate(name="Old"))
-    assert project.labels == []
-    board = SQLiteBoardBackend(engine).create(
-        BoardCreate(name="Old", project_id=project.id)
-    )
-    assert board.labels == []
-    seeded = seed_project(
-        SQLiteProjectBackend(engine),
-        SQLiteStatusBackend(engine),
-        SQLiteWorkItemTypeBackend(engine),
-    )
-    work_items = SQLiteWorkItemBackend(engine)
-    item = work_items.create(new_task(seeded, "Old"))
-    assert item.labels == []
-
-
 def test_status_and_type_tables_exist(engine):
     """The tables for project statuses and types are created on startup."""
     tables = set(inspect(engine).get_table_names())

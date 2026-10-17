@@ -5,10 +5,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.pool import StaticPool
 
-from kangaroo.backends.sqlite.migrations import (
-    _add_missing_labels_column,
-    _migrate_to_project_templates,
-)
 from kangaroo.backends.sqlite.tables import Base
 
 
@@ -34,6 +30,4 @@ def create_sqlite_engine(url: str) -> Engine:
         cursor.close()
 
     Base.metadata.create_all(engine)
-    _add_missing_labels_column(engine)
-    _migrate_to_project_templates(engine)
     return engine
