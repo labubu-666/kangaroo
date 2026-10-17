@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, status
 
-from kangaroo.routes.dependencies import ListParams, get_board_service, list_params
+from kangaroo.routes.dependencies import BoardServiceDep, FilterQuery, ListParamsDep
 from kangaroo.schemas import (
     Board,
     BoardCreate,
@@ -11,25 +11,22 @@ from kangaroo.schemas import (
     BoardView,
     PaginatedResponse,
 )
-from kangaroo.services import BoardService
 
 router = APIRouter(prefix="/boards", tags=["boards"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=Board)
-def create_board(
-    item: BoardCreate, service: BoardService = Depends(get_board_service)
-) -> Board:
+def create_board(item: BoardCreate, service: BoardServiceDep) -> Board:
     """Create a new board. The filter must be valid filter syntax (422 otherwise)."""
     return service.create(item)
 
 
 @router.get("/", response_model=PaginatedResponse[Board])
 def list_boards(
-    params: ListParams = Depends(list_params),
+    params: ListParamsDep,
+    service: BoardServiceDep,
     project_id: UUID | None = None,
-    filter: str | None = Query(None, max_length=1000),
-    service: BoardService = Depends(get_board_service),
+    filter: FilterQuery = None,
 ) -> PaginatedResponse[Board]:
     """List boards with pagination.
 
@@ -54,17 +51,13 @@ def list_boards(
 
 
 @router.get("/{item_id}", response_model=Board)
-def get_board(
-    item_id: UUID, service: BoardService = Depends(get_board_service)
-) -> Board:
+def get_board(item_id: UUID, service: BoardServiceDep) -> Board:
     """Get a board by ID."""
     return service.get(item_id)
 
 
 @router.get("/{item_id}/view", response_model=BoardView)
-def view_board(
-    item_id: UUID, service: BoardService = Depends(get_board_service)
-) -> BoardView:
+def view_board(item_id: UUID, service: BoardServiceDep) -> BoardView:
     """Get the board's work items that match its filter, grouped by status."""
     return service.view(item_id)
 
@@ -73,7 +66,7 @@ def view_board(
 def replace_board(
     item_id: UUID,
     replace: BoardReplace,
-    service: BoardService = Depends(get_board_service),
+    service: BoardServiceDep,
 ) -> Board:
     """Replace a board (full update)."""
     return service.replace(item_id, replace)
@@ -83,15 +76,13 @@ def replace_board(
 def update_board(
     item_id: UUID,
     update: BoardUpdate,
-    service: BoardService = Depends(get_board_service),
+    service: BoardServiceDep,
 ) -> Board:
     """Update a board (partial update)."""
     return service.update(item_id, update)
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_board(
-    item_id: UUID, service: BoardService = Depends(get_board_service)
-) -> None:
+def delete_board(item_id: UUID, service: BoardServiceDep) -> None:
     """Delete a board."""
     service.delete(item_id)

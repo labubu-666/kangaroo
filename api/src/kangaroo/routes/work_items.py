@@ -1,12 +1,8 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, status
 
-from kangaroo.routes.dependencies import (
-    ListParams,
-    get_work_item_service,
-    list_params,
-)
+from kangaroo.routes.dependencies import FilterQuery, ListParamsDep, WorkItemServiceDep
 from kangaroo.schemas import (
     PaginatedResponse,
     WorkItemCreate,
@@ -14,7 +10,6 @@ from kangaroo.schemas import (
     WorkItemReplace,
     WorkItemUpdate,
 )
-from kangaroo.services import WorkItemService
 
 router = APIRouter(prefix="/work-items", tags=["work-items"])
 
@@ -22,7 +17,7 @@ router = APIRouter(prefix="/work-items", tags=["work-items"])
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=WorkItemDetail)
 def create_work_item(
     item: WorkItemCreate,
-    service: WorkItemService = Depends(get_work_item_service),
+    service: WorkItemServiceDep,
 ) -> WorkItemDetail:
     """Create a new work item in the given project.
 
@@ -33,11 +28,11 @@ def create_work_item(
 
 @router.get("/", response_model=PaginatedResponse[WorkItemDetail])
 def list_work_items(
-    params: ListParams = Depends(list_params),
+    params: ListParamsDep,
+    service: WorkItemServiceDep,
     project_id: UUID | None = None,
     parent_id: UUID | None = None,
-    filter: str | None = Query(None, max_length=1000),
-    service: WorkItemService = Depends(get_work_item_service),
+    filter: FilterQuery = None,
 ) -> PaginatedResponse[WorkItemDetail]:
     """List work items with pagination.
 
@@ -65,9 +60,7 @@ def list_work_items(
 
 
 @router.get("/{item_id}", response_model=WorkItemDetail)
-def get_work_item(
-    item_id: UUID, service: WorkItemService = Depends(get_work_item_service)
-) -> WorkItemDetail:
+def get_work_item(item_id: UUID, service: WorkItemServiceDep) -> WorkItemDetail:
     """Get a work item by ID."""
     return service.get(item_id)
 
@@ -76,7 +69,7 @@ def get_work_item(
 def replace_work_item(
     item_id: UUID,
     replace: WorkItemReplace,
-    service: WorkItemService = Depends(get_work_item_service),
+    service: WorkItemServiceDep,
 ) -> WorkItemDetail:
     """Replace a work item (full update)."""
     return service.replace(item_id, replace)
@@ -86,16 +79,14 @@ def replace_work_item(
 def update_work_item(
     item_id: UUID,
     update: WorkItemUpdate,
-    service: WorkItemService = Depends(get_work_item_service),
+    service: WorkItemServiceDep,
 ) -> WorkItemDetail:
     """Update a work item (partial update)."""
     return service.update(item_id, update)
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_work_item(
-    item_id: UUID, service: WorkItemService = Depends(get_work_item_service)
-) -> None:
+def delete_work_item(item_id: UUID, service: WorkItemServiceDep) -> None:
     """Delete a work item.
 
     A task that still has subtasks cannot be deleted (409).
