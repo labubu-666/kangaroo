@@ -16,6 +16,7 @@ from kangaroo.repositories.tables import (
     Base,
     BoardRow,
     FunctionRow,
+    InvocationRow,
     ProjectRow,
     StatusRow,
     StatusTransitionRow,
@@ -31,6 +32,8 @@ from kangaroo.schemas import (
     FunctionCreate,
     FunctionReplace,
     FunctionUpdate,
+    Invocation,
+    InvocationCreate,
     PaginatedResponse,
     Project,
     ProjectCreate,
@@ -368,3 +371,15 @@ class FunctionRepository(
     search_fields = ("name", "description")
     model_type = Function
     row_type = FunctionRow
+
+
+class InvocationRepository(
+    Repository[Invocation, InvocationCreate, InvocationCreate, InvocationCreate]
+):
+    """Invocation storage."""
+
+    entity = "Invocation"
+    filter_fields = frozenset({"function_id"})
+    search_fields = ()
+    model_type = Invocation
+    row_type = InvocationRow

@@ -1,4 +1,5 @@
 import { apiFetch, apiJson, jsonBody, type Paginated } from "./api";
+import type { Invocation } from "./invocations";
 
 export interface Function {
   id: string;
@@ -76,7 +77,7 @@ export async function deleteFunction(id: string): Promise<void> {
   });
 }
 
-export function runFunction(id: string): Promise<RunResult> {
+export function runFunction(id: string): Promise<Invocation> {
   return apiJson(`/api/v1/functions/${id}/run`, "Failed to run function", {
     method: "POST",
   });

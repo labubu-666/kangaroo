@@ -127,6 +127,18 @@ class StatusTransitionRow(Base):
     )
 
 
+class InvocationRow(Base):
+    __tablename__ = "invocations"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    function_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("functions.id", ondelete="CASCADE"), nullable=False
+    )
+    stdout: Mapped[str] = mapped_column(String)
+    stderr: Mapped[str] = mapped_column(String)
+    exit_code: Mapped[int] = mapped_column(Integer)
+
+
 class FunctionRow(Base):
     __tablename__ = "functions"
 

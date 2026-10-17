@@ -342,6 +342,25 @@ class Function(FunctionCreate, Timestamped):
     id: UUID
 
 
+class InvocationCreate(BaseModel):
+    """The saved output of one run of a function."""
+
+    function_id: UUID
+    stdout: str
+    stderr: str
+    exit_code: int
+
+
+class Invocation(Timestamped):
+    """A stored run of a function: what it printed and how it exited."""
+
+    id: UUID
+    function_id: UUID
+    stdout: str
+    stderr: str
+    exit_code: int
+
+
 class RunRequest(BaseModel):
     """Input to any runner: a Python script and how long it may run."""
 

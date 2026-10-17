@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from kangaroo.repositories import (
     BoardRepository,
     FunctionRepository,
+    InvocationRepository,
     ProjectRepository,
     StatusRepository,
     StatusTransitionRepository,
@@ -21,6 +22,7 @@ from kangaroo.runners import BaseRunner, create_runner
 from kangaroo.services import (
     BoardService,
     FunctionService,
+    InvocationService,
     ProjectService,
     ReportService,
     WorkflowService,
@@ -71,7 +73,17 @@ def get_session(engine: Annotated[Engine, Depends(get_engine)]) -> Iterator[Sess
 def get_function_service(
     session: Annotated[Session, Depends(get_session)],
 ) -> FunctionService:
-    return FunctionService(FunctionRepository(session), get_function_runner())
+    return FunctionService(
+        FunctionRepository(session),
+        InvocationRepository(session),
+        get_function_runner(),
+    )
+
+
+def get_invocation_service(
+    session: Annotated[Session, Depends(get_session)],
+) -> InvocationService:
+    return InvocationService(InvocationRepository(session))
 
 
 def get_work_item_service(
@@ -137,6 +149,7 @@ def get_report_service(
 ListParamsDep = Annotated[ListParams, Depends(list_params)]
 FilterQuery = Annotated[str | None, Query(max_length=1000)]
 FunctionServiceDep = Annotated[FunctionService, Depends(get_function_service)]
+InvocationServiceDep = Annotated[InvocationService, Depends(get_invocation_service)]
 WorkItemServiceDep = Annotated[WorkItemService, Depends(get_work_item_service)]
 ProjectServiceDep = Annotated[ProjectService, Depends(get_project_service)]
 WorkflowServiceDep = Annotated[WorkflowService, Depends(get_workflow_service)]

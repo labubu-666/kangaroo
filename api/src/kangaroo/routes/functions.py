@@ -8,8 +8,8 @@ from kangaroo.schemas import (
     FunctionCreate,
     FunctionReplace,
     FunctionUpdate,
+    Invocation,
     PaginatedResponse,
-    RunResult,
 )
 
 router = APIRouter(prefix="/functions", tags=["functions"])
@@ -71,11 +71,12 @@ def delete_function(item_id: UUID, service: FunctionServiceDep) -> None:
     service.delete(item_id)
 
 
-@router.post("/{item_id}/run", response_model=RunResult)
-def run_function(item_id: UUID, service: FunctionServiceDep) -> RunResult:
-    """Run a saved function and return its stdout, stderr and exit code.
+@router.post("/{item_id}/run", response_model=Invocation)
+def run_function(item_id: UUID, service: FunctionServiceDep) -> Invocation:
+    """Run a saved function and store the run as an invocation.
 
-    The run takes up to 120 seconds. A timeout returns exit code -1. If the
-    configured runner cannot be reached, returns 503.
+    Returns the stored invocation with its stdout, stderr and exit code. The run
+    takes up to 120 seconds. A timeout returns exit code -1. If the configured
+    runner cannot be reached, returns 503 and nothing is stored.
     """
     return service.run(item_id)

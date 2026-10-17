@@ -58,9 +58,10 @@ def main() -> None:
                     "name": "default-http",
                     "numWorkers": 1,
                     "mode": "sync",
-                    "attributes": {"port": 18090},
+                    "attributes": {"port": 8080},
                 }
             },
+            "platform": {"attributes": {"network": "host"}},
         },
     }
     # The dashboard rejects updates (409 on POST, 405 on PUT), so remove any

@@ -11,3 +11,6 @@ spec:
   env:
     - name: UV_CACHE_DIR
       value: /tmp/uv-cache
+  platform:
+    attributes:
+      network: host
