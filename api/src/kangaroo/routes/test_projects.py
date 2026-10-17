@@ -2,20 +2,27 @@ from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import func, select
 
 from kangaroo.app import app
-from kangaroo.backends.sqlite import (
-    SQLiteStatusBackend,
-    SQLiteWorkItemTypeBackend,
+from kangaroo.repositories import (
+    StatusRepository,
+    WorkItemTypeRepository,
 )
-from kangaroo.routes.dependencies import get_backends
+from kangaroo.repositories.tables import (
+    ProjectRow,
+    StatusRow,
+    StatusTransitionRow,
+    WorkItemTypeRow,
+)
+from kangaroo.routes.dependencies import get_engine
 from kangaroo.testing import type_id
 
 
 @pytest.fixture
-def client(backends):
-    """Provide a TestClient that uses fresh backends for each test."""
-    app.dependency_overrides[get_backends] = lambda: backends
+def client(engine):
+    """Provide a TestClient that uses fresh database for each test."""
+    app.dependency_overrides[get_engine] = lambda: engine
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -272,9 +279,9 @@ def test_replace_project_labels(client):
     assert cleared.json()["labels"] == []
 
 
-def test_failed_create_request_saves_nothing(client, backends, monkeypatch):
+def test_failed_create_request_saves_nothing(client, session, monkeypatch):
     """A request that fails part-way saves none of its rows."""
-    real_create = SQLiteStatusBackend.create
+    real_create = StatusRepository.create
     calls = []
 
     def fail_on_second(self, item):
@@ -283,36 +290,36 @@ def test_failed_create_request_saves_nothing(client, backends, monkeypatch):
             raise RuntimeError("disk full")
         return real_create(self, item)
 
-    monkeypatch.setattr(SQLiteStatusBackend, "create", fail_on_second)
+    monkeypatch.setattr(StatusRepository, "create", fail_on_second)
     client_no_raise = TestClient(app, raise_server_exceptions=False)
     response = client_no_raise.post("/api/v1/projects", json={"name": "Partial"})
     assert response.status_code == 500
-    assert backends.projects.count() == 0
-    assert backends.types.count() == 0
-    assert backends.statuses.count() == 0
-    assert backends.transitions.count() == 0
+    assert session.scalar(select(func.count()).select_from(ProjectRow)) == 0
+    assert session.scalar(select(func.count()).select_from(WorkItemTypeRow)) == 0
+    assert session.scalar(select(func.count()).select_from(StatusRow)) == 0
+    assert session.scalar(select(func.count()).select_from(StatusTransitionRow)) == 0
 
 
-def test_failed_delete_request_keeps_everything(client, backends, monkeypatch):
+def test_failed_delete_request_keeps_everything(client, session, monkeypatch):
     """A delete request that fails part-way keeps the project and its template."""
     project_id = client.post("/api/v1/projects", json={"name": "Keep"}).json()["id"]
     before = (
-        backends.projects.count(),
-        backends.statuses.count(),
-        backends.types.count(),
+        session.scalar(select(func.count()).select_from(ProjectRow)),
+        session.scalar(select(func.count()).select_from(StatusRow)),
+        session.scalar(select(func.count()).select_from(WorkItemTypeRow)),
     )
-    real_delete = SQLiteWorkItemTypeBackend.delete
+    real_delete = WorkItemTypeRepository.delete
 
     def fail(self, item_id):
         raise RuntimeError("disk full")
 
-    monkeypatch.setattr(SQLiteWorkItemTypeBackend, "delete", fail)
+    monkeypatch.setattr(WorkItemTypeRepository, "delete", fail)
     client_no_raise = TestClient(app, raise_server_exceptions=False)
     response = client_no_raise.delete(f"/api/v1/projects/{project_id}")
-    monkeypatch.setattr(SQLiteWorkItemTypeBackend, "delete", real_delete)
+    monkeypatch.setattr(WorkItemTypeRepository, "delete", real_delete)
     assert response.status_code == 500
     assert (
-        backends.projects.count(),
-        backends.statuses.count(),
-        backends.types.count(),
+        session.scalar(select(func.count()).select_from(ProjectRow)),
+        session.scalar(select(func.count()).select_from(StatusRow)),
+        session.scalar(select(func.count()).select_from(WorkItemTypeRow)),
     ) == before

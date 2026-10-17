@@ -1,16 +1,16 @@
 from uuid import UUID
 
-from kangaroo.backends import (
-    ProjectBackend,
-    StatusBackend,
-    StatusTransitionBackend,
-    WorkItemBackend,
-    WorkItemTypeBackend,
-)
 from kangaroo.errors import (
     ConflictError,
     InvalidReferenceError,
     NotFoundError,
+)
+from kangaroo.repositories import (
+    ProjectRepository,
+    StatusRepository,
+    StatusTransitionRepository,
+    WorkItemRepository,
+    WorkItemTypeRepository,
 )
 from kangaroo.schemas import (
     ProjectStatus,
@@ -44,11 +44,11 @@ class WorkflowService:
 
     def __init__(
         self,
-        projects: ProjectBackend,
-        statuses: StatusBackend,
-        types: WorkItemTypeBackend,
-        transitions: StatusTransitionBackend,
-        work_items: WorkItemBackend,
+        projects: ProjectRepository,
+        statuses: StatusRepository,
+        types: WorkItemTypeRepository,
+        transitions: StatusTransitionRepository,
+        work_items: WorkItemRepository,
     ) -> None:
         self._projects = projects
         self._statuses = statuses

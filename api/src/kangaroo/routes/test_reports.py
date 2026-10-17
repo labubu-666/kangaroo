@@ -2,14 +2,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from kangaroo.app import app
-from kangaroo.routes.dependencies import get_backends
+from kangaroo.routes.dependencies import get_engine
 from kangaroo.testing import status_id, type_id
 
 
 @pytest.fixture
-def client(backends):
-    """Provide a TestClient that uses fresh backends for each test."""
-    app.dependency_overrides[get_backends] = lambda: backends
+def client(engine):
+    """Provide a TestClient that uses fresh database for each test."""
+    app.dependency_overrides[get_engine] = lambda: engine
     yield TestClient(app)
     app.dependency_overrides.clear()
 

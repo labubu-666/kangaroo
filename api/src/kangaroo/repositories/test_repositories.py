@@ -5,23 +5,19 @@ from sqlalchemy import func, inspect, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from kangaroo.backends.base import utc_now
-from kangaroo.backends.sqlite import (
-    SQLiteBoardBackend,
-    SQLiteFunctionBackend,
-    SQLiteProjectBackend,
-    SQLiteStatusBackend,
-    SQLiteWorkItemBackend,
-    SQLiteWorkItemTypeBackend,
-    create_sqlite_engine,
+from kangaroo.errors import NotFoundError
+from kangaroo.repositories import (
+    BoardRepository,
+    FunctionRepository,
+    ProjectRepository,
 )
-from kangaroo.backends.sqlite.tables import (
+from kangaroo.repositories.repositories import utc_now
+from kangaroo.repositories.tables import (
     StatusRow,
     StatusTransitionRow,
     WorkItemRow,
     WorkItemTypeRow,
 )
-from kangaroo.errors import NotFoundError
 from kangaroo.schemas import (
     BoardCreate,
     BoardReplace,
@@ -34,32 +30,6 @@ from kangaroo.schemas import (
     WorkItemUpdate,
 )
 from kangaroo.testing import new_subtask, new_task, seed_project
-
-
-@pytest.fixture
-def engine():
-    """Provide a fresh in-memory SQLite engine for each test."""
-    return create_sqlite_engine("sqlite://memory")
-
-
-@pytest.fixture
-def projects(engine):
-    return SQLiteProjectBackend(engine)
-
-
-@pytest.fixture
-def work_items(engine):
-    return SQLiteWorkItemBackend(engine)
-
-
-@pytest.fixture
-def statuses(engine):
-    return SQLiteStatusBackend(engine)
-
-
-@pytest.fixture
-def types(engine):
-    return SQLiteWorkItemTypeBackend(engine)
 
 
 @pytest.fixture
@@ -170,10 +140,10 @@ def test_search_treats_like_wildcards_literally(work_items, project_id, seeded):
     assert work_items.list_paginated(limit=10, offset=0, search="snake_case").total == 1
 
 
-def test_search_projects_and_boards_by_name(engine, project_id):
+def test_search_projects_and_boards_by_name(session, project_id):
     """Projects and boards are searched by name and description."""
-    projects = SQLiteProjectBackend(engine)
-    boards = SQLiteBoardBackend(engine)
+    projects = ProjectRepository(session)
+    boards = BoardRepository(session)
     projects.create(ProjectCreate(name="Alpha", description="Shared"))
     boards.create(BoardCreate(name="Alpha board", project_id=project_id))
     boards.create(
@@ -203,9 +173,9 @@ def test_delete_work_item(work_items, project_id, seeded):
         work_items.get_by_id(item.id)
 
 
-def test_board_crud(engine, project_id):
+def test_board_crud(session, project_id):
     """Boards can be created, read, updated, replaced, listed and deleted."""
-    boards = SQLiteBoardBackend(engine)
+    boards = BoardRepository(session)
     board = boards.create(
         BoardCreate(name="Foo", filter="project.name == 'foo'", project_id=project_id)
     )
@@ -307,9 +277,9 @@ def test_status_rejects_missing_project(engine):
             session.commit()
 
 
-def test_function_round_trip(engine):
+def test_function_round_trip(session):
     """A saved function is stored and read back with its code and labels."""
-    functions = SQLiteFunctionBackend(engine)
+    functions = FunctionRepository(session)
     created = functions.create(
         FunctionCreate(name="Hello", code="print(1)", labels=["demo"])
     )

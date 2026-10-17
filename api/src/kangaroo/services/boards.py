@@ -1,15 +1,15 @@
 from typing import Any
 from uuid import UUID
 
-from kangaroo.backends import (
-    BoardBackend,
-    ProjectBackend,
-    StatusBackend,
-    WorkItemBackend,
-    WorkItemTypeBackend,
-)
-from kangaroo.backends.base import clean_search, matches_search
 from kangaroo.filters import parse_filter
+from kangaroo.repositories import (
+    BoardRepository,
+    ProjectRepository,
+    StatusRepository,
+    WorkItemRepository,
+    WorkItemTypeRepository,
+)
+from kangaroo.repositories.repositories import clean_search, matches_search
 from kangaroo.schemas import (
     Board,
     BoardColumn,
@@ -63,11 +63,11 @@ class BoardService:
 
     def __init__(
         self,
-        boards: BoardBackend,
-        work_items: WorkItemBackend,
-        projects: ProjectBackend,
-        statuses: StatusBackend,
-        types: WorkItemTypeBackend,
+        boards: BoardRepository,
+        work_items: WorkItemRepository,
+        projects: ProjectRepository,
+        statuses: StatusRepository,
+        types: WorkItemTypeRepository,
     ) -> None:
         self._boards = boards
         self._work_items = work_items

@@ -1,16 +1,16 @@
 from typing import Any
 from uuid import UUID
 
-from kangaroo.backends import (
-    ProjectBackend,
-    StatusBackend,
-    WorkItemTypeBackend,
-)
-from kangaroo.backends.base import BaseBackend
 from kangaroo.errors import (
     InvalidReferenceError,
     NotFoundError,
 )
+from kangaroo.repositories import (
+    ProjectRepository,
+    StatusRepository,
+    WorkItemTypeRepository,
+)
+from kangaroo.repositories.repositories import Repository
 from kangaroo.schemas import (
     ProjectStatus,
     StatusRef,
@@ -21,7 +21,9 @@ from kangaroo.schemas import (
 )
 
 
-def _ensure_project_exists(projects: ProjectBackend, project_id: UUID | None) -> None:
+def _ensure_project_exists(
+    projects: ProjectRepository, project_id: UUID | None
+) -> None:
     """Raise InvalidReferenceError if the project is null or does not exist."""
     if project_id is None:
         raise InvalidReferenceError("project_id cannot be null")
@@ -31,7 +33,7 @@ def _ensure_project_exists(projects: ProjectBackend, project_id: UUID | None) ->
         raise InvalidReferenceError("Project not found") from None
 
 
-def _project_names(projects: ProjectBackend) -> dict[UUID, str]:
+def _project_names(projects: ProjectRepository) -> dict[UUID, str]:
     """Map each project ID to its name."""
     return {project.id: project.name for project in projects.list_all()}
 
@@ -63,7 +65,7 @@ def _filter_record(
 
 
 def _lookups(
-    statuses: StatusBackend, types: WorkItemTypeBackend
+    statuses: StatusRepository, types: WorkItemTypeRepository
 ) -> tuple[dict[UUID, ProjectStatus], dict[UUID, WorkItemType]]:
     """Map every status ID and work item type ID to its row."""
     return (
@@ -89,9 +91,9 @@ def _detail(
     )
 
 
-def _next_position(backend: BaseBackend, project_id: UUID) -> int:
+def _next_position(repository: Repository, project_id: UUID) -> int:
     """Place a new item after the last position already used in the project."""
-    positions = [item.position for item in backend.list_all(project_id=project_id)]
+    positions = [item.position for item in repository.list_all(project_id=project_id)]
     return max(positions, default=-1) + 1
 
 

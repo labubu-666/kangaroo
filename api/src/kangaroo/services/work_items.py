@@ -1,19 +1,19 @@
 from uuid import UUID
 
-from kangaroo.backends import (
-    ProjectBackend,
-    StatusBackend,
-    StatusTransitionBackend,
-    WorkItemBackend,
-    WorkItemTypeBackend,
-)
-from kangaroo.backends.base import clean_search, matches_search
 from kangaroo.errors import (
     ConflictError,
     InvalidReferenceError,
     NotFoundError,
 )
 from kangaroo.filters import parse_filter
+from kangaroo.repositories import (
+    ProjectRepository,
+    StatusRepository,
+    StatusTransitionRepository,
+    WorkItemRepository,
+    WorkItemTypeRepository,
+)
+from kangaroo.repositories.repositories import clean_search, matches_search
 from kangaroo.schemas import (
     PaginatedResponse,
     ProjectStatus,
@@ -45,11 +45,11 @@ class WorkItemService:
 
     def __init__(
         self,
-        work_items: WorkItemBackend,
-        projects: ProjectBackend,
-        statuses: StatusBackend,
-        types: WorkItemTypeBackend,
-        transitions: StatusTransitionBackend,
+        work_items: WorkItemRepository,
+        projects: ProjectRepository,
+        statuses: StatusRepository,
+        types: WorkItemTypeRepository,
+        transitions: StatusTransitionRepository,
     ) -> None:
         self._work_items = work_items
         self._projects = projects

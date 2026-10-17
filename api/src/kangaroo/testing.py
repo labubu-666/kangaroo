@@ -49,7 +49,7 @@ class SeededProject:
 
 
 def seed_project(projects, statuses, types, name: str = "Test") -> SeededProject:
-    """Create a project and copy the "To Do List" template into the backends."""
+    """Create a project and copy the "To Do List" template into the repositories."""
     project = projects.create(ProjectCreate(name=name))
     type_ids = {
         t.name: types.create(
@@ -81,7 +81,7 @@ def seed_project(projects, statuses, types, name: str = "Test") -> SeededProject
 
 
 def new_task(seeded: SeededProject, title: str = "Task", **extra) -> WorkItemCreate:
-    """A task create request in the first To Do status, ready for a backend."""
+    """A task create request in the first To Do status, ready for a repository."""
     extra.setdefault("status_id", seeded.open_id)
     return WorkItemCreate(
         title=title, project_id=seeded.project_id, type_id=seeded.task_id, **extra
@@ -91,7 +91,7 @@ def new_task(seeded: SeededProject, title: str = "Task", **extra) -> WorkItemCre
 def new_subtask(
     seeded: SeededProject, parent_id: UUID, title: str = "Child", **extra
 ) -> WorkItemCreate:
-    """A subtask create request in the first To Do status, ready for a backend."""
+    """A subtask create request in the first To Do status, ready for a repository."""
     extra.setdefault("status_id", seeded.open_id)
     return WorkItemCreate(
         title=title,

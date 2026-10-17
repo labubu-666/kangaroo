@@ -1,15 +1,70 @@
 import os
 
-# The app reads DATABASE_URL when its backends are first used. Point it at an
+# The app reads DATABASE_URL when its engine is first used. Point it at an
 # in-memory database before any test runs.
 os.environ["DATABASE_URL"] = "sqlite://memory"
 
-import pytest
+from collections.abc import Iterator
 
-from kangaroo.backends import Backends, create_backends
+import pytest
+from sqlalchemy import Engine
+from sqlalchemy.orm import Session
+
+from kangaroo.repositories import (
+    BoardRepository,
+    FunctionRepository,
+    ProjectRepository,
+    StatusRepository,
+    StatusTransitionRepository,
+    WorkItemRepository,
+    WorkItemTypeRepository,
+    create_engine_for,
+)
 
 
 @pytest.fixture
-def backends() -> Backends:
-    """Fresh, empty backends on a new in-memory database for each test."""
-    return create_backends("sqlite://memory")
+def engine() -> Engine:
+    """A fresh, empty in-memory database for each test."""
+    return create_engine_for("sqlite://memory")
+
+
+@pytest.fixture
+def session(engine) -> Iterator[Session]:
+    """One session for the test; every repository in the test shares it."""
+    with Session(engine, expire_on_commit=False) as session:
+        yield session
+
+
+@pytest.fixture
+def projects(session):
+    return ProjectRepository(session)
+
+
+@pytest.fixture
+def work_items(session):
+    return WorkItemRepository(session)
+
+
+@pytest.fixture
+def boards(session):
+    return BoardRepository(session)
+
+
+@pytest.fixture
+def statuses(session):
+    return StatusRepository(session)
+
+
+@pytest.fixture
+def types(session):
+    return WorkItemTypeRepository(session)
+
+
+@pytest.fixture
+def transitions(session):
+    return StatusTransitionRepository(session)
+
+
+@pytest.fixture
+def functions(session):
+    return FunctionRepository(session)

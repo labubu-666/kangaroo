@@ -5,15 +5,20 @@ from sqlalchemy import (
 )
 from sqlalchemy.pool import StaticPool
 
-from kangaroo.backends.sqlite.tables import Base
+from kangaroo.repositories.tables import Base
 
 
-def create_sqlite_engine(url: str) -> Engine:
+def create_engine_for(url: str) -> Engine:
     """Create a SQLAlchemy engine with foreign keys enabled and the schema ready.
 
     ``sqlite://memory`` maps to a shared in-memory database. Any other URL is
     passed to SQLAlchemy unchanged (e.g. ``sqlite:///kangaroo.db``).
+
+    Raises:
+        ValueError: If the URL is not a SQLite URL.
     """
+    if not url.startswith("sqlite://"):
+        raise ValueError(f"Unsupported DATABASE_URL: {url}")
     if url == "sqlite://memory":
         engine = create_engine(
             "sqlite://",
