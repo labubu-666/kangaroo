@@ -1,14 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import {
   deleteFunction,
   fetchFunction,
   runFunction,
-  type RunResult,
 } from "../../lib/functions";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
-import { RunOutput } from "../../components/functions/RunOutput";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { Loading } from "../../components/shared/Loading";
 
@@ -20,7 +17,6 @@ function FunctionDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [result, setResult] = useState<RunResult | null>(null);
 
   const {
     data: fn,
@@ -33,7 +29,8 @@ function FunctionDetail() {
 
   const runMutation = useMutation({
     mutationFn: () => runFunction(id),
-    onSuccess: (output) => setResult(output),
+    onSuccess: (invocation) =>
+      navigate({ to: "/invocations/$id", params: { id: invocation.id } }),
   });
 
   const deleteMutation = useMutation({
@@ -118,8 +115,6 @@ function FunctionDetail() {
           {deleteMutation.error && (
             <ErrorBanner>{deleteMutation.error.message}</ErrorBanner>
           )}
-
-          {result && <RunOutput result={result} />}
 
           <div>
             <h2 className="mb-2 font-semibold text-gray-700">Code</h2>

@@ -2,6 +2,7 @@ from kangaroo.repositories.engine import create_engine_for
 from kangaroo.repositories.repositories import (
     BoardRepository,
     FunctionRepository,
+    InvocationRepository,
     ProjectRepository,
     Repository,
     StatusRepository,
@@ -13,6 +14,7 @@ from kangaroo.repositories.repositories import (
 __all__ = [
     "BoardRepository",
     "FunctionRepository",
+    "InvocationRepository",
     "ProjectRepository",
     "Repository",
     "StatusRepository",

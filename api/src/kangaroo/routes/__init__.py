@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from kangaroo.routes.boards import router as boards_router
 from kangaroo.routes.docs import router as docs_router
 from kangaroo.routes.functions import router as functions_router
+from kangaroo.routes.invocations import router as invocations_router
 from kangaroo.routes.project_templates import router as project_templates_router
 from kangaroo.routes.projects import router as projects_router
 from kangaroo.routes.reports import router as reports_router
@@ -24,5 +25,6 @@ api_v1_router.include_router(statuses_router)
 api_v1_router.include_router(work_item_types_router)
 api_v1_router.include_router(transitions_router)
 api_v1_router.include_router(functions_router)
+api_v1_router.include_router(invocations_router)
 
 __all__ = ["api_v1_router"]

@@ -2,6 +2,7 @@ from uuid import UUID
 
 from kangaroo.repositories import (
     FunctionRepository,
+    InvocationRepository,
 )
 from kangaroo.runners import BaseRunner
 from kangaroo.schemas import (
@@ -9,17 +10,24 @@ from kangaroo.schemas import (
     FunctionCreate,
     FunctionReplace,
     FunctionUpdate,
+    Invocation,
+    InvocationCreate,
     PaginatedResponse,
     RunRequest,
-    RunResult,
 )
 
 
 class FunctionService:
     """Stores saved scripts and runs them through a runner."""
 
-    def __init__(self, functions: FunctionRepository, runner: BaseRunner) -> None:
+    def __init__(
+        self,
+        functions: FunctionRepository,
+        invocations: InvocationRepository,
+        runner: BaseRunner,
+    ) -> None:
         self._functions = functions
+        self._invocations = invocations
         self._runner = runner
 
     def create(self, item: FunctionCreate) -> Function:
@@ -42,7 +50,10 @@ class FunctionService:
     def delete(self, item_id: UUID) -> None:
         self._functions.delete(item_id)
 
-    def run(self, item_id: UUID) -> RunResult:
-        """Run a saved script through the configured runner."""
+    def run(self, item_id: UUID) -> Invocation:
+        """Run a saved script through the configured runner and store the output."""
         function = self._functions.get_by_id(item_id)
-        return self._runner.run(RunRequest(code=function.code))
+        result = self._runner.run(RunRequest(code=function.code))
+        return self._invocations.create(
+            InvocationCreate(function_id=function.id, **result.model_dump())
+        )

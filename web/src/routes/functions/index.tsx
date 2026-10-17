@@ -3,19 +3,62 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { FUNCTION_LIMIT, fetchFunctions } from "../../lib/functions";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
+import { InvocationList } from "../../components/invocations/InvocationList";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { Loading } from "../../components/shared/Loading";
 import { Pagination } from "../../components/shared/Pagination";
 
+type FunctionsTab = "functions" | "invocations";
+
 export const Route = createFileRoute("/functions/")({
-  component: FunctionsList,
+  component: FunctionsPage,
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: FunctionsTab } => ({
+    tab: search.tab === "invocations" ? "invocations" : "functions",
+  }),
 });
 
-function FunctionsList() {
-  const [offset, setOffset] = useState(0);
-  const [search, setSearch] = useState("");
+const TABS: { value: FunctionsTab; label: string }[] = [
+  { value: "functions", label: "Functions" },
+  { value: "invocations", label: "Invocations" },
+];
+
+function FunctionsPage() {
+  const { tab = "functions" } = Route.useSearch();
 
   useBreadcrumbs([{ label: "Functions" }]);
+
+  return (
+    <div className="space-y-4 p-4">
+      <div role="tablist" className="flex gap-4 border-b border-gray-200">
+        {TABS.map((t) => (
+          <Link
+            key={t.value}
+            role="tab"
+            aria-selected={tab === t.value}
+            to="/functions"
+            search={{ tab: t.value }}
+            replace
+            className={`-mb-px border-b-2 px-1 pb-2 font-semibold ${
+              tab === t.value
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            {t.label}
+          </Link>
+        ))}
+      </div>
+
+      {tab === "invocations" ? <InvocationList /> : <FunctionList />}
+    </div>
+  );
+}
+
+function FunctionList() {
+  const [offset, setOffset] = useState(0);
+  const [search, setSearch] = useState("");
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["functions", offset, search],
@@ -26,9 +69,9 @@ function FunctionsList() {
   const total = data?.total ?? 0;
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <h1 className="text-2xl font-bold">Functions</h1>
+        <h2 className="text-xl font-semibold">Functions</h2>
         <Link
           to="/functions/create"
           className="rounded bg-blue-600 px-4 py-2 text-center font-medium text-white hover:bg-blue-700"
