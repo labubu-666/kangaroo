@@ -15,6 +15,15 @@ connectors:
       clientSecret: MY_GITHUB_CLIENT_SECRET
       redirectURI: http://localhost:5556/dex/callback
 
+enablePasswordDB: true
+staticPasswords:
+  - email: "user@example.com"
+    # Generate a bcrypt hash (replace the password), e.g.:
+    # uv run --no-project --with bcrypt python -c "import bcrypt; print(bcrypt.hashpw(b'DEIN_PASSWORT', bcrypt.gensalt(10)).decode())"
+    hash: "REPLACE_WITH_BCRYPT_HASH"
+    username: "user"
+    userID: "0815"
+
 staticClients:
   - id: fastapi-app
     redirectURIs:

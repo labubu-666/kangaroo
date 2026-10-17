@@ -4,7 +4,42 @@ import { TestRouter } from "../TestRouter.story";
 
 const paths = ["/", "/projects", "/work-items", "/about", "/admin"];
 
+const currentUser = {
+  username: "test-user",
+  email: "test@example.com",
+  avatar_url: "https://gravatar.com/avatar/test?d=identicon&s=64",
+};
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/v1/user", (route) =>
+    route.fulfill({ json: currentUser }),
+  );
+});
+
 test.describe("AppHeader", () => {
+  test("shows the Gravatar as the profile avatar", async ({ mount, page }) => {
+    await mount(
+      <TestRouter paths={paths}>
+        <AppHeader />
+      </TestRouter>,
+    );
+    await expect(
+      page.getByRole("button", { name: "Profile menu" }).locator("img"),
+    ).toHaveAttribute("src", currentUser.avatar_url);
+  });
+
+  test("shows username and email in the profile menu", async ({ mount }) => {
+    const component = await mount(
+      <TestRouter paths={paths}>
+        <AppHeader />
+      </TestRouter>,
+    );
+    await component.getByRole("button", { name: "Profile menu" }).click();
+    const menu = component.getByRole("menu");
+    await expect(menu.getByText("test-user", { exact: true })).toBeVisible();
+    await expect(menu.getByText("test@example.com")).toBeVisible();
+  });
+
   test("renders a navigation landmark", async ({ mount, page }) => {
     await mount(
       <TestRouter paths={paths}>
@@ -39,6 +74,20 @@ test.describe("AppHeader", () => {
     await expect(
       component.getByRole("menuitem", { name: "About" }),
     ).toHaveAttribute("href", "/about");
+  });
+
+  test("logs out with a POST form in the profile menu", async ({ mount }) => {
+    const component = await mount(
+      <TestRouter paths={paths}>
+        <AppHeader />
+      </TestRouter>,
+    );
+    await component.getByRole("button", { name: "Profile menu" }).click();
+    await expect(
+      component
+        .locator('form[method="post"][action="/logout"]')
+        .getByRole("menuitem", { name: "Logout" }),
+    ).toBeVisible();
   });
 
   test("renders a link to admin in the profile menu", async ({ mount }) => {

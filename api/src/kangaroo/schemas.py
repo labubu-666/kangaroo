@@ -411,3 +411,11 @@ class ReportSummary(BaseModel):
     projects: int
     boards: int
     work_items: WorkItemCounts
+
+
+class CurrentUser(BaseModel):
+    """The logged-in user, from the Dex session."""
+
+    username: str
+    email: str | None
+    avatar_url: str

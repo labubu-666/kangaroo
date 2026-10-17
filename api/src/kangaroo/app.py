@@ -1,9 +1,15 @@
 from pathlib import Path
 
 from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import (
+    JSONResponse,
+    PlainTextResponse,
+    RedirectResponse,
+    StreamingResponse,
+)
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
+from starlette.middleware.sessions import SessionMiddleware
 
 from kangaroo.errors import (
     ConflictError,
@@ -13,6 +19,7 @@ from kangaroo.errors import (
     NotFoundError,
 )
 from kangaroo.routes import api_v1_router
+from kangaroo.routes.auth import router as auth_router
 from kangaroo.runners import RunnerUnavailableError
 from kangaroo.settings import settings
 
@@ -58,6 +65,8 @@ def root() -> RedirectResponse:
     return RedirectResponse(url="/web/")
 
 
+app.add_middleware(SessionMiddleware, secret_key=settings.session_secret_key)
+app.include_router(auth_router)
 app.include_router(api_v1_router, prefix="/api/v1")
 
 
@@ -127,6 +136,12 @@ if settings.env.lower() == "development":
             vite_url = f"{vite_url}?{request.url.query}"
         try:
             return await _fetch_from_vite(vite_url)
+        except httpx.ConnectError:
+            return PlainTextResponse(
+                "Vite dev server is not running on http://localhost:5173. "
+                "Start it with `npm run dev` in web/.",
+                status_code=502,
+            )
         except httpx.HTTPError:
             # Fall back to index.html for SPA routing
             return await _fetch_from_vite("http://localhost:5173/web/index.html")
