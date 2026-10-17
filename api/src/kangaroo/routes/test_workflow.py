@@ -4,39 +4,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from kangaroo.app import app
-from kangaroo.backends import (
-    InMemoryBoardBackend,
-    InMemoryProjectBackend,
-    InMemoryStatusBackend,
-    InMemoryStatusTransitionBackend,
-    InMemoryWorkItemBackend,
-    InMemoryWorkItemTypeBackend,
-)
-from kangaroo.routes.dependencies import (
-    get_board_backend,
-    get_project_backend,
-    get_status_backend,
-    get_status_transition_backend,
-    get_work_item_backend,
-    get_work_item_type_backend,
-)
+from kangaroo.routes.dependencies import get_backends
 
 
 @pytest.fixture
-def client():
-    """Provide a TestClient with fresh in-memory backends for each test."""
-    boards = InMemoryBoardBackend()
-    work_items = InMemoryWorkItemBackend()
-    projects = InMemoryProjectBackend()
-    statuses = InMemoryStatusBackend()
-    types = InMemoryWorkItemTypeBackend()
-    transitions = InMemoryStatusTransitionBackend()
-    app.dependency_overrides[get_board_backend] = lambda: boards
-    app.dependency_overrides[get_work_item_backend] = lambda: work_items
-    app.dependency_overrides[get_project_backend] = lambda: projects
-    app.dependency_overrides[get_status_backend] = lambda: statuses
-    app.dependency_overrides[get_work_item_type_backend] = lambda: types
-    app.dependency_overrides[get_status_transition_backend] = lambda: transitions
+def client(backends):
+    """Provide a TestClient that uses fresh backends for each test."""
+    app.dependency_overrides[get_backends] = lambda: backends
     yield TestClient(app)
     app.dependency_overrides.clear()
 

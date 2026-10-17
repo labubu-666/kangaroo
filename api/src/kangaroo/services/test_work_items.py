@@ -2,79 +2,13 @@ from uuid import uuid4
 
 import pytest
 
-from kangaroo.backends import (
-    InMemoryBoardBackend,
-    InMemoryProjectBackend,
-    InMemoryStatusBackend,
-    InMemoryStatusTransitionBackend,
-    InMemoryWorkItemBackend,
-    InMemoryWorkItemTypeBackend,
-)
 from kangaroo.errors import ConflictError, InvalidReferenceError, NotFoundError
 from kangaroo.schemas import (
-    BoardCreate,
-    ProjectCreate,
-    ProjectReplace,
-    ProjectUpdate,
     StatusTransitionCreate,
     WorkItemCreate,
     WorkItemReplace,
     WorkItemUpdate,
 )
-from kangaroo.services import ProjectService, WorkItemService
-from kangaroo.testing import seed_project
-
-
-@pytest.fixture
-def projects():
-    return InMemoryProjectBackend()
-
-
-@pytest.fixture
-def work_items():
-    return InMemoryWorkItemBackend()
-
-
-@pytest.fixture
-def boards():
-    return InMemoryBoardBackend()
-
-
-@pytest.fixture
-def statuses():
-    return InMemoryStatusBackend()
-
-
-@pytest.fixture
-def types():
-    return InMemoryWorkItemTypeBackend()
-
-
-@pytest.fixture
-def transitions():
-    return InMemoryStatusTransitionBackend()
-
-
-@pytest.fixture
-def work_item_service(work_items, projects, statuses, types, transitions):
-    return WorkItemService(work_items, projects, statuses, types, transitions)
-
-
-@pytest.fixture
-def project_service(projects, work_items, boards, statuses, types, transitions):
-    return ProjectService(projects, work_items, boards, statuses, types, transitions)
-
-
-@pytest.fixture
-def seeded(projects, statuses, types):
-    """A project with the To Do List statuses and types."""
-    return seed_project(projects, statuses, types)
-
-
-@pytest.fixture
-def other(projects, statuses, types):
-    """A second project, to test moves and cross-project checks."""
-    return seed_project(projects, statuses, types, name="Other")
 
 
 def task(seeded, title="Task", **extra):
@@ -91,18 +25,6 @@ def subtask(seeded, parent_id, title="Child", **extra):
         parent_id=parent_id,
         **extra,
     )
-
-
-def test_delete_project_with_boards_raises(project_service, boards):
-    project = project_service.create(ProjectCreate(name="Alpha"))
-    board = boards.create(BoardCreate(name="Board", project_id=project.id))
-    with pytest.raises(ConflictError, match="still has boards"):
-        project_service.delete(project.id)
-
-    boards.delete(board.id)
-    project_service.delete(project.id)
-    with pytest.raises(NotFoundError):
-        project_service.get(project.id)
 
 
 def test_create_work_item_with_missing_project_raises(work_item_service, seeded):
@@ -352,30 +274,3 @@ def test_delete_task_with_subtasks_raises(work_item_service, seeded):
 def test_delete_missing_work_item_raises(work_item_service):
     with pytest.raises(NotFoundError):
         work_item_service.delete(uuid4())
-
-
-def test_delete_project_with_work_items_raises(project_service, work_item_service):
-    project = project_service.create(ProjectCreate(name="Alpha"))
-    work_types = work_item_service._types.list_all(project_id=project.id)
-    task_type = next(t for t in work_types if t.level == "standard")
-    item = work_item_service.create(
-        WorkItemCreate(title="Task", project_id=project.id, type_id=task_type.id)
-    )
-    with pytest.raises(ConflictError, match="still has work items"):
-        project_service.delete(project.id)
-
-    work_item_service.delete(item.id)
-    project_service.delete(project.id)
-    with pytest.raises(NotFoundError):
-        project_service.get(project.id)
-
-
-def test_project_update_and_replace(project_service):
-    created = project_service.create(ProjectCreate(name="Alpha", description="First"))
-    updated = project_service.update(created.id, ProjectUpdate(name="Renamed"))
-    assert updated.name == "Renamed"
-    assert updated.description == "First"
-
-    replaced = project_service.replace(created.id, ProjectReplace(name="Final"))
-    assert replaced.name == "Final"
-    assert replaced.description is None

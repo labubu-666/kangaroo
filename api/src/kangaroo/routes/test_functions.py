@@ -2,17 +2,15 @@ import pytest
 from fastapi.testclient import TestClient
 
 from kangaroo.app import app
-from kangaroo.backends import InMemoryFunctionBackend
-from kangaroo.routes.dependencies import get_function_backend
+from kangaroo.routes.dependencies import get_backends
 
 HELLO = 'print("hello")'
 
 
 @pytest.fixture
-def client():
-    """Provide a TestClient with a fresh in-memory function backend for each test."""
-    functions = InMemoryFunctionBackend()
-    app.dependency_overrides[get_function_backend] = lambda: functions
+def client(backends):
+    """Provide a TestClient that uses fresh backends for each test."""
+    app.dependency_overrides[get_backends] = lambda: backends
     yield TestClient(app)
     app.dependency_overrides.clear()
 

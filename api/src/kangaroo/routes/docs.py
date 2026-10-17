@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from kangaroo.schemas import render_doc_markdown
+from kangaroo.utils import render_doc_markdown
 
 router = APIRouter(prefix="/docs", tags=["docs"])
 

@@ -13,11 +13,13 @@ from kangaroo.backends.sqlite import (
     SQLiteStatusBackend,
     SQLiteWorkItemBackend,
     SQLiteWorkItemTypeBackend,
+    create_sqlite_engine,
+)
+from kangaroo.backends.sqlite.tables import (
     StatusRow,
     StatusTransitionRow,
     WorkItemRow,
     WorkItemTypeRow,
-    create_sqlite_engine,
 )
 from kangaroo.errors import NotFoundError
 from kangaroo.schemas import (

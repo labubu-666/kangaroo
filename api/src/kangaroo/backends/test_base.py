@@ -1,44 +1,13 @@
 import pytest
 
-from kangaroo.backends import (
-    InMemoryProjectBackend,
-    InMemoryStatusBackend,
-    InMemoryWorkItemBackend,
-    InMemoryWorkItemTypeBackend,
-    SQLiteProjectBackend,
-    SQLiteStatusBackend,
-    SQLiteWorkItemBackend,
-    SQLiteWorkItemTypeBackend,
-)
-from kangaroo.backends.sqlite import create_sqlite_engine
 from kangaroo.schemas import WorkItemReplace, WorkItemUpdate
 from kangaroo.testing import new_task, seed_project
-
-
-@pytest.fixture(params=["memory", "sqlite"])
-def backends(request):
-    """Provide (projects, work_items, statuses, types) for each storage engine."""
-    if request.param == "memory":
-        return (
-            InMemoryProjectBackend(),
-            InMemoryWorkItemBackend(),
-            InMemoryStatusBackend(),
-            InMemoryWorkItemTypeBackend(),
-        )
-    engine = create_sqlite_engine("sqlite://memory")
-    return (
-        SQLiteProjectBackend(engine),
-        SQLiteWorkItemBackend(engine),
-        SQLiteStatusBackend(engine),
-        SQLiteWorkItemTypeBackend(engine),
-    )
 
 
 @pytest.fixture
 def seeded(backends):
     """A project with the To Do List statuses and types."""
-    projects, _work_items, statuses, types = backends
-    return seed_project(projects, statuses, types)
+    return seed_project(backends.projects, backends.statuses, backends.types)
 
 
 @pytest.fixture
@@ -46,11 +15,9 @@ def project_id(seeded):
     return seeded.project_id
 
 
-def test_search_matches_title_and_description_on_every_engine(
-    backends, project_id, seeded
-):
+def test_search_matches_title_and_description(backends, project_id, seeded):
     """Search is a case-insensitive match on title or description."""
-    _projects, work_items, _statuses, _types = backends
+    work_items = backends.work_items
     work_items.create(new_task(seeded, "Fix Login bug"))
     work_items.create(new_task(seeded, "Other", description="login page copy"))
     work_items.create(new_task(seeded, "Unrelated"))
@@ -60,9 +27,9 @@ def test_search_matches_title_and_description_on_every_engine(
     assert sorted(item.title for item in page.results) == ["Fix Login bug", "Other"]
 
 
-def test_blank_search_matches_everything_on_every_engine(backends, project_id, seeded):
+def test_blank_search_matches_everything(backends, project_id, seeded):
     """A blank or whitespace-only search is ignored."""
-    _projects, work_items, _statuses, _types = backends
+    work_items = backends.work_items
     work_items.create(new_task(seeded, "A"))
     work_items.create(new_task(seeded, "B"))
 
@@ -70,11 +37,9 @@ def test_blank_search_matches_everything_on_every_engine(backends, project_id, s
     assert work_items.list_paginated(limit=10, offset=0, search=None).total == 2
 
 
-def test_search_combines_with_exact_filters_on_every_engine(
-    backends, project_id, seeded
-):
+def test_search_combines_with_exact_filters(backends, project_id, seeded):
     """Search and exact-match filters both apply, and total counts both."""
-    _projects, work_items, _statuses, _types = backends
+    work_items = backends.work_items
     done = work_items.create(new_task(seeded, "Login done"))
     work_items.update(done.id, WorkItemUpdate(status_id=seeded.done_id))
     work_items.create(new_task(seeded, "Login open"))
@@ -86,9 +51,9 @@ def test_search_combines_with_exact_filters_on_every_engine(
     assert page.results[0].id == done.id
 
 
-def test_modified_at_tracks_changes_on_every_engine(backends, project_id, seeded):
+def test_modified_at_tracks_changes(backends, project_id, seeded):
     """A new item has modified_at equal to created_at; edits move it forward."""
-    _projects, work_items, _statuses, _types = backends
+    work_items = backends.work_items
     item = work_items.create(new_task(seeded, "A"))
     assert item.modified_at == item.created_at
 
@@ -109,9 +74,9 @@ def test_modified_at_tracks_changes_on_every_engine(backends, project_id, seeded
     assert replaced.modified_at > updated.modified_at
 
 
-def test_labels_round_trip_on_every_engine(backends, project_id, seeded):
+def test_labels_round_trip(backends, project_id, seeded):
     """Labels are stored on create, changed by update and replaced by replace."""
-    _projects, work_items, _statuses, _types = backends
+    work_items = backends.work_items
     item = work_items.create(new_task(seeded, "A", labels=["news", "urgent"]))
     assert item.labels == ["news", "urgent"]
     assert work_items.get_by_id(item.id).labels == ["news", "urgent"]
@@ -131,9 +96,9 @@ def test_labels_round_trip_on_every_engine(backends, project_id, seeded):
     assert replaced.labels == []
 
 
-def test_unknown_filter_field_raises_on_every_engine(backends, project_id):
+def test_unknown_filter_field_raises(backends, project_id):
     """Filtering on a name the entity does not have is a ValueError."""
-    _projects, work_items, _statuses, _types = backends
+    work_items = backends.work_items
     with pytest.raises(ValueError, match="Unknown filter field 'projct_id'"):
         work_items.count(projct_id=project_id)
     with pytest.raises(ValueError, match="Unknown filter field 'projct_id'"):

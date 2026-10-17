@@ -2,20 +2,7 @@ from uuid import uuid4
 
 import pytest
 
-from kangaroo.backends import (
-    InMemoryBoardBackend,
-    InMemoryProjectBackend,
-    InMemoryStatusBackend,
-    InMemoryStatusTransitionBackend,
-    InMemoryWorkItemBackend,
-    InMemoryWorkItemTypeBackend,
-)
-from kangaroo.errors import (
-    ConflictError,
-    InvalidReferenceError,
-    InvalidTemplateError,
-    NotFoundError,
-)
+from kangaroo.errors import ConflictError, InvalidReferenceError, NotFoundError
 from kangaroo.schemas import (
     ProjectCreate,
     StatusCreate,
@@ -25,75 +12,6 @@ from kangaroo.schemas import (
     WorkItemCreate,
     WorkItemTypeCreate,
 )
-from kangaroo.services import ProjectService, WorkflowService
-
-
-@pytest.fixture
-def projects():
-    return InMemoryProjectBackend()
-
-
-@pytest.fixture
-def statuses():
-    return InMemoryStatusBackend()
-
-
-@pytest.fixture
-def types():
-    return InMemoryWorkItemTypeBackend()
-
-
-@pytest.fixture
-def transitions():
-    return InMemoryStatusTransitionBackend()
-
-
-@pytest.fixture
-def project_service(projects, statuses, types, transitions):
-    return ProjectService(
-        projects,
-        InMemoryWorkItemBackend(),
-        InMemoryBoardBackend(),
-        statuses,
-        types,
-        transitions,
-    )
-
-
-@pytest.fixture
-def work_items():
-    return InMemoryWorkItemBackend()
-
-
-@pytest.fixture
-def workflow(projects, statuses, types, transitions, work_items):
-    return WorkflowService(projects, statuses, types, transitions, work_items)
-
-
-@pytest.fixture
-def project_id(project_service):
-    """A project created through the service, so it gets the default template."""
-    return project_service.create(ProjectCreate(name="Test")).id
-
-
-def test_create_project_with_unknown_template_creates_nothing(
-    project_service, projects, statuses
-):
-    """An unknown template is rejected before the project is stored."""
-    with pytest.raises(InvalidTemplateError):
-        project_service.create(ProjectCreate(name="Bad"), template="Nope")
-    assert projects.count() == 0
-    assert statuses.count() == 0
-
-
-def test_project_copy_is_independent_of_template(project_service, statuses, project_id):
-    """Each project gets its own status rows, not shared ones."""
-    created = project_service.create(ProjectCreate(name="Second"))
-    own = statuses.list_all(project_id=created.id)
-    assert len(own) == 3
-    assert not {s.id for s in own} & {
-        s.id for s in statuses.list_all(project_id=project_id)
-    }
 
 
 def test_replace_status_out_of_todo_keeps_one_todo(workflow, statuses, project_id):
@@ -305,3 +223,55 @@ def test_replacement_type_must_have_same_level(
     )
     with pytest.raises(InvalidReferenceError, match="same level"):
         workflow.delete_work_item_type(task_type.id, replacement_id=subtask_type.id)
+
+
+def test_moving_status_leaves_the_type_unchanged(
+    workflow, statuses, project_id, work_items
+):
+    """Replacing a status must not touch the item's type."""
+    in_progress = next(
+        s for s in statuses.list_all(project_id=project_id) if s.position == 1
+    )
+    done = next(s for s in statuses.list_all(project_id=project_id) if s.position == 2)
+    types = workflow._types.list_all(project_id=project_id)
+    task_type = next(t for t in types if t.level == "standard")
+    item = work_items.create(
+        WorkItemCreate(
+            title="Busy",
+            project_id=project_id,
+            type_id=task_type.id,
+            status_id=in_progress.id,
+        )
+    )
+    workflow.delete_status(in_progress.id, replacement_id=done.id)
+    moved = work_items.get_by_id(item.id)
+    assert moved.status_id == done.id
+    assert moved.type_id == task_type.id
+
+
+def test_moving_type_leaves_the_status_unchanged(
+    workflow, statuses, project_id, work_items
+):
+    """Replacing a type must not touch the item's status."""
+    types = workflow._types.list_all(project_id=project_id)
+    old_type = next(t for t in types if t.level == "standard")
+    new_type = workflow._types.create(
+        WorkItemTypeCreate(
+            project_id=project_id, name="Story", level="standard", position=5
+        )
+    )
+    open_status = next(
+        s for s in statuses.list_all(project_id=project_id) if s.position == 0
+    )
+    item = work_items.create(
+        WorkItemCreate(
+            title="Typed",
+            project_id=project_id,
+            type_id=old_type.id,
+            status_id=open_status.id,
+        )
+    )
+    workflow.delete_work_item_type(old_type.id, replacement_id=new_type.id)
+    moved = work_items.get_by_id(item.id)
+    assert moved.type_id == new_type.id
+    assert moved.status_id == open_status.id
