@@ -10,6 +10,7 @@ import pytest
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
+from kangaroo.app import app
 from kangaroo.repositories import (
     BoardRepository,
     FunctionRepository,
@@ -21,6 +22,15 @@ from kangaroo.repositories import (
     WorkItemTypeRepository,
     create_engine_for,
 )
+from kangaroo.routes.auth import require_user
+
+
+@pytest.fixture(autouse=True)
+def signed_in_user() -> Iterator[None]:
+    """Every test runs as a logged-in user. Auth tests opt out themselves."""
+    app.dependency_overrides[require_user] = lambda: {"email": "test@example.com"}
+    yield
+    app.dependency_overrides.pop(require_user, None)
 
 
 @pytest.fixture

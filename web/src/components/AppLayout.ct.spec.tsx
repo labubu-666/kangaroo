@@ -4,6 +4,18 @@ import { PageBreadcrumbs } from "./breadcrumbs/BreadcrumbsContext";
 import { SectionNav } from "./SectionNav";
 import { TestRouter } from "./TestRouter.story";
 
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/v1/user", (route) =>
+    route.fulfill({
+      json: {
+        username: "test-user",
+        email: "test@example.com",
+        avatar_url: "https://gravatar.com/avatar/test?d=identicon&s=64",
+      },
+    }),
+  );
+});
+
 test.describe("App layout", () => {
   test("renders the section links above the breadcrumbs", async ({
     mount,
