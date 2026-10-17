@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 
-from kangaroo.routes.dependencies import ListParams, get_project_service, list_params
+from kangaroo.routes.dependencies import ListParamsDep, ProjectServiceDep
 from kangaroo.schemas import (
     PaginatedResponse,
     Project,
@@ -11,15 +11,12 @@ from kangaroo.schemas import (
     ProjectReplace,
     ProjectUpdate,
 )
-from kangaroo.services import ProjectService
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=Project)
-def create_project(
-    item: ProjectCreateRequest, service: ProjectService = Depends(get_project_service)
-) -> Project:
+def create_project(item: ProjectCreateRequest, service: ProjectServiceDep) -> Project:
     """Create a new project from a template (default "To Do List").
 
     An unknown template returns 400. The template is only used here: a project
@@ -33,8 +30,8 @@ def create_project(
 
 @router.get("/", response_model=PaginatedResponse[Project])
 def list_projects(
-    params: ListParams = Depends(list_params),
-    service: ProjectService = Depends(get_project_service),
+    params: ListParamsDep,
+    service: ProjectServiceDep,
 ) -> PaginatedResponse[Project]:
     """List projects with pagination.
 
@@ -50,9 +47,7 @@ def list_projects(
 
 
 @router.get("/{item_id}", response_model=Project)
-def get_project(
-    item_id: UUID, service: ProjectService = Depends(get_project_service)
-) -> Project:
+def get_project(item_id: UUID, service: ProjectServiceDep) -> Project:
     """Get a project by ID."""
     return service.get(item_id)
 
@@ -61,7 +56,7 @@ def get_project(
 def replace_project(
     item_id: UUID,
     replace: ProjectReplace,
-    service: ProjectService = Depends(get_project_service),
+    service: ProjectServiceDep,
 ) -> Project:
     """Replace a project (full update)."""
     return service.replace(item_id, replace)
@@ -71,16 +66,14 @@ def replace_project(
 def update_project(
     item_id: UUID,
     update: ProjectUpdate,
-    service: ProjectService = Depends(get_project_service),
+    service: ProjectServiceDep,
 ) -> Project:
     """Update a project (partial update)."""
     return service.update(item_id, update)
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_project(
-    item_id: UUID, service: ProjectService = Depends(get_project_service)
-) -> None:
+def delete_project(item_id: UUID, service: ProjectServiceDep) -> None:
     """Delete a project.
 
     A project that still has work items or boards cannot be deleted (409).

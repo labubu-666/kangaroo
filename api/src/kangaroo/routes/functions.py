@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 
-from kangaroo.routes.dependencies import ListParams, get_function_service, list_params
+from kangaroo.routes.dependencies import FunctionServiceDep, ListParamsDep
 from kangaroo.schemas import (
     Function,
     FunctionCreate,
@@ -11,23 +11,20 @@ from kangaroo.schemas import (
     PaginatedResponse,
     RunResult,
 )
-from kangaroo.services import FunctionService
 
 router = APIRouter(prefix="/functions", tags=["functions"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=Function)
-def create_function(
-    item: FunctionCreate, service: FunctionService = Depends(get_function_service)
-) -> Function:
+def create_function(item: FunctionCreate, service: FunctionServiceDep) -> Function:
     """Save a new function (a Python script)."""
     return service.create(item)
 
 
 @router.get("/", response_model=PaginatedResponse[Function])
 def list_functions(
-    params: ListParams = Depends(list_params),
-    service: FunctionService = Depends(get_function_service),
+    params: ListParamsDep,
+    service: FunctionServiceDep,
 ) -> PaginatedResponse[Function]:
     """List functions with pagination.
 
@@ -43,9 +40,7 @@ def list_functions(
 
 
 @router.get("/{item_id}", response_model=Function)
-def get_function(
-    item_id: UUID, service: FunctionService = Depends(get_function_service)
-) -> Function:
+def get_function(item_id: UUID, service: FunctionServiceDep) -> Function:
     """Get a function by ID."""
     return service.get(item_id)
 
@@ -54,7 +49,7 @@ def get_function(
 def replace_function(
     item_id: UUID,
     replace: FunctionReplace,
-    service: FunctionService = Depends(get_function_service),
+    service: FunctionServiceDep,
 ) -> Function:
     """Replace a function (full update)."""
     return service.replace(item_id, replace)
@@ -64,24 +59,20 @@ def replace_function(
 def update_function(
     item_id: UUID,
     update: FunctionUpdate,
-    service: FunctionService = Depends(get_function_service),
+    service: FunctionServiceDep,
 ) -> Function:
     """Update a function (partial update)."""
     return service.update(item_id, update)
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_function(
-    item_id: UUID, service: FunctionService = Depends(get_function_service)
-) -> None:
+def delete_function(item_id: UUID, service: FunctionServiceDep) -> None:
     """Delete a function."""
     service.delete(item_id)
 
 
 @router.post("/{item_id}/run", response_model=RunResult)
-def run_function(
-    item_id: UUID, service: FunctionService = Depends(get_function_service)
-) -> RunResult:
+def run_function(item_id: UUID, service: FunctionServiceDep) -> RunResult:
     """Run a saved function and return its stdout, stderr and exit code.
 
     The run takes up to 120 seconds. A timeout returns exit code -1. If the

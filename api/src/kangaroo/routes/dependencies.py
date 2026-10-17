@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import lru_cache
+from typing import Annotated
 
 from fastapi import Depends, Query
 from sqlalchemy.orm import Session
@@ -34,9 +35,9 @@ class ListParams:
 
 
 def list_params(
-    limit: int = Query(10, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-    search: str | None = Query(None, max_length=200),
+    limit: Annotated[int, Query(ge=1, le=100)] = 10,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    search: Annotated[str | None, Query(max_length=200)] = None,
 ) -> ListParams:
     return ListParams(limit=limit, offset=offset, search=search)
 
@@ -48,7 +49,7 @@ def get_backends() -> Backends:
 
 
 def get_request_backends(
-    backends: Backends = Depends(get_backends),
+    backends: Annotated[Backends, Depends(get_backends)],
 ) -> Iterator[Backends]:
     """One transaction per request: every backend call the request makes shares it.
 
@@ -60,13 +61,13 @@ def get_request_backends(
 
 
 def get_function_service(
-    backends: Backends = Depends(get_request_backends),
+    backends: Annotated[Backends, Depends(get_request_backends)],
 ) -> FunctionService:
     return FunctionService(backends.functions, get_function_runner())
 
 
 def get_work_item_service(
-    backends: Backends = Depends(get_request_backends),
+    backends: Annotated[Backends, Depends(get_request_backends)],
 ) -> WorkItemService:
     return WorkItemService(
         work_items=backends.work_items,
@@ -78,7 +79,7 @@ def get_work_item_service(
 
 
 def get_project_service(
-    backends: Backends = Depends(get_request_backends),
+    backends: Annotated[Backends, Depends(get_request_backends)],
 ) -> ProjectService:
     return ProjectService(
         projects=backends.projects,
@@ -91,7 +92,7 @@ def get_project_service(
 
 
 def get_workflow_service(
-    backends: Backends = Depends(get_request_backends),
+    backends: Annotated[Backends, Depends(get_request_backends)],
 ) -> WorkflowService:
     return WorkflowService(
         projects=backends.projects,
@@ -103,7 +104,7 @@ def get_workflow_service(
 
 
 def get_board_service(
-    backends: Backends = Depends(get_request_backends),
+    backends: Annotated[Backends, Depends(get_request_backends)],
 ) -> BoardService:
     return BoardService(
         boards=backends.boards,
@@ -115,7 +116,7 @@ def get_board_service(
 
 
 def get_report_service(
-    backends: Backends = Depends(get_request_backends),
+    backends: Annotated[Backends, Depends(get_request_backends)],
 ) -> ReportService:
     return ReportService(
         work_items=backends.work_items,
@@ -123,3 +124,13 @@ def get_report_service(
         boards=backends.boards,
         statuses=backends.statuses,
     )
+
+
+ListParamsDep = Annotated[ListParams, Depends(list_params)]
+FilterQuery = Annotated[str | None, Query(max_length=1000)]
+FunctionServiceDep = Annotated[FunctionService, Depends(get_function_service)]
+WorkItemServiceDep = Annotated[WorkItemService, Depends(get_work_item_service)]
+ProjectServiceDep = Annotated[ProjectService, Depends(get_project_service)]
+WorkflowServiceDep = Annotated[WorkflowService, Depends(get_workflow_service)]
+BoardServiceDep = Annotated[BoardService, Depends(get_board_service)]
+ReportServiceDep = Annotated[ReportService, Depends(get_report_service)]
