@@ -1,5 +1,7 @@
 import { useDraggable } from "@dnd-kit/react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { fetchCurrentUser } from "../../lib/user";
 import type { WorkItem } from "../../lib/work-items";
 import { CopyId } from "../shared/CopyId";
 import { TypeIcon } from "../shared/TypeIcon";
@@ -8,6 +10,10 @@ export function BoardCard({ item }: { item: WorkItem }) {
   const { ref, isDragging } = useDraggable({
     id: item.id,
     data: { status: item.status_id },
+  });
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: fetchCurrentUser,
   });
 
   return (
@@ -46,10 +52,18 @@ export function BoardCard({ item }: { item: WorkItem }) {
             url={`${window.location.origin}/web/work-items/${item.id}`}
           />
         </div>
-        <span
-          aria-label="Unassigned"
-          className="h-6 w-6 shrink-0 rounded-full bg-gray-300"
-        />
+        {user ? (
+          <img
+            src={user.avatar_url}
+            alt={user.username}
+            className="h-6 w-6 shrink-0 border border-gray-200"
+          />
+        ) : (
+          <span
+            aria-label="Unassigned"
+            className="h-6 w-6 shrink-0 rounded-full bg-gray-300"
+          />
+        )}
       </div>
     </Link>
   );

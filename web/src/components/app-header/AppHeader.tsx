@@ -33,7 +33,11 @@ export function AppHeader() {
           className="h-8 w-8 cursor-pointer overflow-hidden bg-gray-300 hover:bg-gray-400"
         >
           {user && (
-            <img src={user.avatar_url} alt="" className="h-full w-full" />
+            <img
+              src={user.avatar_url}
+              alt=""
+              className="h-full w-full border border-gray-200"
+            />
           )}
         </button>
         {menuOpen && (
