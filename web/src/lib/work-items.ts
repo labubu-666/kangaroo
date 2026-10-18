@@ -118,3 +118,17 @@ export async function deleteWorkItem(id: string): Promise<void> {
     method: "DELETE",
   });
 }
+
+export type BulkDeleteRequest =
+  | { ids: string[] }
+  | { all_matching: true; filter?: string };
+
+export function bulkDeleteWorkItems(
+  request: BulkDeleteRequest,
+): Promise<{ deleted: number }> {
+  return apiJson(
+    "/api/v1/work-items/bulk-delete",
+    "Failed to delete work items",
+    jsonBody("POST", request),
+  );
+}

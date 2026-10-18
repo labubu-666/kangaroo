@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -1035,8 +1035,8 @@ def test_list_subtasks_of_parent(client, project_id):
     assert data["results"][0]["title"] == "Child"
 
 
-def test_delete_task_with_subtasks_returns_409(client, project_id):
-    """A task that still has subtasks cannot be deleted."""
+def test_delete_task_also_deletes_subtasks(client, project_id):
+    """Deleting a task deletes its subtasks too."""
     parent_id = client.post(
         "/api/v1/work-items",
         json={
@@ -1055,10 +1055,88 @@ def test_delete_task_with_subtasks_returns_409(client, project_id):
         },
     ).json()["id"]
 
-    assert client.delete(f"/api/v1/work-items/{parent_id}").status_code == 409
-
-    assert client.delete(f"/api/v1/work-items/{subtask_id}").status_code == 204
     assert client.delete(f"/api/v1/work-items/{parent_id}").status_code == 204
+    assert client.get(f"/api/v1/work-items/{subtask_id}").status_code == 404
+
+
+def test_bulk_delete_ids(client, project_id):
+    """POST /api/v1/work-items/bulk-delete removes the listed items and their subtasks."""
+    parent_id = client.post(
+        "/api/v1/work-items",
+        json={
+            "type_id": type_id(client, project_id, "task"),
+            "title": "Parent",
+            "project_id": project_id,
+        },
+    ).json()["id"]
+    subtask_id = client.post(
+        "/api/v1/work-items",
+        json={
+            "title": "Child",
+            "type_id": type_id(client, project_id, "subtask"),
+            "parent_id": parent_id,
+            "project_id": project_id,
+        },
+    ).json()["id"]
+
+    response = client.post(
+        "/api/v1/work-items/bulk-delete", json={"ids": [parent_id, subtask_id]}
+    )
+    assert response.status_code == 200
+    assert response.json() == {"deleted": 2}
+    assert client.get(f"/api/v1/work-items/{parent_id}").status_code == 404
+
+
+def test_bulk_delete_all_matching(client, project_id):
+    """all_matching with a filter deletes only the items the filter matches."""
+    for title in ["Login bug", "Other bug", "Feature"]:
+        client.post(
+            "/api/v1/work-items",
+            json={
+                "type_id": type_id(client, project_id, "task"),
+                "title": title,
+                "project_id": project_id,
+            },
+        )
+
+    response = client.post(
+        "/api/v1/work-items/bulk-delete",
+        json={"all_matching": True, "filter": "title ~ 'bug'"},
+    )
+    assert response.status_code == 200
+    assert response.json() == {"deleted": 2}
+    titles = [
+        item["title"] for item in client.get("/api/v1/work-items").json()["results"]
+    ]
+    assert titles == ["Feature"]
+
+
+def test_bulk_delete_rejects_ambiguous_requests(client):
+    """Ids and all_matching are mutually exclusive, and one of them is required."""
+    assert client.post("/api/v1/work-items/bulk-delete", json={}).status_code == 422
+    assert (
+        client.post(
+            "/api/v1/work-items/bulk-delete",
+            json={"ids": [str(uuid4())], "all_matching": True},
+        ).status_code
+        == 422
+    )
+    assert (
+        client.post(
+            "/api/v1/work-items/bulk-delete",
+            json={"ids": [str(uuid4())], "filter": "title ~ 'a'"},
+        ).status_code
+        == 422
+    )
+
+
+def test_bulk_delete_invalid_filter_returns_422(client):
+    """An invalid filter in bulk delete is rejected and deletes nothing."""
+    response = client.post(
+        "/api/v1/work-items/bulk-delete",
+        json={"all_matching": True, "filter": "status == open"},
+    )
+    assert response.status_code == 422
 
 
 def test_move_task_with_subtasks_returns_409(client, project_id):

@@ -9,6 +9,7 @@ from pydantic import (
     Field,
     computed_field,
     field_validator,
+    model_validator,
 )
 
 from kangaroo.utils import render_markdown
@@ -78,6 +79,34 @@ class WorkItemUpdate(BaseModel):
     _reject_null_status = field_validator("status_id")(reject_null)
     _reject_null_type = field_validator("type_id")(reject_null)
     _reject_null_trashed = field_validator("trashed")(reject_null)
+
+
+class WorkItemBulkDelete(BaseModel):
+    """Delete the listed work items, or every work item the filter matches.
+
+    Send either ``ids`` or ``all_matching`` (with an optional ``filter``). The
+    explicit flag means an empty request can never delete everything.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    ids: list[UUID] | None = Field(default=None, min_length=1, max_length=100)
+    all_matching: bool = False
+    filter: str | None = Field(default=None, max_length=1000)
+
+    @model_validator(mode="after")
+    def _one_mode(self) -> WorkItemBulkDelete:
+        if self.all_matching and self.ids is not None:
+            raise ValueError("Send either ids or all_matching, not both")
+        if not self.all_matching and self.ids is None:
+            raise ValueError("Send ids, or set all_matching to true")
+        if self.filter is not None and not self.all_matching:
+            raise ValueError("filter can only be used with all_matching")
+        return self
+
+
+class WorkItemBulkDeleted(BaseModel):
+    deleted: int
 
 
 class WorkItemReplace(BaseModel):

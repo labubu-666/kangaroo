@@ -5,6 +5,7 @@ from kangaroo.errors import (
     InvalidReferenceError,
     NotFoundError,
 )
+from kangaroo.filters import parse_filter
 from kangaroo.repositories import (
     ProjectRepository,
     StatusRepository,
@@ -15,6 +16,7 @@ from kangaroo.repositories import (
 from kangaroo.schemas import (
     PaginatedResponse,
     WorkItem,
+    WorkItemBulkDelete,
     WorkItemCreate,
     WorkItemDetail,
     WorkItemReplace,
@@ -177,10 +179,45 @@ class WorkItemService:
         return self._with_names(replaced)
 
     def delete(self, item_id: UUID) -> None:
-        """Delete a work item. A task that still has subtasks cannot be deleted."""
-        if self._work_items.count(parent_id=item_id) > 0:
-            raise ConflictError(f"Work item {item_id} still has subtasks")
+        """Delete a work item together with its subtasks."""
+        self._delete_tree(item_id)
+
+    def bulk_delete(self, request: WorkItemBulkDelete) -> int:
+        """Delete the listed work items, or every item the filter matches.
+
+        Returns how many items were deleted, subtasks included. Subtasks removed
+        along with a selected task are not counted twice.
+        """
+        if request.all_matching:
+            targets = self._matching_ids(request.filter)
+        else:
+            targets = request.ids or []
+            for item_id in targets:
+                self._work_items.get_by_id(item_id)
+        removed: set[UUID] = set()
+        for item_id in targets:
+            if item_id not in removed:
+                removed.update(self._delete_tree(item_id))
+        return len(removed)
+
+    def _delete_tree(self, item_id: UUID) -> list[UUID]:
+        """Delete an item after its subtasks, so the parent link never blocks it."""
+        deleted: list[UUID] = []
+        for subtask in self._work_items.list_all(parent_id=item_id):
+            deleted += self._delete_tree(subtask.id)
         self._work_items.delete(item_id)
+        return [*deleted, item_id]
+
+    def _matching_ids(self, filter: str | None) -> list[UUID]:
+        """Ids of every work item, trashed or not, that the filter matches."""
+        matches = parse_filter(filter)
+        names = project_names(self._projects)
+        statuses, types = lookups(self._statuses, self._types)
+        return [
+            item.id
+            for item in self._work_items.list_all()
+            if matches(filter_record(item, names, statuses, types))
+        ]
 
     def _with_names(self, item: WorkItem) -> WorkItemDetail:
         """Add the status and type of a single stored item."""
