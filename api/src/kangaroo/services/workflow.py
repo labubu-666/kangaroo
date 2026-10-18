@@ -3,7 +3,6 @@ from uuid import UUID
 from kangaroo.errors import (
     ConflictError,
     InvalidReferenceError,
-    NotFoundError,
 )
 from kangaroo.repositories import (
     ProjectRepository,
@@ -28,9 +27,11 @@ from kangaroo.schemas import (
     WorkItemUpdate,
 )
 from kangaroo.services.helpers import (
-    _ensure_project_exists,
-    _in_position_order,
-    _next_position,
+    ensure_project_exists,
+    get_in_project,
+    in_position_order,
+    keep_position,
+    with_default_position,
 )
 
 
@@ -58,15 +59,12 @@ class WorkflowService:
 
     def list_statuses(self, project_id: UUID) -> list[ProjectStatus]:
         """List a project's statuses in position order."""
-        return _in_position_order(self._statuses.list_all(project_id=project_id))
+        return in_position_order(self._statuses.list_all(project_id=project_id))
 
     def create_status(self, item: StatusCreate) -> ProjectStatus:
         """Create a status. Without a position it is placed last."""
-        _ensure_project_exists(self._projects, item.project_id)
-        if item.position is None:
-            item = item.model_copy(
-                update={"position": _next_position(self._statuses, item.project_id)}
-            )
+        ensure_project_exists(self._projects, item.project_id)
+        item = with_default_position(self._statuses, item, item.project_id)
         return self._statuses.create(item)
 
     def get_status(self, item_id: UUID) -> ProjectStatus:
@@ -86,10 +84,7 @@ class WorkflowService:
         current = self._statuses.get_by_id(item_id)
         if current.category == "todo" and replace.category != "todo":
             self._ensure_other_todo_status(current)
-        position = current.position if replace.position is None else replace.position
-        return self._statuses.replace(
-            item_id, replace.model_copy(update={"position": position})
-        )
+        return self._statuses.replace(item_id, keep_position(current.position, replace))
 
     def delete_status(self, item_id: UUID, replacement_id: UUID | None = None) -> None:
         """Delete a status and the transitions that use it.
@@ -112,7 +107,7 @@ class WorkflowService:
                 raise InvalidReferenceError(
                     "The replacement must be in the same project"
                 )
-            self._move_items(status_id=item_id, to_status_id=replacement_id)
+            self._move_items("status_id", item_id, replacement_id)
         if status.category == "todo":
             self._ensure_other_todo_status(status)
         for transition in self._transitions.list_all(project_id=status.project_id):
@@ -120,31 +115,10 @@ class WorkflowService:
                 self._transitions.delete(transition.id)
         self._statuses.delete(item_id)
 
-    def _move_items(
-        self,
-        *,
-        status_id: UUID | None = None,
-        type_id: UUID | None = None,
-        to_status_id: UUID | None = None,
-        to_type_id: UUID | None = None,
-    ) -> None:
-        """Point every work item that uses a status or type at its replacement."""
-        filters = {"status_id": status_id, "type_id": type_id}
-        for item in self._work_items.list_all(
-            **{k: v for k, v in filters.items() if v is not None}
-        ):
-            moves_status = to_status_id is not None and item.status_id == status_id
-            moves_type = to_type_id is not None and item.type_id == type_id
-            # Only the fields that change are set, so the update leaves the rest alone.
-            if moves_status and moves_type:
-                update = WorkItemUpdate(status_id=to_status_id, type_id=to_type_id)
-            elif moves_status:
-                update = WorkItemUpdate(status_id=to_status_id)
-            elif moves_type:
-                update = WorkItemUpdate(type_id=to_type_id)
-            else:
-                continue
-            self._work_items.update(item.id, update)
+    def _move_items(self, field: str, old_id: UUID, new_id: UUID) -> None:
+        """Point every work item whose ``field`` is ``old_id`` at ``new_id``."""
+        for item in self._work_items.list_all(**{field: old_id}):
+            self._work_items.update(item.id, WorkItemUpdate(**{field: new_id}))
 
     def _ensure_other_todo_status(self, status: ProjectStatus) -> None:
         """Raise ConflictError if ``status`` is the project's only To Do status."""
@@ -159,26 +133,16 @@ class WorkflowService:
     def _ensure_statuses_in_project(self, project_id: UUID, *status_ids: UUID) -> None:
         """Each status must exist and belong to ``project_id``."""
         for status_id in status_ids:
-            try:
-                status = self._statuses.get_by_id(status_id)
-            except NotFoundError:
-                raise InvalidReferenceError("Status not found") from None
-            if status.project_id != project_id:
-                raise InvalidReferenceError(
-                    "Status must be in the same project as its transition"
-                )
+            get_in_project(self._statuses, status_id, project_id, "Status")
 
     def list_work_item_types(self, project_id: UUID) -> list[WorkItemType]:
         """List a project's work item types in position order."""
-        return _in_position_order(self._types.list_all(project_id=project_id))
+        return in_position_order(self._types.list_all(project_id=project_id))
 
     def create_work_item_type(self, item: WorkItemTypeCreate) -> WorkItemType:
         """Create a work item type. Without a position it is placed last."""
-        _ensure_project_exists(self._projects, item.project_id)
-        if item.position is None:
-            item = item.model_copy(
-                update={"position": _next_position(self._types, item.project_id)}
-            )
+        ensure_project_exists(self._projects, item.project_id)
+        item = with_default_position(self._types, item, item.project_id)
         return self._types.create(item)
 
     def get_work_item_type(self, item_id: UUID) -> WorkItemType:
@@ -196,10 +160,7 @@ class WorkflowService:
     ) -> WorkItemType:
         """Replace a work item type (full update). Without a position it keeps its place."""
         current = self._types.get_by_id(item_id)
-        position = current.position if replace.position is None else replace.position
-        return self._types.replace(
-            item_id, replace.model_copy(update={"position": position})
-        )
+        return self._types.replace(item_id, keep_position(current.position, replace))
 
     def delete_work_item_type(
         self, item_id: UUID, replacement_id: UUID | None = None
@@ -226,7 +187,7 @@ class WorkflowService:
                 )
             if replacement.level != work_item_type.level:
                 raise InvalidReferenceError("The replacement must have the same level")
-            self._move_items(type_id=item_id, to_type_id=replacement_id)
+            self._move_items("type_id", item_id, replacement_id)
         self._types.delete(item_id)
 
     def list_transitions(self, project_id: UUID) -> list[StatusTransition]:
@@ -235,7 +196,7 @@ class WorkflowService:
 
     def create_transition(self, item: StatusTransitionCreate) -> StatusTransition:
         """Create a transition between two statuses of the same project."""
-        _ensure_project_exists(self._projects, item.project_id)
+        ensure_project_exists(self._projects, item.project_id)
         self._ensure_statuses_in_project(
             item.project_id, item.from_status_id, item.to_status_id
         )
@@ -250,12 +211,8 @@ class WorkflowService:
     ) -> StatusTransition:
         """Update a transition (partial update), checking its statuses."""
         current = self._transitions.get_by_id(item_id)
-        from_id = current.from_status_id
-        if update.from_status_id is not None:
-            from_id = update.from_status_id
-        to_id = current.to_status_id
-        if update.to_status_id is not None:
-            to_id = update.to_status_id
+        from_id = update.from_status_id or current.from_status_id
+        to_id = update.to_status_id or current.to_status_id
         self._ensure_statuses_in_project(current.project_id, from_id, to_id)
         return self._transitions.update(item_id, update)
 

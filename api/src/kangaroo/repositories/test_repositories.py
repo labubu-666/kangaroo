@@ -10,6 +10,7 @@ from kangaroo.repositories import (
     BoardRepository,
     FunctionRepository,
     ProjectRepository,
+    create_engine_for,
 )
 from kangaroo.repositories.repositories import utc_now
 from kangaroo.repositories.tables import (
@@ -41,6 +42,21 @@ def seeded(projects, statuses, types):
 @pytest.fixture
 def project_id(seeded):
     return seeded.project_id
+
+
+@pytest.mark.parametrize("url", ["sqlite://memo", "sqlite:///", "memory://", "sqlite:"])
+def test_engine_rejects_urls_that_are_not_memory_or_a_file(url):
+    """A typo such as sqlite://memo is refused instead of giving a lost database."""
+    with pytest.raises(ValueError, match="Unsupported DATABASE_URL"):
+        create_engine_for(url)
+
+
+def test_engine_accepts_a_file_url(tmp_path):
+    """sqlite:///path.db creates a file database at that path."""
+    path = tmp_path / "kangaroo.db"
+    engine = create_engine_for(f"sqlite:///{path}")
+    engine.dispose()
+    assert path.exists()
 
 
 def test_foreign_keys_enabled(engine):
@@ -196,6 +212,23 @@ def test_board_crud(session, project_id):
     boards.delete(board.id)
     with pytest.raises(NotFoundError):
         boards.get_by_id(board.id)
+
+
+def test_count_by_groups_and_respects_filters(work_items, seeded):
+    """count_by returns one count per value present, honouring the other filters."""
+    first = work_items.create(new_task(seeded, "One"))
+    work_items.create(new_task(seeded, "Two"))
+    work_items.update(first.id, WorkItemUpdate(trashed=True))
+
+    assert work_items.count_by("status_id", trashed=False) == {seeded.open_id: 1}
+    assert work_items.count_by("status_id") == {seeded.open_id: 2}
+    assert work_items.count_by("status_id", project_id=uuid4()) == {}
+
+
+def test_count_by_unknown_field_raises(work_items):
+    """Grouping by a name the entity does not have is a ValueError."""
+    with pytest.raises(ValueError, match="Unknown filter field 'nope'"):
+        work_items.count_by("nope")
 
 
 def test_unknown_filter_field_raises(projects, work_items, project_id):

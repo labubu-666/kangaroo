@@ -11,14 +11,19 @@ from kangaroo.repositories.tables import Base
 def create_engine_for(url: str) -> Engine:
     """Create a SQLAlchemy engine with foreign keys enabled and the schema ready.
 
-    ``sqlite://memory`` maps to a shared in-memory database. Any other URL is
-    passed to SQLAlchemy unchanged (e.g. ``sqlite:///kangaroo.db``).
+    ``sqlite://memory`` maps to a shared in-memory database. ``sqlite:///path.db``
+    is a file database. Any other URL is rejected, so a typo cannot quietly give
+    a database that is lost on restart.
 
     Raises:
-        ValueError: If the URL is not a SQLite URL.
+        ValueError: If the URL is not ``sqlite://memory`` or a ``sqlite:///`` file URL.
     """
-    if not url.startswith("sqlite://"):
-        raise ValueError(f"Unsupported DATABASE_URL: {url}")
+    is_file = url.startswith("sqlite:///") and len(url) > len("sqlite:///")
+    if url != "sqlite://memory" and not is_file:
+        raise ValueError(
+            f"Unsupported DATABASE_URL: {url!r}. Use sqlite://memory or "
+            "sqlite:///path/to/file.db"
+        )
     if url == "sqlite://memory":
         engine = create_engine(
             "sqlite://",

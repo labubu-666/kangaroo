@@ -50,7 +50,7 @@ def test_create_transition_to_status_of_other_project_raises(
     foreign = workflow.create_status(
         StatusCreate(project_id=other, name="X", category="todo")
     ).id
-    with pytest.raises(InvalidReferenceError, match="same project"):
+    with pytest.raises(InvalidReferenceError, match="not in the project"):
         workflow.create_transition(
             StatusTransitionCreate(
                 project_id=project_id, from_status_id=own, to_status_id=foreign

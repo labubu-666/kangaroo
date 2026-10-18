@@ -76,7 +76,7 @@ def run_function(item_id: UUID, service: FunctionServiceDep) -> Invocation:
     """Run a saved function and store the run as an invocation.
 
     Returns the stored invocation with its stdout, stderr and exit code. The run
-    takes up to 120 seconds. A timeout returns exit code -1. If the configured
+    takes up to 15 seconds. A timeout returns exit code -1. If the configured
     runner cannot be reached, returns 503 and nothing is stored.
     """
     return service.run(item_id)

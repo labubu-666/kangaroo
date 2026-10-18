@@ -65,12 +65,6 @@ def clean_search(search: str | None) -> str | None:
     return search.strip()
 
 
-def matches_search(item: BaseModel, text: str, fields: tuple[str, ...]) -> bool:
-    """Case-insensitive substring match of ``text`` on any of ``fields``."""
-    needle = text.lower()
-    return any(needle in (getattr(item, name, None) or "").lower() for name in fields)
-
-
 def utc_now() -> datetime:
     """Return the current time as a timezone-aware UTC datetime."""
     return datetime.now(UTC)
@@ -255,6 +249,22 @@ class Repository[M: BaseModel, C: BaseModel, U: BaseModel, R: BaseModel]:
             ValueError: If a filter name is not one of ``filter_fields``.
         """
         return self._count(self._checked(filters), None)
+
+    def count_by(self, field: str, **filters: Any) -> dict[Any, int]:
+        """Count entities matching the filters, grouped by one filter field.
+
+        Only values that have at least one matching entity appear in the result.
+
+        Raises:
+            ValueError: If ``field`` or a filter name is not one of ``filter_fields``.
+        """
+        if field not in self.filter_fields:
+            raise ValueError(f"Unknown filter field {field!r} for {self.entity}")
+        column = getattr(self.row_type, field)
+        stmt = select(column, func.count()).group_by(column)
+        for name, value in self._checked(filters).items():
+            stmt = stmt.where(getattr(self.row_type, name) == value)
+        return dict(self._session.execute(stmt).all())
 
     def _checked(self, filters: dict[str, Any]) -> dict[str, Any]:
         """Reject unknown filter names, then drop filters that are None."""

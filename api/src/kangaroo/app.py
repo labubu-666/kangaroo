@@ -37,13 +37,11 @@ class SPAStaticFiles(StaticFiles):
         try:
             return await super().get_response(path, scope)
         except HTTPException as exc:
-            # Check if this is a 404 and the path is not an asset
             if (
                 exc.status_code == status.HTTP_404_NOT_FOUND
                 and not path.startswith("assets/")
                 and path not in ("index.html", "")
             ):
-                # Fall back to index.html for unknown paths
                 return await super().get_response("index.html", scope)
             raise
 
@@ -77,20 +75,16 @@ def _error_handler(status_code: int):
     return handler
 
 
-app.add_exception_handler(NotFoundError, _error_handler(status.HTTP_404_NOT_FOUND))
-app.add_exception_handler(ConflictError, _error_handler(status.HTTP_409_CONFLICT))
-app.add_exception_handler(
-    InvalidReferenceError, _error_handler(status.HTTP_422_UNPROCESSABLE_CONTENT)
-)
-app.add_exception_handler(
-    InvalidFilterError, _error_handler(status.HTTP_422_UNPROCESSABLE_CONTENT)
-)
-app.add_exception_handler(
-    InvalidTemplateError, _error_handler(status.HTTP_400_BAD_REQUEST)
-)
-app.add_exception_handler(
-    RunnerUnavailableError, _error_handler(status.HTTP_503_SERVICE_UNAVAILABLE)
-)
+ERROR_STATUS_CODES: dict[type[ValueError], int] = {
+    NotFoundError: status.HTTP_404_NOT_FOUND,
+    ConflictError: status.HTTP_409_CONFLICT,
+    InvalidReferenceError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    InvalidFilterError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    InvalidTemplateError: status.HTTP_400_BAD_REQUEST,
+    RunnerUnavailableError: status.HTTP_503_SERVICE_UNAVAILABLE,
+}
+for error_type, status_code in ERROR_STATUS_CODES.items():
+    app.add_exception_handler(error_type, _error_handler(status_code))
 
 
 # Web UI serving
@@ -99,7 +93,6 @@ app.add_exception_handler(
 WEB_DIR = Path(__file__).parent.parent.parent.parent / "web"
 
 if settings.env.lower() == "development":
-    # Dev mode: proxy to Vite dev server
     import httpx
 
     # httpx decodes the body, so these headers no longer describe what we send.
@@ -143,10 +136,8 @@ if settings.env.lower() == "development":
                 status_code=502,
             )
         except httpx.HTTPError:
-            # Fall back to index.html for SPA routing
             return await _fetch_from_vite("http://localhost:5173/web/index.html")
 else:
-    # Production mode: serve built dist folder
     dist_dir = WEB_DIR / "dist"
     if dist_dir.exists():
         app.mount(

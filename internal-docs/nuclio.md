@@ -36,6 +36,6 @@ Run a packaged tool with `uvx`:
 curl -X POST <function-url> -d '{"tool": "pycowsay", "args": ["moo"]}'
 ```
 
-The response is JSON with `stdout`, `stderr` and `exit_code`. Scripts time out after 120 seconds.
+The response is JSON with `stdout`, `stderr` and `exit_code`. Scripts time out after 15 seconds.
 
 **Warning:** anyone who can reach this function can run arbitrary code in its container. Do not expose it publicly.
