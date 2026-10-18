@@ -14,7 +14,7 @@ def list_invocations(
     service: InvocationServiceDep,
     function_id: UUID | None = None,
 ) -> PaginatedResponse[Invocation]:
-    """List invocations, oldest first, with pagination.
+    """List invocations, newest first, with pagination.
 
     Args:
         limit: The maximum number of items to return (default: 10, max: 100).
