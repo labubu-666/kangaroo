@@ -1,5 +1,3 @@
-import pytest
-
 from kangaroo.settings import Settings
 
 

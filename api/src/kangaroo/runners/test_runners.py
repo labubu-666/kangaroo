@@ -31,7 +31,7 @@ def fake_nuclio():
             self.end_headers()
             self.wfile.write(payload)
 
-        def log_message(self, *args):
+        def log_message(self, format, *args):
             pass
 
     server = HTTPServer(("127.0.0.1", 0), Handler)

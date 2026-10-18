@@ -266,7 +266,12 @@ def _compare(field: str, op: str, value: str) -> Predicate:
         return named if op == "==" else _negate(named)
     if op == "~":
         needle = value.lower()
-        return lambda record: needle in (record[field] or "").lower()
+
+        def contains(record: Record) -> bool:
+            text = record[field] or ""
+            return isinstance(text, str) and needle in text.lower()
+
+        return contains
     if op == "==":
         return lambda record: record[field] == value
     return lambda record: record[field] != value

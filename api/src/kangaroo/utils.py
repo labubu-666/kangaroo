@@ -9,12 +9,12 @@ from markdown.treeprocessors import Treeprocessor
 class LinkifyPattern(InlineProcessor):
     """Turns bare http(s):// and www. URLs into links."""
 
-    def handleMatch(self, match, data):
-        url = match.group(1)
+    def handleMatch(self, m, data):
+        url = m.group(1)
         link = ElementTree.Element("a")
         link.set("href", url if url.startswith("http") else f"http://{url}")
         link.text = url
-        return link, match.start(1), match.end(1)
+        return link, m.start(1), m.end(1)
 
 
 class LinkifyExtension(markdown.Extension):

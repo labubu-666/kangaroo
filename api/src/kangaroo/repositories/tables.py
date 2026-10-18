@@ -38,6 +38,7 @@ class UTCDateTime(TypeDecorator):
 class Base(DeclarativeBase):
     """Declarative base for the tables."""
 
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     trashed: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=false()
     )
