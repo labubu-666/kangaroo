@@ -1,4 +1,4 @@
 # Index
-- [Authentication](./auth)
+- [Authentication](./authentication)
 - [Configuration](./configuration)
 - [Filter language](./filter-language)

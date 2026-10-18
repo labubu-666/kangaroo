@@ -15,4 +15,4 @@ the field names in upper case.
 | `OIDC_CLIENT_SECRET` | `a-safe-password` | Client secret registered in Dex. |
 | `OIDC_REDIRECT_URI` | `http://localhost:8000/auth/callback` | Callback URL, which must be `/auth/callback` on the API. |
 
-See [Authentication](./auth) for how the OIDC settings fit together.
+See [Authentication](./authentication) for how the OIDC settings fit together.
