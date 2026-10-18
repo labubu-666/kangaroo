@@ -58,6 +58,21 @@ def test_list_invocations_filters_by_function(client):
     assert {item["function_id"] for item in data["results"]} == {first}
 
 
+def test_list_invocations_newest_first(client):
+    """GET /api/v1/invocations lists the newest runs first, across pages."""
+    function_id = create_function(client)
+    runs = [
+        client.post(f"/api/v1/functions/{function_id}/run").json() for _ in range(3)
+    ]
+
+    data = client.get("/api/v1/invocations?limit=2").json()
+    assert data["total"] == 3
+    assert [item["id"] for item in data["results"]] == [runs[2]["id"], runs[1]["id"]]
+
+    data = client.get("/api/v1/invocations?limit=2&offset=2").json()
+    assert [item["id"] for item in data["results"]] == [runs[0]["id"]]
+
+
 def test_deleting_function_deletes_its_invocations(client):
     """Invocations are removed with the function they ran."""
     function_id = create_function(client)
