@@ -102,13 +102,13 @@ app.include_router(api_v1_router, prefix="/api/v1")
 
 
 def _error_handler(status_code: int):
-    def handler(_request: Request, exc: ValueError) -> JSONResponse:
+    def handler(_request: Request, exc: Exception) -> JSONResponse:
         return JSONResponse(status_code=status_code, content={"detail": str(exc)})
 
     return handler
 
 
-ERROR_STATUS_CODES: dict[type[ValueError], int] = {
+ERROR_STATUS_CODES: dict[type[Exception], int] = {
     NotFoundError: status.HTTP_404_NOT_FOUND,
     ConflictError: status.HTTP_409_CONFLICT,
     InvalidReferenceError: status.HTTP_422_UNPROCESSABLE_CONTENT,

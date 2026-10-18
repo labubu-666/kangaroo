@@ -135,13 +135,12 @@ class WorkItemService:
         project_id = current.project_id
         if "project_id" in fields:
             ensure_project_exists(self._projects, update.project_id)
-            project_id = update.project_id
+            project_id = update.project_id or current.project_id
         moved = project_id != current.project_id
         if moved:
             self._ensure_project_can_change(current)
-            update = WorkItemUpdate(
-                **{
-                    **update.model_dump(exclude_unset=True),
+            update = update.model_copy(
+                update={
                     "status_id": self._project_status_or_default(
                         project_id, update.status_id
                     ),
@@ -149,10 +148,12 @@ class WorkItemService:
                     or self._project_type_or_default(project_id, current),
                 }
             )
-        if update.type_id is not None:
-            self._ensure_type_change(current, project_id, update.type_id)
-        if update.status_id is not None:
-            self._ensure_status_change(current, project_id, update.status_id, moved)
+        type_id = update.type_id
+        if type_id is not None:
+            self._ensure_type_change(current, project_id, type_id)
+        status_id = update.status_id
+        if status_id is not None:
+            self._ensure_status_change(current, project_id, status_id, moved)
         return self._with_names(self._work_items.update(item_id, update))
 
     def replace(self, item_id: UUID, replace: WorkItemReplace) -> WorkItemDetail:

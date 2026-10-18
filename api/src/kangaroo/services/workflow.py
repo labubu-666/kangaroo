@@ -118,7 +118,9 @@ class WorkflowService:
     def _move_items(self, field: str, old_id: UUID, new_id: UUID) -> None:
         """Point every work item whose ``field`` is ``old_id`` at ``new_id``."""
         for item in self._work_items.list_all(**{field: old_id}):
-            self._work_items.update(item.id, WorkItemUpdate(**{field: new_id}))
+            self._work_items.update(
+                item.id, WorkItemUpdate.model_validate({field: new_id})
+            )
 
     def _ensure_other_todo_status(self, status: ProjectStatus) -> None:
         """Raise ConflictError if ``status`` is the project's only To Do status."""

@@ -118,7 +118,7 @@ class Repository[M: BaseModel, C: BaseModel, U: BaseModel, R: BaseModel]:
     entity: ClassVar[str]
     filter_fields: ClassVar[frozenset[str]]
     search_fields: ClassVar[tuple[str, ...]]
-    model_type: ClassVar[type[BaseModel]]
+    model_type: type[M]
     row_type: ClassVar[type[Base]]
 
     def __init__(self, session: Session) -> None:
@@ -132,7 +132,7 @@ class Repository[M: BaseModel, C: BaseModel, U: BaseModel, R: BaseModel]:
         )
 
     def _to_model(self, row: Base) -> M:
-        return _model_from_row(self.model_type, row)  # type: ignore[return-value]
+        return _model_from_row(self.model_type, row)
 
     def _get_row(self, item_id: UUID) -> Base:
         row = self._session.get(self.row_type, item_id)
