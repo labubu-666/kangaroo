@@ -22,6 +22,7 @@ class LocalRunner(BaseRunner):
                 capture_output=True,
                 text=True,
                 timeout=request.timeout_seconds,
+                env={**os.environ, **request.env},
                 check=False,
             )
             return RunResult(

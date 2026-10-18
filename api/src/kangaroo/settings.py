@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     function_runner: str = "local"
     nuclio_runner_url: str | None = None
 
+    # Base URL that function scripts use to call this API. Scripts run in other
+    # containers when FUNCTION_RUNNER=nuclio, so set this to an address they can reach.
+    api_public_url: str = "http://localhost:8000"
+
     # OpenID Connect login via Dex. The session key signs the session cookie.
     session_secret_key: str = SESSION_SECRET_KEY
     oidc_metadata_url: str = (

@@ -1,7 +1,9 @@
+from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
+from kangaroo.routes.auth import create_impersonation_token, require_user
 from kangaroo.routes.dependencies import FunctionServiceDep, ListParamsDep
 from kangaroo.schemas import (
     Function,
@@ -11,6 +13,7 @@ from kangaroo.schemas import (
     Invocation,
     PaginatedResponse,
 )
+from kangaroo.settings import settings
 
 router = APIRouter(prefix="/functions", tags=["functions"])
 
@@ -72,11 +75,22 @@ def delete_function(item_id: UUID, service: FunctionServiceDep) -> None:
 
 
 @router.post("/{item_id}/run", response_model=Invocation)
-def run_function(item_id: UUID, service: FunctionServiceDep) -> Invocation:
+def run_function(
+    item_id: UUID,
+    service: FunctionServiceDep,
+    user: Annotated[dict[str, Any], Depends(require_user)],
+) -> Invocation:
     """Run a saved function and store the run as an invocation.
 
     Returns the stored invocation with its stdout, stderr and exit code. The run
     takes up to 15 seconds. A timeout returns exit code -1. If the configured
     runner cannot be reached, returns 503 and nothing is stored.
+
+    The script gets ``KANGAROO_API_URL`` and ``KANGAROO_TOKEN`` in its environment.
+    The token impersonates the calling user and expires shortly after the run.
     """
-    return service.run(item_id)
+    env = {
+        "KANGAROO_API_URL": settings.api_public_url,
+        "KANGAROO_TOKEN": create_impersonation_token(user),
+    }
+    return service.run(item_id, env)

@@ -68,8 +68,22 @@ def test_nuclio_runner_sends_standard_request(fake_nuclio):
     """NuclioRunner posts the RunRequest fields and returns the RunResult."""
     url, received = fake_nuclio
     result = NuclioRunner(url).run(RunRequest(code="print(1)", timeout_seconds=15))
-    assert received["body"] == {"code": "print(1)", "timeout_seconds": 15}
+    assert received["body"] == {"code": "print(1)", "timeout_seconds": 15, "env": {}}
     assert result == RunResult(stdout="from nuclio\n", stderr="", exit_code=0)
+
+
+def test_nuclio_runner_sends_env(fake_nuclio):
+    """NuclioRunner passes the env to the runner so the script can use it."""
+    url, received = fake_nuclio
+    NuclioRunner(url).run(RunRequest(code="print(1)", env={"KANGAROO_TOKEN": "t"}))
+    assert received["body"]["env"] == {"KANGAROO_TOKEN": "t"}
+
+
+def test_local_runner_passes_env():
+    """LocalRunner makes the request env visible to the script."""
+    code = 'import os\nprint(os.environ["KANGAROO_TOKEN"])'
+    result = LocalRunner().run(RunRequest(code=code, env={"KANGAROO_TOKEN": "abc"}))
+    assert result.stdout == "abc\n"
 
 
 def test_nuclio_runner_unreachable_raises():

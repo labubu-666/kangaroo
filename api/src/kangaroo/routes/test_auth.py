@@ -3,6 +3,7 @@ import pytest
 from authlib.integrations.starlette_client import OAuthError
 from fastapi.responses import RedirectResponse
 from fastapi.testclient import TestClient
+from itsdangerous import URLSafeTimedSerializer
 
 from kangaroo.app import app
 from kangaroo.routes import auth
@@ -122,6 +123,54 @@ def test_logout_clears_session_and_redirects(monkeypatch):
     assert response.status_code == 303
     assert response.headers["location"] == "/web/"
     assert client.get("/api/v1/user").status_code == 401
+
+
+def test_impersonation_token_authenticates_api_calls():
+    """A bearer impersonation token impersonates the user it was created for."""
+    app.dependency_overrides.pop(require_user, None)
+    token = auth.create_impersonation_token({"sub": "abc", "email": "run@example.com"})
+
+    client = TestClient(app)
+    response = client.get("/api/v1/user", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.json()["email"] == "run@example.com"
+
+
+@pytest.mark.parametrize(
+    "header",
+    [
+        "Bearer not-a-real-token",
+        "Basic dXNlcjpwYXNz",
+        "Bearer",
+    ],
+)
+def test_bad_authorization_header_is_rejected(header):
+    app.dependency_overrides.pop(require_user, None)
+    client = TestClient(app)
+    response = client.get("/api/v1/user", headers={"Authorization": header})
+    assert response.status_code == 401
+
+
+def test_expired_impersonation_token_is_rejected(monkeypatch):
+    app.dependency_overrides.pop(require_user, None)
+    monkeypatch.setattr(auth, "IMPERSONATION_TOKEN_MAX_AGE", -1)
+    token = auth.create_impersonation_token({"email": "run@example.com"})
+
+    client = TestClient(app)
+    response = client.get("/api/v1/user", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 401
+
+
+def test_impersonation_token_signed_with_other_key_is_rejected():
+    """A token signed with a different key is refused."""
+    app.dependency_overrides.pop(require_user, None)
+    forged = URLSafeTimedSerializer(
+        "someone-else", salt=auth.IMPERSONATION_TOKEN_SALT
+    ).dumps({"email": "admin@example.com"})
+
+    client = TestClient(app)
+    response = client.get("/api/v1/user", headers={"Authorization": f"Bearer {forged}"})
+    assert response.status_code == 401
 
 
 def test_logout_rejects_get():
