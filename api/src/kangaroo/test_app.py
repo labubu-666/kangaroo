@@ -2,6 +2,7 @@ import gzip
 import importlib
 import tempfile
 from pathlib import Path
+from urllib.parse import quote
 
 import httpx
 import pytest
@@ -11,6 +12,49 @@ from fastapi.testclient import TestClient
 import kangaroo.app
 import kangaroo.settings
 from kangaroo.app import SPAStaticFiles, app
+from kangaroo.routes import auth
+from kangaroo.routes.auth import require_user
+
+
+def log_in(client, monkeypatch):
+    """Store a logged-in user in the client's session via the real callback."""
+
+    async def fake_authorize_access_token(request):
+        return {"userinfo": {"email": "test@example.com", "name": "test-user"}}
+
+    monkeypatch.setattr(
+        auth.oauth.dex, "authorize_access_token", fake_authorize_access_token
+    )
+    client.get("/auth/callback", follow_redirects=False)
+
+
+def test_logged_out_web_request_redirects_to_login():
+    """Logged-out browsers go to login before the web UI is served."""
+    app.dependency_overrides.pop(require_user, None)
+    client = TestClient(app)
+    response = client.get("/web/", follow_redirects=False)
+    assert response.status_code == 307
+    assert response.headers["location"] == "/login?next=%2Fweb%2F"
+
+
+def test_login_redirect_keeps_path_and_query():
+    """The original path and query string come back after logging in."""
+    app.dependency_overrides.pop(require_user, None)
+    client = TestClient(app)
+    response = client.get("/web/projects?view=list", follow_redirects=False)
+    assert response.status_code == 307
+    assert response.headers["location"] == "/login?next=" + quote(
+        "/web/projects?view=list", safe=""
+    )
+
+
+def test_logged_in_web_request_is_not_redirected(monkeypatch):
+    """Logged-in users are not sent to login when opening the web UI."""
+    app.dependency_overrides.pop(require_user, None)
+    client = TestClient(app)
+    log_in(client, monkeypatch)
+    response = client.get("/web/", follow_redirects=False)
+    assert "/login" not in response.headers.get("location", "")
 
 
 def test_health():
@@ -33,6 +77,23 @@ def test_docs_at_api_v1():
     client = TestClient(app)
     response = client.get("/api/v1/docs")
     assert response.status_code == 200
+
+
+@pytest.mark.parametrize("path", ["/api/v1/docs", "/api/v1/openapi.json"])
+def test_docs_require_login(path):
+    """API docs and the OpenAPI schema should not be public."""
+    app.dependency_overrides.pop(require_user, None)
+    client = TestClient(app)
+    response = client.get(path)
+    assert response.status_code == 401
+
+
+def test_openapi_schema_for_logged_in_user():
+    """Logged-in users get the OpenAPI schema for the API."""
+    client = TestClient(app)
+    response = client.get("/api/v1/openapi.json")
+    assert response.status_code == 200
+    assert "/api/v1/work-items/" in response.json()["paths"]
 
 
 def test_docs_not_at_root():
@@ -107,6 +168,7 @@ def test_dev_proxy_forwards_query_string(dev_app, monkeypatch):
     monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
 
     client = TestClient(dev_app.app)
+    log_in(client, monkeypatch)
     response = client.get("/web/src/routes/work-items/index.tsx?tsr-split=component")
 
     assert response.status_code == 200
@@ -137,6 +199,7 @@ def test_dev_proxy_drops_headers_for_decoded_body(dev_app, monkeypatch):
     monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
 
     client = TestClient(dev_app.app)
+    log_in(client, monkeypatch)
     response = client.get("/web/index.html")
 
     assert response.status_code == 200
