@@ -40,7 +40,6 @@ def ensure_project_exists(projects: ProjectRepository, project_id: UUID | None) 
 
 
 def project_names(projects: ProjectRepository) -> dict[UUID, str]:
-    """Map each project ID to its name."""
     return {project.id: project.name for project in projects.list_all()}
 
 
@@ -97,7 +96,6 @@ def filter_record(
 def lookups(
     statuses: StatusRepository, types: WorkItemTypeRepository
 ) -> tuple[dict[UUID, ProjectStatus], dict[UUID, WorkItemType]]:
-    """Map every status ID and work item type ID to its row."""
     return (
         {status.id: status for status in statuses.list_all()},
         {work_item_type.id: work_item_type for work_item_type in types.list_all()},
@@ -109,7 +107,6 @@ def detail(
     statuses: dict[UUID, ProjectStatus],
     types: dict[UUID, WorkItemType],
 ) -> WorkItemDetail:
-    """Add the item's status and type to the stored work item."""
     status = statuses[item.status_id]
     work_item_type = types[item.type_id]
     return WorkItemDetail(

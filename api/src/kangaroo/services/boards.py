@@ -113,7 +113,6 @@ class BoardService:
         )
 
     def get(self, item_id: UUID) -> Board:
-        """Get a board by ID."""
         return self._boards.get_by_id(item_id)
 
     def update(self, item_id: UUID, update: BoardUpdate) -> Board:
@@ -131,7 +130,6 @@ class BoardService:
         return self._boards.replace(item_id, replace)
 
     def delete(self, item_id: UUID) -> None:
-        """Delete a board."""
         self._boards.delete(item_id)
 
     def _stored_filter(self, board: Board) -> Callable[[dict[str, Any]], bool]:
