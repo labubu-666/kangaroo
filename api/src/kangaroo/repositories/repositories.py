@@ -378,10 +378,9 @@ class InvocationRepository(
     row_type = InvocationRow
 
     def _query(self, filters: dict[str, Any], search: str | None) -> Select:
-        # Newest runs first; hardcoded until sorting is generic across entities.
         return (
             super()
             ._query(filters, search)
             .order_by(None)
-            .order_by(InvocationRow.created_at.desc(), InvocationRow.id.desc())
+            .order_by(InvocationRow.id.desc())
         )
