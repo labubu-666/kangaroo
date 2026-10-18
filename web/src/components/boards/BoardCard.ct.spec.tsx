@@ -31,6 +31,18 @@ const subtask: WorkItem = {
   parent_id: "3f2a9c1d-0000-4000-8000-000000000001",
 };
 
+const currentUser = {
+  username: "test-user",
+  email: "test@example.com",
+  avatar_url: "https://gravatar.com/avatar/test?d=identicon&s=64",
+};
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/v1/user", (route) =>
+    route.fulfill({ json: currentUser }),
+  );
+});
+
 test.describe("BoardCard", () => {
   test("renders the whole card as a link to the work item", async ({
     mount,
@@ -95,15 +107,16 @@ test.describe("BoardCard", () => {
     ).toBeAttached();
   });
 
-  test("renders a placeholder assignee circle", async ({ mount }) => {
+  test("shows the logged-in user's Gravatar in the footer", async ({
+    mount,
+  }) => {
     const component = await mount(
       <TestRouter paths={paths}>
         <BoardCard item={task} />
       </TestRouter>,
     );
-    // The placeholder is an empty element, so check it is attached rather than visible
     await expect(
-      component.getByLabel("Unassigned", { exact: true }),
-    ).toBeAttached();
+      component.getByRole("img", { name: currentUser.username, exact: true }),
+    ).toHaveAttribute("src", currentUser.avatar_url);
   });
 });
