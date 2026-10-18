@@ -7,6 +7,7 @@ import { PROJECT_LIMIT, fetchProjects } from "../../lib/projects";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { Loading } from "../../components/shared/Loading";
+import { Pagination } from "../../components/shared/Pagination";
 
 export const Route = createFileRoute("/projects/")({
   component: ProjectsList,
@@ -23,8 +24,6 @@ function ProjectsList() {
 
   const items: Project[] = data?.results ?? [];
   const total = data?.total ?? 0;
-  const hasNextPage = data ? offset + PROJECT_LIMIT < total : false;
-  const hasPrevPage = offset > 0;
 
   return (
     <div className="space-y-4 p-4">
@@ -66,27 +65,13 @@ function ProjectsList() {
         </div>
       )}
 
-      {/* Pagination */}
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-        <button
-          onClick={() => setOffset(Math.max(0, offset - PROJECT_LIMIT))}
-          disabled={!hasPrevPage || isLoading}
-          className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
-        >
-          ← Previous
-        </button>
-        <span className="order-first w-full text-center text-sm text-gray-600 sm:order-none sm:w-auto">
-          Showing {Math.min(offset + 1, total)}-
-          {Math.min(offset + PROJECT_LIMIT, total)} of {total}
-        </span>
-        <button
-          onClick={() => setOffset(offset + PROJECT_LIMIT)}
-          disabled={!hasNextPage || isLoading}
-          className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
-        >
-          Next →
-        </button>
-      </div>
+      <Pagination
+        offset={offset}
+        limit={PROJECT_LIMIT}
+        total={total}
+        disabled={isLoading}
+        onChange={setOffset}
+      />
     </div>
   );
 }
