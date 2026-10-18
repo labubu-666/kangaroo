@@ -2,7 +2,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 from kangaroo.app import app
+from kangaroo.routes.auth import require_user
 from kangaroo.routes.dependencies import get_engine
+from kangaroo.schemas import RunResult
+from kangaroo.settings import settings
 
 HELLO = 'print("hello")'
 
@@ -111,6 +114,31 @@ def test_run_function_reports_errors(client):
     data = response.json()
     assert data["exit_code"] == 1
     assert "boom" in data["stderr"]
+
+
+def test_run_function_passes_impersonation_env(client, monkeypatch):
+    """The script gets the API URL and a token that impersonates the calling user."""
+    captured = {}
+
+    class CapturingRunner:
+        def run(self, request):
+            captured["env"] = request.env
+            return RunResult(stdout="", stderr="", exit_code=0)
+
+    monkeypatch.setattr(
+        "kangaroo.routes.dependencies.get_function_runner",
+        lambda: CapturingRunner(),
+    )
+    created = create(client).json()
+    assert client.post(f"/api/v1/functions/{created['id']}/run").status_code == 200
+
+    assert captured["env"]["KANGAROO_API_URL"] == settings.api_public_url
+    app.dependency_overrides.pop(require_user, None)
+    user = TestClient(app).get(
+        "/api/v1/user",
+        headers={"Authorization": f"Bearer {captured['env']['KANGAROO_TOKEN']}"},
+    )
+    assert user.json()["email"] == "test@example.com"
 
 
 def test_run_missing_function(client):

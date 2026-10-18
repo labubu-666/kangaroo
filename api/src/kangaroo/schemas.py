@@ -372,6 +372,7 @@ class RunRequest(BaseModel):
     timeout_seconds: int = Field(
         default=MAX_RUN_TIMEOUT_SECONDS, ge=1, le=MAX_RUN_TIMEOUT_SECONDS
     )
+    env: dict[str, str] = Field(default_factory=dict)
 
 
 class RunResult(BaseModel):

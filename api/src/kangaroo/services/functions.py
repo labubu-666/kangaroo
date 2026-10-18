@@ -50,10 +50,13 @@ class FunctionService:
     def delete(self, item_id: UUID) -> None:
         self._functions.delete(item_id)
 
-    def run(self, item_id: UUID) -> Invocation:
-        """Run a saved script through the configured runner and store the output."""
+    def run(self, item_id: UUID, env: dict[str, str] | None = None) -> Invocation:
+        """Run a saved script through the configured runner and store the output.
+
+        ``env`` is added to the script's environment, for example its API token.
+        """
         function = self._functions.get_by_id(item_id)
-        result = self._runner.run(RunRequest(code=function.code))
+        result = self._runner.run(RunRequest(code=function.code, env=env or {}))
         return self._invocations.create(
             InvocationCreate(function_id=function.id, **result.model_dump())
         )

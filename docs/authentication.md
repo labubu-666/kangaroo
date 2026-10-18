@@ -29,6 +29,30 @@ If Dex can't be reached, `/login` returns `503`.
 
 `dex/config.yaml` is ignored by git, so it stays local.
 
+## Calling the API from a function
+
+Functions run with two extra environment variables:
+
+- `KANGAROO_API_URL`: the base URL of the API (`API_PUBLIC_URL`).
+- `KANGAROO_TOKEN`: a signed impersonation token for the user who ran the function.
+
+Send the token as a bearer header:
+
+```python
+import os
+
+import httpx
+
+httpx.get(
+    f"{os.environ['KANGAROO_API_URL']}/api/v1/work-items",
+    headers={"Authorization": f"Bearer {os.environ['KANGAROO_TOKEN']}"},
+)
+```
+
+An impersonation token is created for each run and is valid for 25 seconds from
+creation, which covers the run's 15-second limit plus a margin. The script
+impersonates the user who ran it, with the same permissions.
+
 ## Settings
 
 These are read from environment variables or `api/.env`.
@@ -40,6 +64,7 @@ These are read from environment variables or `api/.env`.
 | `OIDC_CLIENT_ID` | Client ID registered in Dex. |
 | `OIDC_CLIENT_SECRET` | Client secret registered in Dex. |
 | `OIDC_REDIRECT_URI` | Callback URL, which must be `/auth/callback` on the API. |
+| `API_PUBLIC_URL` | Base URL function scripts use to call the API. Must be reachable from the runner (for Nuclio, not `localhost` unless the runner shares the host network). |
 
 The client ID, client secret and redirect URI must match the `staticClients`
 entry in `dex/config.yaml`.

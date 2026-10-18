@@ -21,7 +21,10 @@ def handler(context, event):
                 f.write(body.get("code", ""))
                 script_path = f.name
             cmd = ["uv", "run", "--script", script_path]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        env = {**os.environ, **body.get("env", {})}
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=timeout, env=env
+        )
         payload = {"stdout": result.stdout, "stderr": result.stderr, "exit_code": result.returncode}
     except subprocess.TimeoutExpired:
         payload = {"stdout": "", "stderr": f"Timed out after {timeout} seconds", "exit_code": -1}
