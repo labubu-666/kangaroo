@@ -1,7 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useProjectOptions } from "../../lib/projects";
+import { bulkDeleteWorkItems } from "../../lib/work-items";
 
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
+import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { FilterBubbles } from "../../components/shared/FilterBubbles";
 import { WorkItemList } from "../../components/work-items/WorkItemList";
 import { ADMIN_WORK_ITEM_FIELDS } from "../../lib/filter-bubbles";
@@ -17,11 +21,44 @@ function AdminWorkItems() {
   const { filter } = Route.useSearch();
   useBreadcrumbs([{ label: "Admin", to: "/admin" }, { label: "Work items" }]);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: projects } = useProjectOptions();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [matchingTotal, setMatchingTotal] = useState(0);
 
   const setFilter = (next: string | undefined) => {
+    setSelected(new Set());
     navigate({ to: "/admin/work-items", search: { filter: next } });
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: bulkDeleteWorkItems,
+    onSuccess: () => {
+      setSelected(new Set());
+      queryClient.invalidateQueries({ queryKey: ["work-items"] });
+    },
+  });
+
+  const deleteSelected = () => {
+    const count = selected.size;
+    if (
+      !confirm(
+        `Delete ${count} selected work item(s)? Their subtasks are deleted too. This cannot be undone.`,
+      )
+    )
+      return;
+    deleteMutation.mutate({ ids: [...selected] });
+  };
+
+  const deleteAllMatching = () => {
+    if (
+      !confirm(
+        `Delete all ${matchingTotal} work item(s) matching this filter? Their subtasks are deleted too. This cannot be undone.`,
+      )
+    )
+      return;
+    deleteMutation.mutate({ all_matching: true, filter });
   };
 
   return (
@@ -35,7 +72,34 @@ function AdminWorkItems() {
         fields={ADMIN_WORK_ITEM_FIELDS}
       />
 
-      <WorkItemList key={filter ?? ""} filter={filter} trashed="all" />
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          onClick={deleteSelected}
+          disabled={selected.size === 0 || deleteMutation.isPending}
+          className="rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:bg-gray-400"
+        >
+          Delete selected ({selected.size})
+        </button>
+        <button
+          onClick={deleteAllMatching}
+          disabled={matchingTotal === 0 || deleteMutation.isPending}
+          className="rounded border border-red-600 px-4 py-2 font-medium text-red-600 hover:bg-red-50 disabled:border-gray-400 disabled:text-gray-400"
+        >
+          Delete all matching ({matchingTotal})
+        </button>
+      </div>
+
+      {deleteMutation.error && (
+        <ErrorBanner>{deleteMutation.error.message}</ErrorBanner>
+      )}
+
+      <WorkItemList
+        key={filter ?? ""}
+        filter={filter}
+        trashed="all"
+        selection={{ selected, onChange: setSelected }}
+        onTotalChange={setMatchingTotal}
+      />
     </div>
   );
 }

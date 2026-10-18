@@ -5,6 +5,7 @@ import pytest
 from kangaroo.errors import ConflictError, InvalidReferenceError, NotFoundError
 from kangaroo.schemas import (
     StatusTransitionCreate,
+    WorkItemBulkDelete,
     WorkItemCreate,
     WorkItemReplace,
     WorkItemUpdate,
@@ -264,13 +265,54 @@ def test_replace_uses_first_todo_status_when_omitted(work_item_service, seeded):
     assert replaced.status_id == seeded.open_id
 
 
-def test_delete_task_with_subtasks_raises(work_item_service, seeded):
+def test_delete_task_also_deletes_subtasks(work_item_service, seeded):
     parent = work_item_service.create(task(seeded, "Parent"))
-    work_item_service.create(subtask(seeded, parent.id))
-    with pytest.raises(ConflictError, match="still has subtasks"):
-        work_item_service.delete(parent.id)
+    child = work_item_service.create(subtask(seeded, parent.id))
+    work_item_service.delete(parent.id)
+    with pytest.raises(NotFoundError):
+        work_item_service.get(child.id)
 
 
 def test_delete_missing_work_item_raises(work_item_service):
     with pytest.raises(NotFoundError):
         work_item_service.delete(uuid4())
+
+
+def test_bulk_delete_ids_removes_task_with_its_subtasks(work_item_service, seeded):
+    parent = work_item_service.create(task(seeded, "Parent"))
+    child = work_item_service.create(subtask(seeded, parent.id))
+    keep = work_item_service.create(task(seeded, "Keep"))
+    deleted = work_item_service.bulk_delete(
+        WorkItemBulkDelete(ids=[parent.id, child.id])
+    )
+    assert deleted == 2
+    assert work_item_service.list_paginated(10, 0).total == 1
+    assert work_item_service.get(keep.id).id == keep.id
+
+
+def test_bulk_delete_ids_missing_item_deletes_nothing(work_item_service, seeded):
+    keep = work_item_service.create(task(seeded, "Keep"))
+    with pytest.raises(NotFoundError):
+        work_item_service.bulk_delete(WorkItemBulkDelete(ids=[keep.id, uuid4()]))
+    assert work_item_service.get(keep.id).id == keep.id
+
+
+def test_bulk_delete_all_matching_uses_filter(work_item_service, seeded):
+    work_item_service.create(task(seeded, "Login bug"))
+    work_item_service.create(task(seeded, "Other"))
+    deleted = work_item_service.bulk_delete(
+        WorkItemBulkDelete(all_matching=True, filter="title ~ 'bug'")
+    )
+    assert deleted == 1
+    titles = [item.title for item in work_item_service.list_paginated(10, 0).results]
+    assert titles == ["Other"]
+
+
+def test_bulk_delete_all_matching_without_filter_deletes_everything(
+    work_item_service, seeded
+):
+    parent = work_item_service.create(task(seeded, "Parent"))
+    work_item_service.create(subtask(seeded, parent.id))
+    work_item_service.create(task(seeded, "Other"))
+    assert work_item_service.bulk_delete(WorkItemBulkDelete(all_matching=True)) == 3
+    assert work_item_service.list_paginated(10, 0).total == 0

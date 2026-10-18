@@ -5,6 +5,8 @@ from fastapi import APIRouter, status
 from kangaroo.routes.dependencies import FilterQuery, ListParamsDep, WorkItemServiceDep
 from kangaroo.schemas import (
     PaginatedResponse,
+    WorkItemBulkDelete,
+    WorkItemBulkDeleted,
     WorkItemCreate,
     WorkItemDetail,
     WorkItemReplace,
@@ -87,8 +89,17 @@ def update_work_item(
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_work_item(item_id: UUID, service: WorkItemServiceDep) -> None:
-    """Delete a work item.
-
-    A task that still has subtasks cannot be deleted (409).
-    """
+    """Delete a work item and its subtasks."""
     service.delete(item_id)
+
+
+@router.post("/bulk-delete", response_model=WorkItemBulkDeleted)
+def bulk_delete_work_items(
+    request: WorkItemBulkDelete,
+    service: WorkItemServiceDep,
+) -> WorkItemBulkDeleted:
+    """Delete the given work items, or every item the filter matches.
+
+    Subtasks are deleted with their task. An invalid filter returns 422.
+    """
+    return WorkItemBulkDeleted(deleted=service.bulk_delete(request))
