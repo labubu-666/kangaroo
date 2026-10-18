@@ -2,8 +2,11 @@ from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import update
+from sqlalchemy.orm import Session
 
 from kangaroo.app import app
+from kangaroo.repositories.tables import BoardRow
 from kangaroo.routes.dependencies import get_engine
 from kangaroo.testing import status_id, type_id
 
@@ -496,3 +499,36 @@ def test_view_items_carry_status_and_type_names(client, project_id):
     item = columns[0]["items"][0]
     assert item["status"]["name"] == "Open"
     assert item["type"]["name"] == "Task"
+
+
+def test_view_with_invalid_stored_filter_shows_empty_board(
+    client, engine, project_id, caplog
+):
+    """A board whose saved filter no longer parses still loads, with no items, and logs it."""
+    item_id = client.post(
+        "/api/v1/work-items",
+        json={
+            "type_id": type_id(client, project_id, "task"),
+            "title": "Hidden",
+            "project_id": project_id,
+        },
+    ).json()["id"]
+    board_id = client.post(
+        "/api/v1/boards", json={"name": "Old", "project_id": project_id}
+    ).json()["id"]
+    # The API refuses invalid filters, so write one straight into the row.
+    with Session(engine) as session, session.begin():
+        session.execute(
+            update(BoardRow)
+            .where(BoardRow.id == UUID(board_id))
+            .values(filter="title ==")
+        )
+
+    with caplog.at_level("WARNING", logger="kangaroo.services.boards"):
+        response = client.get(f"/api/v1/boards/{board_id}/view")
+
+    assert response.status_code == 200
+    items = [item for column in response.json()["columns"] for item in column["items"]]
+    assert items == []
+    assert item_id not in str(items)
+    assert f"Board {board_id} has an invalid filter" in caplog.text

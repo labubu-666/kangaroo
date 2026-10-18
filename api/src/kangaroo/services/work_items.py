@@ -5,7 +5,6 @@ from kangaroo.errors import (
     InvalidReferenceError,
     NotFoundError,
 )
-from kangaroo.filters import parse_filter
 from kangaroo.repositories import (
     ProjectRepository,
     StatusRepository,
@@ -13,24 +12,23 @@ from kangaroo.repositories import (
     WorkItemRepository,
     WorkItemTypeRepository,
 )
-from kangaroo.repositories.repositories import clean_search, matches_search
 from kangaroo.schemas import (
     PaginatedResponse,
-    ProjectStatus,
     WorkItem,
     WorkItemCreate,
     WorkItemDetail,
     WorkItemReplace,
-    WorkItemType,
     WorkItemUpdate,
 )
 from kangaroo.services.helpers import (
-    _detail,
-    _ensure_project_exists,
-    _filter_record,
-    _in_position_order,
-    _lookups,
-    _project_names,
+    detail,
+    ensure_project_exists,
+    filter_record,
+    filtered_page,
+    get_in_project,
+    in_position_order,
+    lookups,
+    project_names,
 )
 
 
@@ -59,8 +57,10 @@ class WorkItemService:
 
     def create(self, item: WorkItemCreate) -> WorkItemDetail:
         """Create a work item, checking its project, type, status and parent."""
-        _ensure_project_exists(self._projects, item.project_id)
-        work_item_type = self._project_type(item.project_id, item.type_id)
+        ensure_project_exists(self._projects, item.project_id)
+        work_item_type = get_in_project(
+            self._types, item.type_id, item.project_id, "Work item type"
+        )
         status_id = self._project_status_or_default(item.project_id, item.status_id)
         if work_item_type.level == "subtask":
             if item.parent_id is None:
@@ -95,35 +95,29 @@ class WorkItemService:
                 project_id=project_id,
                 parent_id=parent_id,
             )
-            statuses, types = _lookups(self._statuses, self._types)
+            statuses, types = lookups(self._statuses, self._types)
             return PaginatedResponse[WorkItemDetail](
-                results=[_detail(item, statuses, types) for item in page.results],
+                results=[detail(item, statuses, types) for item in page.results],
                 limit=page.limit,
                 offset=page.offset,
                 total=page.total,
             )
-        matches = parse_filter(filter)
-        project_names = _project_names(self._projects)
-        statuses, types = _lookups(self._statuses, self._types)
-        candidates = self._work_items.list_all(
-            project_id=project_id, parent_id=parent_id
+        names = project_names(self._projects)
+        statuses, types = lookups(self._statuses, self._types)
+        page, total = filtered_page(
+            self._work_items.list_all(project_id=project_id, parent_id=parent_id),
+            filter,
+            lambda item: filter_record(item, names, statuses, types),
+            search,
+            self._work_items.search_fields,
+            limit,
+            offset,
         )
-        text = clean_search(search)
-        fields = self._work_items.search_fields
-        matched = [
-            item
-            for item in candidates
-            if matches(_filter_record(item, project_names, statuses, types))
-            and (text is None or matches_search(item, text, fields))
-        ]
         return PaginatedResponse[WorkItemDetail](
-            results=[
-                _detail(item, statuses, types)
-                for item in matched[offset : offset + limit]
-            ],
+            results=[detail(item, statuses, types) for item in page],
             limit=limit,
             offset=offset,
-            total=len(matched),
+            total=total,
         )
 
     def get(self, item_id: UUID) -> WorkItemDetail:
@@ -140,7 +134,7 @@ class WorkItemService:
         fields = update.model_fields_set
         project_id = current.project_id
         if "project_id" in fields:
-            _ensure_project_exists(self._projects, update.project_id)
+            ensure_project_exists(self._projects, update.project_id)
             project_id = update.project_id
         moved = project_id != current.project_id
         if moved:
@@ -167,7 +161,7 @@ class WorkItemService:
         Without a ``status_id`` the item goes to the project's first To Do status.
         """
         current = self._work_items.get_by_id(item_id)
-        _ensure_project_exists(self._projects, replace.project_id)
+        ensure_project_exists(self._projects, replace.project_id)
         moved = replace.project_id != current.project_id
         if moved:
             self._ensure_project_can_change(current)
@@ -189,53 +183,36 @@ class WorkItemService:
 
     def _with_names(self, item: WorkItem) -> WorkItemDetail:
         """Add the status and type of a single stored item."""
-        return _detail(
+        return detail(
             item,
             {item.status_id: self._statuses.get_by_id(item.status_id)},
             {item.type_id: self._types.get_by_id(item.type_id)},
         )
-
-    def _project_type(self, project_id: UUID, type_id: UUID) -> WorkItemType:
-        """The type must exist and belong to the project."""
-        try:
-            work_item_type = self._types.get_by_id(type_id)
-        except NotFoundError:
-            raise InvalidReferenceError("Work item type not found") from None
-        if work_item_type.project_id != project_id:
-            raise InvalidReferenceError("Work item type is not in the project")
-        return work_item_type
-
-    def _project_status(self, project_id: UUID, status_id: UUID) -> ProjectStatus:
-        """The status must exist and belong to the project."""
-        try:
-            status = self._statuses.get_by_id(status_id)
-        except NotFoundError:
-            raise InvalidReferenceError("Status not found") from None
-        if status.project_id != project_id:
-            raise InvalidReferenceError("Status is not in the project")
-        return status
 
     def _project_status_or_default(
         self, project_id: UUID, status_id: UUID | None
     ) -> UUID:
         """Check the given status, or pick the project's first To Do status."""
         if status_id is not None:
-            return self._project_status(project_id, status_id).id
-        todo = [
-            status
-            for status in _in_position_order(
-                self._statuses.list_all(project_id=project_id)
-            )
-            if status.category == "todo"
-        ]
-        if not todo:
+            return get_in_project(self._statuses, status_id, project_id, "Status").id
+        todo = next(
+            (
+                status
+                for status in in_position_order(
+                    self._statuses.list_all(project_id=project_id)
+                )
+                if status.category == "todo"
+            ),
+            None,
+        )
+        if todo is None:
             raise InvalidReferenceError("The project has no To Do status")
-        return todo[0].id
+        return todo.id
 
     def _project_type_or_default(self, project_id: UUID, current: WorkItem) -> UUID:
         """Pick the project's first type with the same level as the item's type."""
         level = self._types.get_by_id(current.type_id).level
-        for work_item_type in _in_position_order(
+        for work_item_type in in_position_order(
             self._types.list_all(project_id=project_id)
         ):
             if work_item_type.level == level:
@@ -263,7 +240,7 @@ class WorkItemService:
 
         The parent/subtask links depend on the level, so it cannot change.
         """
-        new_type = self._project_type(project_id, type_id)
+        new_type = get_in_project(self._types, type_id, project_id, "Work item type")
         old_type = self._types.get_by_id(current.type_id)
         if new_type.level != old_type.level:
             raise ConflictError("A work item cannot change type level")
@@ -276,7 +253,7 @@ class WorkItemService:
         A project without transitions allows every change. A move to another
         project starts fresh, so no transition is needed.
         """
-        self._project_status(project_id, status_id)
+        get_in_project(self._statuses, status_id, project_id, "Status")
         if moved or status_id == current.status_id:
             return
         allowed = self._transitions.list_all(project_id=project_id)

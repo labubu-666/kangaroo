@@ -688,6 +688,22 @@ def test_create_work_item_null_project_returns_422(client, project_id):
     assert response.status_code == 422
 
 
+def test_update_work_item_trashed_null_returns_422(client, project_id):
+    """PATCH /api/v1/work-items/{id} rejects an explicit null trashed flag."""
+    item_id = client.post(
+        "/api/v1/work-items",
+        json={
+            "type_id": type_id(client, project_id, "task"),
+            "title": "Keep",
+            "project_id": project_id,
+        },
+    ).json()["id"]
+
+    response = client.patch(f"/api/v1/work-items/{item_id}", json={"trashed": None})
+    assert response.status_code == 422
+    assert client.get(f"/api/v1/work-items/{item_id}").json()["trashed"] is False
+
+
 def test_update_work_item_null_project(client, project_id):
     """PATCH /api/v1/work-items/{id} with project_id null returns 422."""
     item_id = client.post(

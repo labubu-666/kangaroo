@@ -77,6 +77,7 @@ class WorkItemUpdate(BaseModel):
     _reject_null_title = field_validator("title")(reject_null)
     _reject_null_status = field_validator("status_id")(reject_null)
     _reject_null_type = field_validator("type_id")(reject_null)
+    _reject_null_trashed = field_validator("trashed")(reject_null)
 
 
 class WorkItemReplace(BaseModel):
@@ -361,11 +362,16 @@ class Invocation(Timestamped):
     exit_code: int
 
 
+MAX_RUN_TIMEOUT_SECONDS = 15
+
+
 class RunRequest(BaseModel):
     """Input to any runner: a Python script and how long it may run."""
 
     code: str
-    timeout_seconds: int = 120
+    timeout_seconds: int = Field(
+        default=MAX_RUN_TIMEOUT_SECONDS, ge=1, le=MAX_RUN_TIMEOUT_SECONDS
+    )
 
 
 class RunResult(BaseModel):

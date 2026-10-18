@@ -28,11 +28,9 @@ class ReportService:
 
     def summary(self) -> ReportSummary:
         """Count projects, boards and work items, split by status and category."""
+        counts = self._work_items.count_by("status_id", trashed=False)
         by_status = [
-            StatusCount(
-                status=status,
-                count=self._work_items.count(status_id=status.id, trashed=False),
-            )
+            StatusCount(status=status, count=counts.get(status.id, 0))
             for status in self._statuses.list_all()
         ]
         per_category = {"todo": 0, "in_progress": 0, "done": 0}

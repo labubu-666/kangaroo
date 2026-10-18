@@ -10,7 +10,7 @@ from kangaroo.runners import (
     RunnerUnavailableError,
     create_runner,
 )
-from kangaroo.schemas import RunRequest, RunResult
+from kangaroo.schemas import MAX_RUN_TIMEOUT_SECONDS, RunRequest, RunResult
 
 
 @pytest.fixture
@@ -67,8 +67,8 @@ def test_local_runner_times_out():
 def test_nuclio_runner_sends_standard_request(fake_nuclio):
     """NuclioRunner posts the RunRequest fields and returns the RunResult."""
     url, received = fake_nuclio
-    result = NuclioRunner(url).run(RunRequest(code="print(1)", timeout_seconds=30))
-    assert received["body"] == {"code": "print(1)", "timeout_seconds": 30}
+    result = NuclioRunner(url).run(RunRequest(code="print(1)", timeout_seconds=15))
+    assert received["body"] == {"code": "print(1)", "timeout_seconds": 15}
     assert result == RunResult(stdout="from nuclio\n", stderr="", exit_code=0)
 
 
@@ -95,3 +95,12 @@ def test_create_runner_nuclio_requires_url():
 def test_create_runner_unknown_name():
     with pytest.raises(ValueError, match="Unsupported FUNCTION_RUNNER"):
         create_runner("docker")
+
+
+def test_run_request_timeout_is_capped():
+    """The timeout defaults to the maximum, and anything above or below the range is refused."""
+    assert RunRequest(code="print(1)").timeout_seconds == MAX_RUN_TIMEOUT_SECONDS
+    with pytest.raises(ValueError):
+        RunRequest(code="print(1)", timeout_seconds=MAX_RUN_TIMEOUT_SECONDS + 1)
+    with pytest.raises(ValueError):
+        RunRequest(code="print(1)", timeout_seconds=0)
