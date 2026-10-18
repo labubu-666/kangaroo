@@ -58,7 +58,6 @@ class WorkflowService:
         self._work_items = work_items
 
     def list_statuses(self, project_id: UUID) -> list[ProjectStatus]:
-        """List a project's statuses in position order."""
         return in_position_order(self._statuses.list_all(project_id=project_id))
 
     def create_status(self, item: StatusCreate) -> ProjectStatus:
@@ -68,11 +67,9 @@ class WorkflowService:
         return self._statuses.create(item)
 
     def get_status(self, item_id: UUID) -> ProjectStatus:
-        """Get a status by ID."""
         return self._statuses.get_by_id(item_id)
 
     def update_status(self, item_id: UUID, update: StatusUpdate) -> ProjectStatus:
-        """Update a status (partial update)."""
         current = self._statuses.get_by_id(item_id)
         new_category = update.category or current.category
         if current.category == "todo" and new_category != "todo":
@@ -193,7 +190,6 @@ class WorkflowService:
         self._types.delete(item_id)
 
     def list_transitions(self, project_id: UUID) -> list[StatusTransition]:
-        """List a project's status transitions."""
         return self._transitions.list_all(project_id=project_id)
 
     def create_transition(self, item: StatusTransitionCreate) -> StatusTransition:
@@ -205,7 +201,6 @@ class WorkflowService:
         return self._transitions.create(item)
 
     def get_transition(self, item_id: UUID) -> StatusTransition:
-        """Get a status transition by ID."""
         return self._transitions.get_by_id(item_id)
 
     def update_transition(
@@ -229,5 +224,4 @@ class WorkflowService:
         return self._transitions.replace(item_id, replace)
 
     def delete_transition(self, item_id: UUID) -> None:
-        """Delete a status transition."""
         self._transitions.delete(item_id)

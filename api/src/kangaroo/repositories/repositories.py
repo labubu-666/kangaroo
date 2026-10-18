@@ -66,7 +66,6 @@ def clean_search(search: str | None) -> str | None:
 
 
 def utc_now() -> datetime:
-    """Return the current time as a timezone-aware UTC datetime."""
     return datetime.now(UTC)
 
 
@@ -294,8 +293,6 @@ class Repository[M: BaseModel, C: BaseModel, U: BaseModel, R: BaseModel]:
 class ProjectRepository(
     Repository[Project, ProjectCreate, ProjectUpdate, ProjectReplace]
 ):
-    """Project storage."""
-
     entity = "Project"
     filter_fields = frozenset(Project.model_fields)
     search_fields = ("name", "description")
@@ -304,8 +301,6 @@ class ProjectRepository(
 
 
 class BoardRepository(Repository[Board, BoardCreate, BoardUpdate, BoardReplace]):
-    """Board storage."""
-
     entity = "Board"
     filter_fields = frozenset(Board.model_fields)
     search_fields = ("name", "description")
@@ -316,8 +311,6 @@ class BoardRepository(Repository[Board, BoardCreate, BoardUpdate, BoardReplace])
 class StatusRepository(
     Repository[ProjectStatus, StatusCreate, StatusUpdate, StatusReplace]
 ):
-    """Status storage."""
-
     entity = "Status"
     filter_fields = frozenset(ProjectStatus.model_fields)
     search_fields = ("name",)
@@ -330,8 +323,6 @@ class WorkItemTypeRepository(
         WorkItemType, WorkItemTypeCreate, WorkItemTypeUpdate, WorkItemTypeReplace
     ]
 ):
-    """Work item type storage."""
-
     entity = "Work item type"
     filter_fields = frozenset(WorkItemType.model_fields)
     search_fields = ("name",)
@@ -347,8 +338,6 @@ class StatusTransitionRepository(
         StatusTransitionReplace,
     ]
 ):
-    """Status transition storage."""
-
     entity = "Status transition"
     filter_fields = frozenset(StatusTransition.model_fields)
     search_fields = ()
@@ -359,8 +348,6 @@ class StatusTransitionRepository(
 class WorkItemRepository(
     Repository[WorkItem, WorkItemCreate, WorkItemUpdate, WorkItemReplace]
 ):
-    """Work item storage."""
-
     entity = "Work item"
     filter_fields = frozenset(WorkItem.model_fields)
     search_fields = ("title", "description")
@@ -374,8 +361,6 @@ class WorkItemRepository(
 class FunctionRepository(
     Repository[Function, FunctionCreate, FunctionUpdate, FunctionReplace]
 ):
-    """Function storage."""
-
     entity = "Function"
     filter_fields = frozenset(Function.model_fields)
     search_fields = ("name", "description")
@@ -386,8 +371,6 @@ class FunctionRepository(
 class InvocationRepository(
     Repository[Invocation, InvocationCreate, InvocationCreate, InvocationCreate]
 ):
-    """Invocation storage."""
-
     entity = "Invocation"
     filter_fields = frozenset({"function_id"})
     search_fields = ()

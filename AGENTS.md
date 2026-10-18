@@ -7,7 +7,6 @@
 # Implementation
 - Prefer simple solutions to complicated ones.
 - Only do what was asked, dont wander off into tangents.
-# Testing
-- The project has Playwright Component Testing configured.
-- Tests can be run with `npm run test:ct`.
+- Comments show explain `why` if you think the code needs explaining. Otherwise the code should describe itself.
+
 
