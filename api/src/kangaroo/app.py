@@ -1,7 +1,11 @@
 from pathlib import Path
+from typing import Annotated, Any
+from urllib.parse import quote
 
-from fastapi import FastAPI, Request, status
+from fastapi import Depends, FastAPI, Request, status
+from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import (
+    HTMLResponse,
     JSONResponse,
     PlainTextResponse,
     RedirectResponse,
@@ -19,6 +23,7 @@ from kangaroo.errors import (
     NotFoundError,
 )
 from kangaroo.routes import api_v1_router
+from kangaroo.routes.auth import require_user
 from kangaroo.routes.auth import router as auth_router
 from kangaroo.runners import RunnerUnavailableError
 from kangaroo.settings import settings
@@ -47,8 +52,8 @@ class SPAStaticFiles(StaticFiles):
 
 
 app = FastAPI(
-    docs_url="/api/v1/docs",
-    openapi_url="/api/v1/openapi.json",
+    docs_url=None,
+    openapi_url=None,
     redoc_url=None,
 )
 
@@ -58,9 +63,37 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+# API docs are served only to logged-in users, so the endpoint list isn't public.
+@app.get("/api/v1/openapi.json", include_in_schema=False)
+def openapi_schema(_user: Annotated[dict[str, Any], Depends(require_user)]) -> dict:
+    return app.openapi()
+
+
+@app.get("/api/v1/docs", include_in_schema=False)
+def swagger_docs(
+    _user: Annotated[dict[str, Any], Depends(require_user)],
+) -> HTMLResponse:
+    return get_swagger_ui_html(
+        openapi_url="/api/v1/openapi.json",
+        title=f"{app.title} - Swagger UI",
+    )
+
+
 @app.get("/", include_in_schema=False)
 def root() -> RedirectResponse:
     return RedirectResponse(url="/web/")
+
+
+# Send logged-out browsers to login before any web UI page loads. Added before
+# SessionMiddleware so that SessionMiddleware (the outer layer) fills the session first.
+@app.middleware("http")
+async def require_login_for_web(request: Request, call_next):
+    path = request.url.path
+    is_web = path == "/web" or path.startswith("/web/")
+    if is_web and request.method in ("GET", "HEAD") and not request.session.get("user"):
+        target = path + (f"?{request.url.query}" if request.url.query else "")
+        return RedirectResponse(url=f"/login?next={quote(target, safe='')}")
+    return await call_next(request)
 
 
 app.add_middleware(SessionMiddleware, secret_key=settings.session_secret_key)
