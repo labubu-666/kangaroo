@@ -33,7 +33,9 @@ test.describe("FunctionForm", () => {
     );
     await expect(component.getByLabel("Name *")).toHaveValue("Hello");
     await expect(component.getByLabel("Description")).toHaveValue("Says hi");
-    await expect(component.getByLabel("Code *")).toHaveValue("print(1)");
+    await expect(component.getByLabel("Code", { exact: true })).toContainText(
+      "print(1)",
+    );
     await expect(component.getByText("demo", { exact: true })).toBeVisible();
   });
 
@@ -60,7 +62,7 @@ test.describe("FunctionForm", () => {
     expect(submitted).toBe(false);
   });
 
-  test("submits the entered values", async ({ mount }) => {
+  test("submits the entered values", async ({ mount, page }) => {
     const submitted: FunctionFormValues[] = [];
     const component = await mount(
       <TestRouter paths={paths}>
@@ -76,7 +78,8 @@ test.describe("FunctionForm", () => {
       </TestRouter>,
     );
     await component.getByLabel("Name *").fill("Hello");
-    await component.getByLabel("Code *").fill('print("hi")');
+    await component.getByLabel("Code", { exact: true }).click();
+    await page.keyboard.type('print("hi")');
     await component.getByRole("button", { name: "Create" }).click();
     expect(submitted).toEqual([
       { name: "Hello", description: "", code: 'print("hi")', labels: [] },

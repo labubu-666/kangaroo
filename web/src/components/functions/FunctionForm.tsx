@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { ErrorBanner } from "../shared/ErrorBanner";
 import { LabelsEditor } from "../shared/LabelsEditor";
+import { CodeEditor } from "./CodeEditor";
 
 export interface FunctionFormValues {
   name: string;
@@ -67,23 +68,19 @@ export function FunctionForm({
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="code" className="block font-medium">
-            Code *
-          </label>
+          <label className="block font-medium">Code *</label>
           <p className="text-sm text-gray-500">
             A Python script. Put dependencies in a PEP 723 header, for example{" "}
             <code># /// script</code>.
           </p>
-          <textarea
-            id="code"
-            disabled={disabled}
+          <CodeEditor
+            value={values.code}
+            ariaLabel="Code"
+            readOnly={disabled}
             placeholder={
               '# /// script\n# dependencies = ["requests"]\n# ///\nprint("hello")'
             }
-            rows={12}
-            value={values.code}
-            onChange={(e) => setValues({ ...values, code: e.target.value })}
-            className="w-full rounded border border-gray-300 px-3 py-2 font-mono text-sm"
+            onChange={(code) => setValues({ ...values, code })}
           />
           {codeError && <p className="text-sm text-red-600">{codeError}</p>}
         </div>
