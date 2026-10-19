@@ -72,10 +72,11 @@ def get_session(engine: Annotated[Engine, Depends(get_engine)]) -> Iterator[Sess
 
 def get_function_service(
     session: Annotated[Session, Depends(get_session)],
+    engine: Annotated[Engine, Depends(get_engine)],
 ) -> FunctionService:
     return FunctionService(
         FunctionRepository(session),
-        InvocationRepository(session),
+        engine,
         get_function_runner(),
     )
 

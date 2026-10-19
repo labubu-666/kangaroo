@@ -82,9 +82,10 @@ def run_function(
 ) -> Invocation:
     """Run a saved function and store the run as an invocation.
 
-    Returns the stored invocation with its stdout, stderr and exit code. The run
-    takes up to 15 seconds. A timeout returns exit code -1. If the configured
-    runner cannot be reached, returns 503 and nothing is stored.
+    Returns the stored invocation with its status (SUCCESS or ERROR), logs, result
+    and error. The run takes up to 15 seconds. A timeout returns ERROR. If the
+    configured runner cannot be reached, the invocation is stored as ERROR and the
+    route returns 503.
 
     The script gets ``KANGAROO_API_URL`` and ``KANGAROO_TOKEN`` in its environment.
     The token impersonates the calling user and expires shortly after the run.

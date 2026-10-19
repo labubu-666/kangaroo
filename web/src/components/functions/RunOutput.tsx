@@ -1,28 +1,34 @@
-import type { RunResult } from "../../lib/functions";
+import type { Invocation } from "../../lib/invocations";
 
-export function RunOutput({ result }: { result: RunResult }) {
-  const succeeded = result.exit_code === 0;
+export const STATUS_TEXT: Record<Invocation["status"], string> = {
+  RUNNING: "text-blue-700",
+  SUCCESS: "text-green-700",
+  ERROR: "text-red-700",
+};
+
+export function RunOutput({ result }: { result: Invocation }) {
   return (
     <div
       role="region"
       aria-label="Run output"
       className="space-y-3 rounded border border-gray-200 p-4"
     >
-      <p
-        className={`font-semibold ${succeeded ? "text-green-700" : "text-red-700"}`}
-      >
-        Exit code {result.exit_code}
+      <p className={`font-semibold ${STATUS_TEXT[result.status]}`}>
+        {result.status}
       </p>
+      {result.error && <p className="text-sm text-red-700">{result.error}</p>}
       <div>
-        <h3 className="mb-1 font-medium text-gray-700">stdout</h3>
+        <h3 className="mb-1 font-medium text-gray-700">Logs</h3>
         <pre className="overflow-x-auto whitespace-pre-wrap rounded bg-gray-50 p-3 font-mono text-sm">
-          {result.stdout || "(empty)"}
+          {result.logs || "(empty)"}
         </pre>
       </div>
       <div>
-        <h3 className="mb-1 font-medium text-gray-700">stderr</h3>
+        <h3 className="mb-1 font-medium text-gray-700">Result</h3>
         <pre className="overflow-x-auto whitespace-pre-wrap rounded bg-gray-50 p-3 font-mono text-sm">
-          {result.stderr || "(empty)"}
+          {result.result === null
+            ? "null"
+            : JSON.stringify(result.result, null, 2)}
         </pre>
       </div>
     </div>

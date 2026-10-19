@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { fetchFunction } from "../../lib/functions";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchFunction, runFunction } from "../../lib/functions";
 import { fetchInvocation } from "../../lib/invocations";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 import { RunOutput } from "../../components/functions/RunOutput";
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/invocations/$id")({
 
 function InvocationDetail() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
 
   const {
     data: invocation,
@@ -30,6 +31,12 @@ function InvocationDetail() {
     enabled: !!functionId,
   });
 
+  const rerunMutation = useMutation({
+    mutationFn: () => runFunction(functionId!),
+    onSuccess: (run) =>
+      navigate({ to: "/invocations/$id", params: { id: run.id } }),
+  });
+
   useBreadcrumbs([
     { label: "Functions", to: "/functions" },
     { label: "Invocations", to: "/functions", search: { tab: "invocations" } },
@@ -44,23 +51,43 @@ function InvocationDetail() {
         <Loading />
       ) : invocation ? (
         <div className="space-y-6">
-          <div>
-            <h1 className="break-words text-2xl font-bold sm:text-3xl">
-              {fn?.name ?? "Invocation"}
-            </h1>
-            <p className="mt-2 text-sm text-gray-500">
-              {new Date(invocation.created_at).toLocaleString()}
-            </p>
-            {fn && (
-              <Link
-                to="/functions/$id"
-                params={{ id: fn.id }}
-                className="mt-2 inline-block text-sm text-blue-600 hover:underline"
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h1 className="break-words text-2xl font-bold sm:text-3xl">
+                {fn?.name ?? "Invocation"}
+              </h1>
+              <p className="mt-2 text-sm text-gray-500">
+                {new Date(invocation.created_at).toLocaleString()}
+              </p>
+              {fn && (
+                <Link
+                  to="/functions/$id"
+                  params={{ id: fn.id }}
+                  className="mt-2 inline-block text-sm text-blue-600 hover:underline"
+                >
+                  Back to function
+                </Link>
+              )}
+            </div>
+            <button
+              onClick={() => rerunMutation.mutate()}
+              disabled={rerunMutation.isPending || !functionId}
+              className="flex h-10 items-center gap-2 rounded bg-green-600 px-4 font-medium text-white hover:bg-green-700 disabled:bg-gray-400"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="h-4 w-4 fill-current"
               >
-                Back to function
-              </Link>
-            )}
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              {rerunMutation.isPending ? "Running..." : "Re-run"}
+            </button>
           </div>
+
+          {rerunMutation.error && (
+            <ErrorBanner>{rerunMutation.error.message}</ErrorBanner>
+          )}
 
           <RunOutput result={invocation} />
         </div>

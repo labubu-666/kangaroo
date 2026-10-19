@@ -34,6 +34,7 @@ from kangaroo.schemas import (
     FunctionUpdate,
     Invocation,
     InvocationCreate,
+    InvocationUpdate,
     PaginatedResponse,
     Project,
     ProjectCreate,
@@ -369,7 +370,7 @@ class FunctionRepository(
 
 
 class InvocationRepository(
-    Repository[Invocation, InvocationCreate, InvocationCreate, InvocationCreate]
+    Repository[Invocation, InvocationCreate, InvocationUpdate, InvocationCreate]
 ):
     entity = "Invocation"
     filter_fields = frozenset({"function_id"})

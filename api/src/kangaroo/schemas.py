@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import (
@@ -372,23 +372,38 @@ class Function(FunctionCreate, Timestamped):
     id: UUID
 
 
+RunStatus = Literal["SUCCESS", "ERROR"]
+InvocationStatus = Literal["RUNNING", "SUCCESS", "ERROR"]
+
+
 class InvocationCreate(BaseModel):
-    """The saved output of one run of a function."""
+    """A run of a function. It is stored as RUNNING until its script has finished."""
 
     function_id: UUID
-    stdout: str
-    stderr: str
-    exit_code: int
+    status: InvocationStatus
+    logs: str = ""
+    result: Any = None
+    error: str | None = None
+
+
+class InvocationUpdate(BaseModel):
+    """The outcome of a run, stored once its script has finished."""
+
+    status: InvocationStatus | None = None
+    logs: str | None = None
+    result: Any = None
+    error: str | None = None
 
 
 class Invocation(Timestamped):
-    """A stored run of a function: what it printed and how it exited."""
+    """A stored run of a function: its status, logs, result and error."""
 
     id: UUID
     function_id: UUID
-    stdout: str
-    stderr: str
-    exit_code: int
+    status: InvocationStatus
+    logs: str
+    result: Any = None
+    error: str | None = None
 
 
 MAX_RUN_TIMEOUT_SECONDS = 15
@@ -405,14 +420,15 @@ class RunRequest(BaseModel):
 
 
 class RunResult(BaseModel):
-    """What a runner printed and how the script exited.
+    """What a runner produced: the logs, the value ``main()`` returned and any error.
 
-    A run that exceeds its timeout has ``exit_code`` -1.
+    ``status`` is SUCCESS when the script exited with code 0, and ERROR otherwise.
     """
 
-    stdout: str
-    stderr: str
-    exit_code: int
+    status: RunStatus
+    logs: str
+    result: Any = None
+    error: str | None = None
 
 
 class PaginatedResponse[T](BaseModel):

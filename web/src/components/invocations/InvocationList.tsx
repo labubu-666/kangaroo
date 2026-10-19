@@ -5,6 +5,7 @@ import { fetchFunctions } from "../../lib/functions";
 import type { Invocation } from "../../lib/invocations";
 import { fetchInvocations, INVOCATION_LIMIT } from "../../lib/invocations";
 
+import { STATUS_TEXT } from "../functions/RunOutput";
 import { ErrorBanner } from "../shared/ErrorBanner";
 import { Loading } from "../shared/Loading";
 import { Pagination } from "../shared/Pagination";
@@ -51,13 +52,9 @@ export function InvocationList() {
                   {functionNames.get(invocation.function_id) ?? "Unknown"}
                 </h3>
                 <span
-                  className={`text-sm font-medium ${
-                    invocation.exit_code === 0
-                      ? "text-green-700"
-                      : "text-red-700"
-                  }`}
+                  className={`text-sm font-medium ${STATUS_TEXT[invocation.status]}`}
                 >
-                  Exit code {invocation.exit_code}
+                  {invocation.status}
                 </span>
               </div>
               <p className="text-xs text-gray-500">

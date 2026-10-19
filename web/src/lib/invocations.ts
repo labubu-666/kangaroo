@@ -1,11 +1,14 @@
 import { apiJson, type Paginated } from "./api";
 
+export type InvocationStatus = "RUNNING" | "SUCCESS" | "ERROR";
+
 export interface Invocation {
   id: string;
   function_id: string;
-  stdout: string;
-  stderr: string;
-  exit_code: number;
+  status: InvocationStatus;
+  logs: string;
+  result: unknown;
+  error: string | null;
   created_at: string;
   modified_at: string;
 }
