@@ -23,7 +23,12 @@ def fake_nuclio():
             length = int(self.headers["Content-Length"])
             received["body"] = json.loads(self.rfile.read(length))
             payload = json.dumps(
-                {"stdout": "from nuclio\n", "stderr": "", "exit_code": 0}
+                {
+                    "status": "SUCCESS",
+                    "logs": "from nuclio\n",
+                    "result": None,
+                    "error": None,
+                }
             ).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -43,25 +48,55 @@ def fake_nuclio():
 
 
 def test_local_runner_runs_script():
-    """LocalRunner runs the code with uv and returns its output."""
+    """A script that prints succeeds and its output is in the logs."""
     result = LocalRunner().run(RunRequest(code="print(1 + 1)"))
-    assert result == RunResult(stdout="2\n", stderr=result.stderr, exit_code=0)
+    assert result == RunResult(status="SUCCESS", logs="2\n", result=None, error=None)
 
 
 def test_local_runner_reports_failure():
-    """A script that exits with an error returns its exit code and stderr."""
+    """A script that exits with an error has ERROR status and its stderr in the logs."""
     result = LocalRunner().run(RunRequest(code="raise SystemExit('boom')"))
-    assert result.exit_code == 1
-    assert "boom" in result.stderr
+    assert result.status == "ERROR"
+    assert result.error == "Exited with code 1"
+    assert "boom" in result.logs
 
 
 def test_local_runner_times_out():
-    """A script over its timeout returns exit code -1."""
+    """A script over its timeout has ERROR status."""
     result = LocalRunner().run(
         RunRequest(code="import time\ntime.sleep(10)", timeout_seconds=1)
     )
-    assert result.exit_code == -1
-    assert result.stderr == "Timed out after 1 seconds"
+    assert result.status == "ERROR"
+    assert result.error == "Timed out after 1 seconds"
+
+
+def test_local_runner_returns_main_result():
+    """The value main() returns is the result, and main() runs once."""
+    code = 'def main():\n    print("ran")\n    return {"count": 2}\n\nif __name__ == "__main__":\n    main()\n'
+    result = LocalRunner().run(RunRequest(code=code))
+    assert result.status == "SUCCESS"
+    assert result.result == {"count": 2}
+    assert result.logs == "ran\n"
+
+
+def test_local_runner_main_returning_nothing_is_null():
+    """A main() that returns nothing gives a null result."""
+    result = LocalRunner().run(RunRequest(code="def main():\n    pass\n"))
+    assert result == RunResult(status="SUCCESS", logs="", result=None, error=None)
+
+
+def test_local_runner_script_without_main_has_null_result():
+    """A script with no main() runs top to bottom and has a null result."""
+    result = LocalRunner().run(RunRequest(code="print('hi')"))
+    assert result == RunResult(status="SUCCESS", logs="hi\n", result=None, error=None)
+
+
+def test_local_runner_non_json_result_is_error():
+    """A main() whose return value is not JSON-serializable is an ERROR."""
+    result = LocalRunner().run(RunRequest(code="def main():\n    return object()\n"))
+    assert result.status == "ERROR"
+    assert result.error == "Exited with code 1"
+    assert "not JSON serializable" in result.logs
 
 
 def test_nuclio_runner_sends_standard_request(fake_nuclio):
@@ -69,7 +104,9 @@ def test_nuclio_runner_sends_standard_request(fake_nuclio):
     url, received = fake_nuclio
     result = NuclioRunner(url).run(RunRequest(code="print(1)", timeout_seconds=15))
     assert received["body"] == {"code": "print(1)", "timeout_seconds": 15, "env": {}}
-    assert result == RunResult(stdout="from nuclio\n", stderr="", exit_code=0)
+    assert result == RunResult(
+        status="SUCCESS", logs="from nuclio\n", result=None, error=None
+    )
 
 
 def test_nuclio_runner_sends_env(fake_nuclio):
@@ -83,7 +120,7 @@ def test_local_runner_passes_env():
     """LocalRunner makes the request env visible to the script."""
     code = 'import os\nprint(os.environ["KANGAROO_TOKEN"])'
     result = LocalRunner().run(RunRequest(code=code, env={"KANGAROO_TOKEN": "abc"}))
-    assert result.stdout == "abc\n"
+    assert result.logs == "abc\n"
 
 
 def test_nuclio_runner_unreachable_raises():

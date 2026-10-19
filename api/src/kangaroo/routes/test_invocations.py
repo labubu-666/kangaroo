@@ -1,8 +1,18 @@
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from kangaroo.app import app
+from kangaroo.repositories import (
+    ProjectRepository,
+    StatusRepository,
+    WorkItemRepository,
+    WorkItemTypeRepository,
+)
 from kangaroo.routes.dependencies import get_engine
+from kangaroo.runners import RunnerUnavailableError
+from kangaroo.schemas import RunResult
+from kangaroo.testing import new_task, seed_project
 
 
 @pytest.fixture
@@ -25,9 +35,70 @@ def test_run_stores_invocation(client):
     assert response.status_code == 200
     data = response.json()
     assert data["function_id"] == function_id
-    assert data["stdout"] == "2\n"
-    assert data["exit_code"] == 0
+    assert data["status"] == "SUCCESS"
+    assert data["logs"] == "2\n"
+    assert data["result"] is None
+    assert data["error"] is None
     assert "created_at" in data
+
+
+def test_script_can_write_to_the_database_during_a_run(client, engine, monkeypatch):
+    """A script's own API writes succeed while its run is in progress.
+
+    The RUNNING row must not hold the database lock for the length of the run.
+    """
+    with Session(engine) as session, session.begin():
+        seeded = seed_project(
+            ProjectRepository(session),
+            StatusRepository(session),
+            WorkItemTypeRepository(session),
+        )
+
+    class WritingRunner:
+        def run(self, request):
+            with Session(engine) as session, session.begin():
+                WorkItemRepository(session).create(new_task(seeded, "During run"))
+            return RunResult(status="SUCCESS", logs="", result=None, error=None)
+
+    monkeypatch.setattr(
+        "kangaroo.routes.dependencies.get_function_runner",
+        lambda: WritingRunner(),
+    )
+    function_id = create_function(client)
+    response = client.post(f"/api/v1/functions/{function_id}/run")
+    assert response.status_code == 200
+    assert response.json()["status"] == "SUCCESS"
+
+
+def test_unreachable_runner_stores_error(client, monkeypatch):
+    """A runner that cannot be reached returns 503 and the invocation is stored as ERROR."""
+
+    class UnreachableRunner:
+        def run(self, request):
+            raise RunnerUnavailableError("Nuclio runner unavailable: down")
+
+    monkeypatch.setattr(
+        "kangaroo.routes.dependencies.get_function_runner",
+        lambda: UnreachableRunner(),
+    )
+    function_id = create_function(client)
+    response = client.post(f"/api/v1/functions/{function_id}/run")
+    assert response.status_code == 503
+    listed = client.get(f"/api/v1/invocations?function_id={function_id}").json()
+    assert listed["total"] == 1
+    assert listed["results"][0]["status"] == "ERROR"
+    assert listed["results"][0]["error"] == "Nuclio runner unavailable: down"
+
+
+def test_run_stores_main_result(client):
+    """The value main() returns is stored as the invocation's result."""
+    code = "def main():\n    return {'answer': 42}\n"
+    function_id = create_function(client, code=code)
+    data = client.post(f"/api/v1/functions/{function_id}/run").json()
+    assert data["result"] == {"answer": 42}
+    assert client.get(f"/api/v1/invocations/{data['id']}").json()["result"] == {
+        "answer": 42
+    }
 
 
 def test_get_invocation(client):

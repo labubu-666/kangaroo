@@ -97,23 +97,26 @@ def test_delete_function(client):
 
 
 def test_run_function(client):
-    """POST /api/v1/functions/{id}/run executes the code and returns its output."""
+    """POST /api/v1/functions/{id}/run executes the code and returns its logs."""
     created = create(client, code="print(1 + 1)").json()
     response = client.post(f"/api/v1/functions/{created['id']}/run")
     assert response.status_code == 200
     data = response.json()
-    assert data["stdout"] == "2\n"
-    assert data["exit_code"] == 0
+    assert data["status"] == "SUCCESS"
+    assert data["logs"] == "2\n"
+    assert data["result"] is None
+    assert data["error"] is None
 
 
 def test_run_function_reports_errors(client):
-    """A script that raises returns a non-zero exit code and its traceback."""
+    """A script that raises has ERROR status and its traceback in the logs."""
     created = create(client, code="raise SystemExit('boom')").json()
     response = client.post(f"/api/v1/functions/{created['id']}/run")
     assert response.status_code == 200
     data = response.json()
-    assert data["exit_code"] == 1
-    assert "boom" in data["stderr"]
+    assert data["status"] == "ERROR"
+    assert data["error"] == "Exited with code 1"
+    assert "boom" in data["logs"]
 
 
 def test_run_function_passes_impersonation_env(client, monkeypatch):
@@ -123,7 +126,7 @@ def test_run_function_passes_impersonation_env(client, monkeypatch):
     class CapturingRunner:
         def run(self, request):
             captured["env"] = request.env
-            return RunResult(stdout="", stderr="", exit_code=0)
+            return RunResult(status="SUCCESS", logs="", result=None, error=None)
 
     monkeypatch.setattr(
         "kangaroo.routes.dependencies.get_function_runner",

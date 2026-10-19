@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import (
@@ -135,9 +136,10 @@ class InvocationRow(Base):
     function_id: Mapped[UUID] = mapped_column(
         Uuid, ForeignKey("functions.id", ondelete="CASCADE"), nullable=False
     )
-    stdout: Mapped[str] = mapped_column(String)
-    stderr: Mapped[str] = mapped_column(String)
-    exit_code: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String)
+    logs: Mapped[str] = mapped_column(String)
+    result: Mapped[Any] = mapped_column(JSON, nullable=True)
+    error: Mapped[str | None] = mapped_column(String, nullable=True)
 
 
 class FunctionRow(Base):

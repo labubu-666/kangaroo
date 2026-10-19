@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useBlocker } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   deleteFunction,
   fetchFunction,
@@ -62,7 +62,11 @@ function FunctionDetail() {
     onSuccess: () => setDraftCode(null),
   });
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuId = useId();
+
   const handleDelete = () => {
+    setMenuOpen(false);
     if (confirm("Are you sure you want to delete this function?")) {
       deleteMutation.mutate();
     }
@@ -112,9 +116,9 @@ function FunctionDetail() {
                 ariaLabel="name"
                 placeholder="Enter function name"
                 requiredMessage="Name is required"
-                textClassName="text-2xl font-bold sm:text-3xl"
+                textClassName="h-10 text-2xl font-bold sm:text-3xl"
               >
-                <h1 className="cursor-pointer break-words text-2xl font-bold sm:text-3xl">
+                <h1 className="flex h-10 cursor-pointer items-center break-words text-2xl font-bold sm:text-3xl">
                   {fn.name}
                 </h1>
               </InlineEdit>
@@ -136,21 +140,52 @@ function FunctionDetail() {
                 </ul>
               )}
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => runMutation.mutate()}
                 disabled={runMutation.isPending}
-                className="rounded bg-green-600 px-4 py-2 font-medium text-white hover:bg-green-700 disabled:bg-gray-400"
+                className="flex h-10 items-center gap-2 rounded bg-green-600 px-4 font-medium text-white hover:bg-green-700 disabled:bg-gray-400"
               >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 fill-current"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
                 {runMutation.isPending ? "Running..." : "Run"}
               </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleteMutation.isPending}
-                className="rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:bg-gray-400"
-              >
-                Delete
-              </button>
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-label="More actions"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-controls={menuId}
+                  onClick={() => setMenuOpen((open) => !open)}
+                  className="flex h-10 items-center rounded border border-gray-300 px-4 font-medium hover:bg-gray-50"
+                >
+                  ⋯
+                </button>
+                {menuOpen && (
+                  <div
+                    id={menuId}
+                    role="menu"
+                    aria-label="Function actions"
+                    className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-gray-200 bg-white py-1 shadow-lg"
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleDelete}
+                      disabled={deleteMutation.isPending}
+                      className="px-3 py-2 text-left font-medium text-red-600 hover:bg-gray-100 disabled:text-gray-400"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

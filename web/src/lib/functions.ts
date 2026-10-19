@@ -27,12 +27,6 @@ export interface FunctionUpdate {
   labels?: string[];
 }
 
-export interface RunResult {
-  stdout: string;
-  stderr: string;
-  exit_code: number;
-}
-
 export const FUNCTION_LIMIT = 10;
 
 export function fetchFunctions(

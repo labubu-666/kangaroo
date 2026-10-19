@@ -13,7 +13,8 @@ class RunnerUnavailableError(Exception):
 class NuclioRunner(BaseRunner):
     """Sends scripts to the deployed Nuclio ``runner`` function over HTTP.
 
-    The function runs each script in its own container.
+    The function runs each script in its own container. It saves the value the
+    script's ``main()`` returned and reports it as ``result``.
     """
 
     def __init__(self, url: str) -> None:
