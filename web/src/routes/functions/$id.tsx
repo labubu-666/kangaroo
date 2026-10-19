@@ -1,11 +1,17 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useBlocker } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   deleteFunction,
   fetchFunction,
   runFunction,
+  updateFunction,
 } from "../../lib/functions";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
+import { CodeEditor } from "../../components/functions/CodeEditor";
+import { InlineEdit } from "../../components/InlineEdit";
+import { ConfirmChange } from "../../components/workflow/ConfirmChange";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { Loading } from "../../components/shared/Loading";
 
@@ -42,6 +48,20 @@ function FunctionDetail() {
     },
   });
 
+  const saveFunction = async (update: { name?: string; code?: string }) => {
+    const updated = await updateFunction(id, update);
+    queryClient.setQueryData(["functions", id], updated);
+    queryClient.invalidateQueries({ queryKey: ["functions"] });
+  };
+
+  // Null means the code has no unsaved changes; the saved code is shown as-is.
+  const [draftCode, setDraftCode] = useState<string | null>(null);
+
+  const codeMutation = useMutation({
+    mutationFn: () => saveFunction({ code: draftCode ?? undefined }),
+    onSuccess: () => setDraftCode(null),
+  });
+
   const handleDelete = () => {
     if (confirm("Are you sure you want to delete this function?")) {
       deleteMutation.mutate();
@@ -53,19 +73,51 @@ function FunctionDetail() {
     { label: fn?.name ?? "Loading..." },
   ]);
 
+  const code = draftCode ?? fn?.code ?? "";
+  const isModified =
+    fn !== undefined && draftCode !== null && draftCode !== fn.code;
+  // Delete navigates away on purpose, so it must not trigger the warning.
+  const blocker = useBlocker({
+    shouldBlockFn: () => isModified,
+    disabled: !isModified || deleteMutation.isPending,
+    withResolver: true,
+  });
+
+  const codeError =
+    draftCode !== null && !draftCode.trim() ? "Code is required" : null;
+
   return (
-    <div className="space-y-6 p-4">
+    <div className="flex min-h-0 flex-1 flex-col space-y-6 p-4">
       {error && <ErrorBanner>Error loading function</ErrorBanner>}
+
+      {blocker.status === "blocked" && (
+        <ConfirmChange
+          title="Discard unsaved changes?"
+          lines={["Your changes to this function have not been saved."]}
+          busy={false}
+          onConfirm={blocker.proceed}
+          onCancel={blocker.reset}
+        />
+      )}
 
       {isLoading ? (
         <Loading />
       ) : fn ? (
-        <div className="space-y-6">
+        <div className="flex min-h-0 flex-1 flex-col space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <h1 className="break-words text-2xl font-bold sm:text-3xl">
-                {fn.name}
-              </h1>
+              <InlineEdit
+                value={fn.name}
+                onSave={(name) => saveFunction({ name: name.trim() })}
+                ariaLabel="name"
+                placeholder="Enter function name"
+                requiredMessage="Name is required"
+                textClassName="text-2xl font-bold sm:text-3xl"
+              >
+                <h1 className="cursor-pointer break-words text-2xl font-bold sm:text-3xl">
+                  {fn.name}
+                </h1>
+              </InlineEdit>
               {fn.description && (
                 <p className="mt-2 whitespace-pre-wrap text-gray-600">
                   {fn.description}
@@ -92,13 +144,6 @@ function FunctionDetail() {
               >
                 {runMutation.isPending ? "Running..." : "Run"}
               </button>
-              <Link
-                to="/functions/$id/edit"
-                params={{ id: fn.id }}
-                className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
-              >
-                Edit
-              </Link>
               <button
                 onClick={handleDelete}
                 disabled={deleteMutation.isPending}
@@ -115,13 +160,42 @@ function FunctionDetail() {
           {deleteMutation.error && (
             <ErrorBanner>{deleteMutation.error.message}</ErrorBanner>
           )}
+          {codeMutation.error && (
+            <ErrorBanner>{codeMutation.error.message}</ErrorBanner>
+          )}
+          {codeError && <p className="text-sm text-red-600">{codeError}</p>}
 
-          <div>
-            <h2 className="mb-2 font-semibold text-gray-700">Code</h2>
-            <pre className="overflow-x-auto whitespace-pre rounded border border-gray-200 bg-gray-50 p-4 font-mono text-sm">
-              {fn.code}
-            </pre>
+          <div className="flex min-h-0 flex-1 flex-col">
+            <CodeEditor
+              value={code}
+              ariaLabel="Code"
+              readOnly={codeMutation.isPending}
+              onChange={setDraftCode}
+              fill
+            />
           </div>
+
+          {isModified && (
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => codeMutation.mutate()}
+                disabled={codeMutation.isPending || codeError !== null}
+                className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                {codeMutation.isPending ? "Saving..." : "Save"}
+              </button>
+              <button
+                onClick={() => setDraftCode(null)}
+                disabled={codeMutation.isPending}
+                className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+              >
+                Discard
+              </button>
+              <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                Modified
+              </span>
+            </div>
+          )}
         </div>
       ) : null}
     </div>
