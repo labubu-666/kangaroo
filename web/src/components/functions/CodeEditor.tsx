@@ -14,6 +14,8 @@ export function CodeEditor({
   ariaLabel,
   placeholder,
   fill = false,
+  grow = false,
+  stretch = false,
   language = "python",
 }: {
   value: string;
@@ -23,6 +25,10 @@ export function CodeEditor({
   placeholder?: string;
   // Caps the editor at the space left in the window instead of a fixed height.
   fill?: boolean;
+  // Lets the editor grow with its content instead of scrolling past a max height.
+  grow?: boolean;
+  // Fills the height of a flex parent instead of using its own height.
+  stretch?: boolean;
   language?: "python" | "markdown";
 }) {
   // Memoized so CodeMirror does not reconfigure the editor on every render.
@@ -52,7 +58,10 @@ export function CodeEditor({
   }, [fill]);
 
   return (
-    <div ref={wrapperRef}>
+    <div
+      ref={wrapperRef}
+      className={stretch ? "flex min-h-0 flex-1 flex-col" : undefined}
+    >
       <CodeMirror
         value={value}
         onChange={onChange}
@@ -60,9 +69,10 @@ export function CodeEditor({
         placeholder={placeholder}
         readOnly={readOnly}
         editable={!readOnly}
+        height={stretch ? "100%" : undefined}
         minHeight="12rem"
-        maxHeight={fill ? fillHeight : DEFAULT_MAX_HEIGHT}
-        className="overflow-hidden rounded border border-gray-300 font-mono text-sm"
+        maxHeight={grow ? undefined : fill ? fillHeight : DEFAULT_MAX_HEIGHT}
+        className={`overflow-hidden rounded border border-gray-300 font-mono text-sm ${stretch ? "min-h-0 flex-1" : ""}`}
       />
     </div>
   );

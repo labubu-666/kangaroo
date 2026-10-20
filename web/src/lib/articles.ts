@@ -23,6 +23,12 @@ export interface ArticleInput {
   labels: string[];
 }
 
+export interface ArticleUpdate {
+  title?: string;
+  body?: string;
+  labels?: string[];
+}
+
 export const ARTICLE_LIMIT = 10;
 
 export function fetchArticles(
@@ -49,6 +55,17 @@ export function createArticle(item: ArticleInput): Promise<Article> {
     "/api/v1/articles/",
     "Failed to create article",
     jsonBody("POST", item),
+  );
+}
+
+export function updateArticle(
+  id: string,
+  item: ArticleUpdate,
+): Promise<Article> {
+  return apiJson(
+    `/api/v1/articles/${id}`,
+    "Failed to update article",
+    jsonBody("PATCH", item),
   );
 }
 

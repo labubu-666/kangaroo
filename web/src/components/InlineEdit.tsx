@@ -1,12 +1,15 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { ErrorBanner } from "./shared/ErrorBanner";
+import { CodeEditor } from "./functions/CodeEditor";
 
 export function InlineEdit({
   value,
   onSave,
   children,
   multiline = false,
+  language,
+  fill = false,
   placeholder,
   ariaLabel,
   requiredMessage,
@@ -16,6 +19,10 @@ export function InlineEdit({
   onSave: (draft: string) => Promise<unknown>;
   children: ReactNode;
   multiline?: boolean;
+  // Renders CodeMirror instead of a textarea, so the text gets syntax highlighting.
+  language?: "python" | "markdown";
+  // Stretches the view to fill its parent's height.
+  fill?: boolean;
   placeholder?: string;
   ariaLabel: string;
   requiredMessage?: string;
@@ -61,7 +68,7 @@ export function InlineEdit({
         onKeyDown={(e) => {
           if (e.key === "Enter") startEditing();
         }}
-        className="cursor-pointer"
+        className={`cursor-pointer ${fill ? "flex flex-1 flex-col" : ""}`}
       >
         {children}
       </div>
@@ -69,9 +76,23 @@ export function InlineEdit({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form
+      onSubmit={handleSubmit}
+      className={`space-y-3 ${fill ? "flex flex-1 flex-col" : ""}`}
+    >
       {mutation.error && <ErrorBanner>{mutation.error.message}</ErrorBanner>}
-      {multiline ? (
+      {language ? (
+        <CodeEditor
+          value={draft}
+          onChange={setDraft}
+          readOnly={mutation.isPending}
+          ariaLabel={ariaLabel}
+          placeholder={placeholder}
+          language={language}
+          grow
+          stretch={fill}
+        />
+      ) : multiline ? (
         <textarea
           aria-label={ariaLabel}
           value={draft}

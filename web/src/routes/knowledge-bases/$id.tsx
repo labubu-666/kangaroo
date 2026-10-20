@@ -5,9 +5,11 @@ import { ARTICLE_LIMIT, fetchArticles } from "../../lib/articles";
 import {
   deleteKnowledgeBase,
   fetchKnowledgeBase,
+  updateKnowledgeBase,
 } from "../../lib/knowledge-bases";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
+import { InlineEdit } from "../../components/InlineEdit";
 import { Loading } from "../../components/shared/Loading";
 import { Pagination } from "../../components/shared/Pagination";
 
@@ -46,6 +48,11 @@ function KnowledgeBaseDetail() {
     },
   });
 
+  const saveName = async (name: string) => {
+    await updateKnowledgeBase(id, { name: name.trim() });
+    queryClient.invalidateQueries({ queryKey: ["knowledge-bases"] });
+  };
+
   const handleDelete = () => {
     setMenuOpen(false);
     if (confirm("Are you sure you want to delete this knowledge base?")) {
@@ -70,9 +77,18 @@ function KnowledgeBaseDetail() {
     <div className="space-y-6 p-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="break-words text-2xl font-bold sm:text-3xl">
-            {knowledgeBase.name}
-          </h1>
+          <InlineEdit
+            value={knowledgeBase.name}
+            onSave={saveName}
+            ariaLabel="name"
+            placeholder="Enter knowledge base name"
+            requiredMessage="Name is required"
+            textClassName="text-2xl font-bold sm:text-3xl"
+          >
+            <h1 className="cursor-pointer break-words text-2xl font-bold sm:text-3xl">
+              {knowledgeBase.name}
+            </h1>
+          </InlineEdit>
           {knowledgeBase.description && (
             <p className="mt-2 whitespace-pre-wrap text-gray-600">
               {knowledgeBase.description}
