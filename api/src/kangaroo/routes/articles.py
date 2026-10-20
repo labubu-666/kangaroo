@@ -25,6 +25,7 @@ def create_article(item: ArticleCreate, service: ArticleServiceDep) -> Article:
 def list_articles(
     params: ListParamsDep,
     service: ArticleServiceDep,
+    knowledge_base_id: UUID | None = None,
 ) -> PaginatedResponse[Article]:
     """List articles with pagination.
 
@@ -32,11 +33,17 @@ def list_articles(
         limit: The maximum number of items to return (default: 10, max: 100).
         offset: The number of items to skip from the beginning (default: 0).
         search: Optional text to match case-insensitively in title or body.
+        knowledge_base_id: Optional knowledge base ID to list only its articles.
 
     Returns:
         A paginated response containing items and metadata.
     """
-    return service.list_paginated(params.limit, params.offset, params.search)
+    return service.list_paginated(
+        params.limit,
+        params.offset,
+        params.search,
+        knowledge_base_id=knowledge_base_id,
+    )
 
 
 @router.get("/{item_id}", response_model=ArticleDetail)

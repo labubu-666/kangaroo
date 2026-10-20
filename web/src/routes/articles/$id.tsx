@@ -8,6 +8,7 @@ import {
 } from "../../lib/articles";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 import { ArticleForm } from "../../components/articles/ArticleForm";
+import { fetchKnowledgeBase } from "../../lib/knowledge-bases";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { Loading } from "../../components/shared/Loading";
 
@@ -32,9 +33,16 @@ function ArticleDetail() {
     queryFn: () => fetchArticle(id),
   });
 
+  const { data: knowledgeBase } = useQuery({
+    queryKey: ["knowledge-bases", article?.knowledge_base_id],
+    queryFn: () => fetchKnowledgeBase(article?.knowledge_base_id ?? ""),
+    enabled: article !== undefined,
+  });
+
   const saveMutation = useMutation({
     mutationFn: (values: { title: string; body: string; labels: string[] }) =>
       replaceArticle(id, {
+        knowledge_base_id: article?.knowledge_base_id ?? "",
         title: values.title.trim(),
         body: values.body,
         labels: values.labels,
@@ -51,7 +59,10 @@ function ArticleDetail() {
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ["articles", id] });
       queryClient.invalidateQueries({ queryKey: ["articles"] });
-      navigate({ to: "/articles" });
+      navigate({
+        to: "/knowledge-bases/$id",
+        params: { id: article?.knowledge_base_id ?? "" },
+      });
     },
   });
 
@@ -63,7 +74,15 @@ function ArticleDetail() {
   };
 
   useBreadcrumbs([
-    { label: "Knowledge base", to: "/articles" },
+    {
+      label: "Knowledge bases",
+      to: "/knowledge-bases",
+    },
+    {
+      label: knowledgeBase?.name ?? "Loading...",
+      to: "/knowledge-bases/$id",
+      params: { id: article?.knowledge_base_id ?? "" },
+    },
     { label: article?.title ?? "Loading..." },
   ]);
 

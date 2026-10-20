@@ -10,6 +10,7 @@ from kangaroo.errors import (
 )
 from kangaroo.filters import parse_filter
 from kangaroo.repositories import (
+    KnowledgeBaseRepository,
     ProjectRepository,
     StatusRepository,
     WorkItemTypeRepository,
@@ -37,6 +38,16 @@ def ensure_project_exists(projects: ProjectRepository, project_id: UUID | None) 
         projects.get_by_id(project_id)
     except NotFoundError:
         raise InvalidReferenceError("Project not found") from None
+
+
+def ensure_knowledge_base_exists(
+    knowledge_bases: KnowledgeBaseRepository, knowledge_base_id: UUID
+) -> None:
+    """Raise InvalidReferenceError if the knowledge base does not exist."""
+    try:
+        knowledge_bases.get_by_id(knowledge_base_id)
+    except NotFoundError:
+        raise InvalidReferenceError("Knowledge base not found") from None
 
 
 def project_names(projects: ProjectRepository) -> dict[UUID, str]:

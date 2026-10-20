@@ -18,6 +18,7 @@ from kangaroo.repositories.tables import (
     BoardRow,
     FunctionRow,
     InvocationRow,
+    KnowledgeBaseRow,
     ProjectRow,
     StatusRow,
     StatusTransitionRow,
@@ -40,6 +41,10 @@ from kangaroo.schemas import (
     Invocation,
     InvocationCreate,
     InvocationUpdate,
+    KnowledgeBase,
+    KnowledgeBaseCreate,
+    KnowledgeBaseReplace,
+    KnowledgeBaseUpdate,
     PaginatedResponse,
     Project,
     ProjectCreate,
@@ -372,6 +377,18 @@ class FunctionRepository(
     search_fields = ("name", "description")
     model_type = Function
     row_type = FunctionRow
+
+
+class KnowledgeBaseRepository(
+    Repository[
+        KnowledgeBase, KnowledgeBaseCreate, KnowledgeBaseUpdate, KnowledgeBaseReplace
+    ]
+):
+    entity = "Knowledge base"
+    filter_fields = frozenset(KnowledgeBase.model_fields)
+    search_fields = ("name", "description")
+    model_type = KnowledgeBase
+    row_type = KnowledgeBaseRow
 
 
 class ArticleRepository(

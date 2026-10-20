@@ -8,7 +8,7 @@ const empty: ArticleFormValues = {
   labels: [],
 };
 
-const paths = ["/", "/articles", "/articles/$id"];
+const paths = ["/", "/knowledge-bases/$id", "/articles/$id"];
 
 test.describe("ArticleForm", () => {
   test("shows the initial values", async ({ mount }) => {
@@ -22,7 +22,8 @@ test.describe("ArticleForm", () => {
           }}
           submitLabel="Save"
           pendingLabel="Saving..."
-          cancelTo="/articles"
+          cancelTo="/knowledge-bases/$id"
+          cancelParams={{ id: "kb-1" }}
           disabled={false}
           error={null}
           onSubmit={() => {}}
@@ -44,7 +45,8 @@ test.describe("ArticleForm", () => {
           initial={empty}
           submitLabel="Create"
           pendingLabel="Creating..."
-          cancelTo="/articles"
+          cancelTo="/knowledge-bases/$id"
+          cancelParams={{ id: "kb-1" }}
           disabled={false}
           error={null}
           onSubmit={() => {

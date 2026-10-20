@@ -10,6 +10,7 @@ from kangaroo.repositories import (
     ArticleRepository,
     BoardRepository,
     FunctionRepository,
+    KnowledgeBaseRepository,
     ProjectRepository,
     create_engine_for,
 )
@@ -26,6 +27,7 @@ from kangaroo.schemas import (
     BoardReplace,
     BoardUpdate,
     FunctionCreate,
+    KnowledgeBaseCreate,
     ProjectCreate,
     ProjectReplace,
     ProjectUpdate,
@@ -324,12 +326,21 @@ def test_function_round_trip(session):
 
 
 def test_article_round_trip(session):
-    """A knowledge base article is stored and read back with its body and labels."""
+    """An article is stored in its knowledge base and read back with its body."""
+    knowledge_base = KnowledgeBaseRepository(session).create(
+        KnowledgeBaseCreate(name="Docs")
+    )
     articles = ArticleRepository(session)
     created = articles.create(
-        ArticleCreate(title="Setup", body="# Setup", labels=["howto"])
+        ArticleCreate(
+            knowledge_base_id=knowledge_base.id,
+            title="Setup",
+            body="# Setup",
+            labels=["howto"],
+        )
     )
     fetched = articles.get_by_id(created.id)
+    assert fetched.knowledge_base_id == knowledge_base.id
     assert fetched.body == "# Setup"
     assert fetched.labels == ["howto"]
 
