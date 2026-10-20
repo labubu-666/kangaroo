@@ -24,6 +24,18 @@ test.describe("CodeEditor", () => {
     await expect(scroller).toBeVisible();
   });
 
+  test("grow mode lets the editor expand past the default cap", async ({
+    mount,
+    page,
+  }) => {
+    const lines = Array.from({ length: 80 }, (_, i) => `print(${i})`);
+    await mount(
+      <CodeEditor value={lines.join("\n")} ariaLabel="Code" readOnly grow />,
+    );
+    const box = await page.locator(".cm-editor").boundingBox();
+    expect(box?.height).toBeGreaterThan(24 * 16);
+  });
+
   test("highlights Markdown headings when language is markdown", async ({
     mount,
     page,

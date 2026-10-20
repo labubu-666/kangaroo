@@ -17,6 +17,12 @@ export interface KnowledgeBaseInput {
   labels: string[];
 }
 
+export interface KnowledgeBaseUpdate {
+  name?: string;
+  description?: string | null;
+  labels?: string[];
+}
+
 export const KNOWLEDGE_BASE_LIMIT = 10;
 
 export function fetchKnowledgeBases(
@@ -39,6 +45,17 @@ export function fetchKnowledgeBase(id: string): Promise<KnowledgeBase> {
   return apiJson(
     `/api/v1/knowledge-bases/${id}`,
     "Failed to fetch knowledge base",
+  );
+}
+
+export function updateKnowledgeBase(
+  id: string,
+  item: KnowledgeBaseUpdate,
+): Promise<KnowledgeBase> {
+  return apiJson(
+    `/api/v1/knowledge-bases/${id}`,
+    "Failed to update knowledge base",
+    jsonBody("PATCH", item),
   );
 }
 

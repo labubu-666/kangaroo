@@ -1,15 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useId, useState } from "react";
-import {
-  deleteArticle,
-  fetchArticle,
-  replaceArticle,
-} from "../../lib/articles";
+import { deleteArticle, fetchArticle, updateArticle } from "../../lib/articles";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
-import { ArticleForm } from "../../components/articles/ArticleForm";
 import { fetchKnowledgeBase } from "../../lib/knowledge-bases";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
+import { InlineEdit } from "../../components/InlineEdit";
+import { LabelsEditor } from "../../components/shared/LabelsEditor";
 import { Loading } from "../../components/shared/Loading";
 
 export const Route = createFileRoute("/articles/$id")({
@@ -20,7 +17,6 @@ function ArticleDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
 
@@ -39,18 +35,20 @@ function ArticleDetail() {
     enabled: article !== undefined,
   });
 
-  const saveMutation = useMutation({
-    mutationFn: (values: { title: string; body: string; labels: string[] }) =>
-      replaceArticle(id, {
-        knowledge_base_id: article?.knowledge_base_id ?? "",
-        title: values.title.trim(),
-        body: values.body,
-        labels: values.labels,
-      }),
-    onSuccess: (updated) => {
-      queryClient.setQueryData(["articles", id], updated);
+  const saveTitle = async (title: string) => {
+    await updateArticle(id, { title: title.trim() });
+    queryClient.invalidateQueries({ queryKey: ["articles"] });
+  };
+
+  const saveBody = async (body: string) => {
+    await updateArticle(id, { body });
+    queryClient.invalidateQueries({ queryKey: ["articles"] });
+  };
+
+  const labelsMutation = useMutation({
+    mutationFn: (labels: string[]) => updateArticle(id, { labels }),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["articles"] });
-      setEditing(false);
     },
   });
 
@@ -91,100 +89,93 @@ function ArticleDetail() {
     return <ErrorBanner>Error loading article</ErrorBanner>;
   }
 
-  if (editing) {
-    return (
-      <div className="space-y-4 p-4">
-        <h1 className="text-2xl font-bold">Edit article</h1>
-        <ArticleForm
-          initial={{
-            title: article.title,
-            body: article.body,
-            labels: article.labels,
-          }}
-          submitLabel="Save"
-          pendingLabel="Saving..."
-          onCancel={() => setEditing(false)}
-          disabled={saveMutation.isPending}
-          error={saveMutation.error?.message ?? null}
-          onSubmit={(values) => saveMutation.mutate(values)}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <h1 className="break-words text-2xl font-bold sm:text-3xl">
-            {article.title}
-          </h1>
-          {article.labels.length > 0 && (
-            <ul className="mt-2 flex flex-wrap gap-2">
-              {article.labels.map((label) => (
-                <li
-                  key={label}
-                  className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
-                >
-                  {label}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="relative">
-          <button
-            type="button"
-            aria-label="More actions"
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            aria-controls={menuId}
-            onClick={() => setMenuOpen((open) => !open)}
-            className="flex h-10 items-center rounded border border-gray-300 px-4 font-medium hover:bg-gray-50"
-          >
-            ⋯
-          </button>
-          {menuOpen && (
-            <div
-              id={menuId}
-              role="menu"
-              aria-label="Article actions"
-              className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-gray-200 bg-white py-1 shadow-lg"
-            >
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setEditing(true);
-                }}
-                className="px-3 py-2 text-left font-medium hover:bg-gray-100"
+    <div className="flex min-h-0 flex-1 flex-col space-y-6 p-4">
+      <div className="grid flex-1 grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="flex min-h-0 min-w-0 flex-col space-y-6 md:col-span-2">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <InlineEdit
+                value={article.title}
+                onSave={saveTitle}
+                ariaLabel="title"
+                placeholder="Enter article title"
+                requiredMessage="Title is required"
+                textClassName="text-2xl font-bold sm:text-3xl"
               >
-                Edit
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                onClick={handleDelete}
-                disabled={deleteMutation.isPending}
-                className="px-3 py-2 text-left font-medium text-red-600 hover:bg-gray-100 disabled:text-gray-400"
-              >
-                Delete
-              </button>
+                <h1 className="cursor-pointer break-words text-2xl font-bold sm:text-3xl">
+                  {article.title}
+                </h1>
+              </InlineEdit>
             </div>
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="More actions"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-controls={menuId}
+                onClick={() => setMenuOpen((open) => !open)}
+                className="flex h-10 items-center rounded border border-gray-300 px-4 font-medium hover:bg-gray-50"
+              >
+                ⋯
+              </button>
+              {menuOpen && (
+                <div
+                  id={menuId}
+                  role="menu"
+                  aria-label="Article actions"
+                  className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-gray-200 bg-white py-1 shadow-lg"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
+                    className="px-3 py-2 text-left font-medium text-red-600 hover:bg-gray-100 disabled:text-gray-400"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {deleteMutation.error && (
+            <ErrorBanner>{deleteMutation.error.message}</ErrorBanner>
           )}
+
+          <div className="flex flex-1 flex-col rounded border border-gray-200 p-4 sm:p-6">
+            {/* The HTML is sanitized by the API before it reaches the page. */}
+            <InlineEdit
+              value={article.body}
+              onSave={saveBody}
+              ariaLabel="body"
+              placeholder="Write the article in Markdown"
+              requiredMessage="Body is required"
+              language="markdown"
+              fill
+            >
+              {article.body ? (
+                <article
+                  className="max-w-none"
+                  dangerouslySetInnerHTML={{ __html: article.html }}
+                />
+              ) : (
+                <p className="text-sm text-gray-500">No body yet</p>
+              )}
+            </InlineEdit>
+          </div>
         </div>
+
+        <aside className="space-y-5 rounded border border-gray-200 p-4 sm:p-6 md:col-span-1">
+          <LabelsEditor
+            labels={article.labels}
+            onChange={(labels) => labelsMutation.mutate(labels)}
+            disabled={labelsMutation.isPending}
+          />
+        </aside>
       </div>
-
-      {deleteMutation.error && (
-        <ErrorBanner>{deleteMutation.error.message}</ErrorBanner>
-      )}
-
-      {/* The HTML is sanitized by the API before it reaches the page. */}
-      <article
-        className="max-w-none"
-        dangerouslySetInnerHTML={{ __html: article.html }}
-      />
     </div>
   );
 }
