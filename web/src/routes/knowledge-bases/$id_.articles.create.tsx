@@ -50,8 +50,9 @@ function CreateArticle() {
         initial={{ title: "", body: "", labels: [] }}
         submitLabel="Create"
         pendingLabel="Creating..."
-        cancelTo="/knowledge-bases/$id"
-        cancelParams={{ id }}
+        onCancel={() =>
+          navigate({ to: "/knowledge-bases/$id", params: { id } })
+        }
         disabled={mutation.isPending}
         error={mutation.error?.message ?? null}
         onSubmit={(values) => mutation.mutate(values)}
