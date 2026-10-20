@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from kangaroo.errors import NotFoundError
 from kangaroo.repositories import (
+    ArticleRepository,
     BoardRepository,
     FunctionRepository,
     ProjectRepository,
@@ -20,6 +21,7 @@ from kangaroo.repositories.tables import (
     WorkItemTypeRow,
 )
 from kangaroo.schemas import (
+    ArticleCreate,
     BoardCreate,
     BoardReplace,
     BoardUpdate,
@@ -319,6 +321,17 @@ def test_function_round_trip(session):
     fetched = functions.get_by_id(created.id)
     assert fetched.code == "print(1)"
     assert fetched.labels == ["demo"]
+
+
+def test_article_round_trip(session):
+    """A knowledge base article is stored and read back with its body and labels."""
+    articles = ArticleRepository(session)
+    created = articles.create(
+        ArticleCreate(title="Setup", body="# Setup", labels=["howto"])
+    )
+    fetched = articles.get_by_id(created.id)
+    assert fetched.body == "# Setup"
+    assert fetched.labels == ["howto"]
 
 
 def test_deleting_project_removes_its_statuses_and_types(engine, projects):

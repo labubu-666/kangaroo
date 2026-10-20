@@ -2,7 +2,7 @@ import { expect, test } from "../../playwright/fixtures.ts";
 import { SectionNav } from "./SectionNav";
 import { TestRouter } from "./TestRouter.story";
 
-const paths = ["/", "/projects", "/work-items", "/functions"];
+const paths = ["/", "/projects", "/work-items", "/functions", "/articles"];
 
 test.describe("SectionNav", () => {
   test("renders a labelled navigation landmark", async ({ mount, page }) => {
@@ -38,6 +38,9 @@ test.describe("SectionNav", () => {
     await expect(
       component.getByRole("link", { name: "Functions" }),
     ).toHaveAttribute("href", "/functions");
+    await expect(
+      component.getByRole("link", { name: "Knowledge base" }),
+    ).toHaveAttribute("href", "/articles");
     await expect(component.getByRole("link", { name: "Boards" })).toHaveCount(
       0,
     );

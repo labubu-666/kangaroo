@@ -48,7 +48,10 @@ export async function apiJson<T>(
 }
 
 // Init for a request with a JSON body
-export function jsonBody(method: "POST" | "PATCH", data: unknown): RequestInit {
+export function jsonBody(
+  method: "POST" | "PUT" | "PATCH",
+  data: unknown,
+): RequestInit {
   return {
     method,
     headers: { "Content-Type": "application/json" },

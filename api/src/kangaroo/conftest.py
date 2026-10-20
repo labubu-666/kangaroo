@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from kangaroo.app import app
 from kangaroo.repositories import (
+    ArticleRepository,
     BoardRepository,
     FunctionRepository,
     InvocationRepository,
@@ -84,3 +85,8 @@ def functions(session):
 @pytest.fixture
 def invocations(session):
     return InvocationRepository(session)
+
+
+@pytest.fixture
+def articles(session):
+    return ArticleRepository(session)

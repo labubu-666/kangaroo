@@ -24,6 +24,22 @@ test.describe("CodeEditor", () => {
     await expect(scroller).toBeVisible();
   });
 
+  test("highlights Markdown headings when language is markdown", async ({
+    mount,
+    page,
+  }) => {
+    await mount(
+      <CodeEditor
+        value="# Title"
+        ariaLabel="Body"
+        language="markdown"
+        readOnly
+      />,
+    );
+    const heading = page.locator(".cm-line span", { hasText: "Title" }).first();
+    await expect(heading).toHaveClass(/ͼ/);
+  });
+
   test("fill mode limits the editor to the window and scrolls long code", async ({
     mount,
     page,

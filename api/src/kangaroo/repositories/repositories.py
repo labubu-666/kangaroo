@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from kangaroo.errors import NotFoundError
 from kangaroo.repositories.tables import (
+    ArticleRow,
     Base,
     BoardRow,
     FunctionRow,
@@ -24,6 +25,10 @@ from kangaroo.repositories.tables import (
     WorkItemTypeRow,
 )
 from kangaroo.schemas import (
+    Article,
+    ArticleCreate,
+    ArticleReplace,
+    ArticleUpdate,
     Board,
     BoardCreate,
     BoardReplace,
@@ -367,6 +372,16 @@ class FunctionRepository(
     search_fields = ("name", "description")
     model_type = Function
     row_type = FunctionRow
+
+
+class ArticleRepository(
+    Repository[Article, ArticleCreate, ArticleUpdate, ArticleReplace]
+):
+    entity = "Article"
+    filter_fields = frozenset(Article.model_fields)
+    search_fields = ("title", "body")
+    model_type = Article
+    row_type = ArticleRow
 
 
 class InvocationRepository(
