@@ -9,7 +9,7 @@ from itsdangerous import BadData, URLSafeTimedSerializer
 from kangaroo.schemas import MAX_RUN_TIMEOUT_SECONDS
 from kangaroo.settings import settings
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["auth"])
 DEFAULT_NEXT = "/web/"
 
 # Impersonation tokens only need to outlive a function run, plus HTTP slack.
@@ -73,7 +73,7 @@ async def login(request: Request, next: str = DEFAULT_NEXT) -> RedirectResponse:
         ) from exc
 
 
-@router.get("/auth/callback")
+@router.get("/callback")
 async def auth_callback(request: Request) -> RedirectResponse:
     """Exchange the Dex code for tokens and store the user in the session."""
     try:

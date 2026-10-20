@@ -85,7 +85,7 @@ test.describe("AppHeader", () => {
     await component.getByRole("button", { name: "Profile menu" }).click();
     await expect(
       component
-        .locator('form[method="post"][action="/logout"]')
+        .locator('form[method="post"][action="/auth/logout"]')
         .getByRole("menuitem", { name: "Logout" }),
     ).toBeVisible();
   });

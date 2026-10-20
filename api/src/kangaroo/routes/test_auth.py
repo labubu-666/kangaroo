@@ -28,7 +28,7 @@ def test_login_redirects_to_dex(monkeypatch):
     monkeypatch.setattr(auth.oauth.dex, "authorize_redirect", fake_authorize_redirect)
 
     client = TestClient(app)
-    response = client.get("/login", follow_redirects=False)
+    response = client.get("/auth/login", follow_redirects=False)
     assert response.status_code == 307
     assert response.headers["location"].startswith("http://localhost:5556/dex/auth")
 
@@ -40,7 +40,7 @@ def test_login_returns_503_when_dex_is_unreachable(monkeypatch):
     monkeypatch.setattr(auth.oauth.dex, "authorize_redirect", fake_authorize_redirect)
 
     client = TestClient(app)
-    response = client.get("/login")
+    response = client.get("/auth/login")
     assert response.status_code == 503
     assert response.json() == {"detail": "Login provider unavailable"}
 
@@ -54,7 +54,7 @@ def test_login_returns_to_next_path_after_callback(monkeypatch, next_path):
     fake_dex_login(monkeypatch)
 
     client = TestClient(app)
-    client.get("/login", params={"next": next_path}, follow_redirects=False)
+    client.get("/auth/login", params={"next": next_path}, follow_redirects=False)
     response = client.get("/auth/callback", follow_redirects=False)
     assert response.headers["location"] == next_path
 
@@ -68,7 +68,7 @@ def test_login_ignores_unsafe_next_path(monkeypatch, next_path):
     fake_dex_login(monkeypatch)
 
     client = TestClient(app)
-    client.get("/login", params={"next": next_path}, follow_redirects=False)
+    client.get("/auth/login", params={"next": next_path}, follow_redirects=False)
     response = client.get("/auth/callback", follow_redirects=False)
     assert response.headers["location"] == "/web/"
 
@@ -119,7 +119,7 @@ def test_logout_clears_session_and_redirects(monkeypatch):
 
     client = TestClient(app)
     client.get("/auth/callback", follow_redirects=False)
-    response = client.post("/logout", follow_redirects=False)
+    response = client.post("/auth/logout", follow_redirects=False)
     assert response.status_code == 303
     assert response.headers["location"] == "/web/"
     assert client.get("/api/v1/user").status_code == 401
@@ -175,5 +175,5 @@ def test_impersonation_token_signed_with_other_key_is_rejected():
 
 def test_logout_rejects_get():
     client = TestClient(app)
-    response = client.get("/logout", follow_redirects=False)
+    response = client.get("/auth/logout", follow_redirects=False)
     assert response.status_code == 405

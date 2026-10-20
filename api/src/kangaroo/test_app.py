@@ -34,7 +34,7 @@ def test_logged_out_web_request_redirects_to_login():
     client = TestClient(app)
     response = client.get("/web/", follow_redirects=False)
     assert response.status_code == 307
-    assert response.headers["location"] == "/login?next=%2Fweb%2F"
+    assert response.headers["location"] == "/auth/login?next=%2Fweb%2F"
 
 
 def test_login_redirect_keeps_path_and_query():
@@ -43,7 +43,7 @@ def test_login_redirect_keeps_path_and_query():
     client = TestClient(app)
     response = client.get("/web/projects?view=list", follow_redirects=False)
     assert response.status_code == 307
-    assert response.headers["location"] == "/login?next=" + quote(
+    assert response.headers["location"] == "/auth/login?next=" + quote(
         "/web/projects?view=list", safe=""
     )
 
@@ -54,7 +54,7 @@ def test_logged_in_web_request_is_not_redirected(monkeypatch):
     client = TestClient(app)
     log_in(client, monkeypatch)
     response = client.get("/web/", follow_redirects=False)
-    assert "/login" not in response.headers.get("location", "")
+    assert "/auth/login" not in response.headers.get("location", "")
 
 
 def test_health():

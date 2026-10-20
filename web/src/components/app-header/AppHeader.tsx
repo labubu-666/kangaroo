@@ -74,7 +74,7 @@ export function AppHeader() {
               About
             </Link>
             {/* Served by the API, not the SPA router, so submit a plain form */}
-            <form method="post" action="/logout">
+            <form method="post" action="/auth/logout">
               <button
                 type="submit"
                 role="menuitem"
