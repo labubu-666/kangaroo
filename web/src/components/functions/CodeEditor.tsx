@@ -1,3 +1,4 @@
+import { markdown } from "@codemirror/lang-markdown";
 import { python } from "@codemirror/lang-python";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -13,6 +14,7 @@ export function CodeEditor({
   ariaLabel,
   placeholder,
   fill = false,
+  language = "python",
 }: {
   value: string;
   onChange?: (value: string) => void;
@@ -21,14 +23,15 @@ export function CodeEditor({
   placeholder?: string;
   // Caps the editor at the space left in the window instead of a fixed height.
   fill?: boolean;
+  language?: "python" | "markdown";
 }) {
   // Memoized so CodeMirror does not reconfigure the editor on every render.
   const extensions = useMemo(
     () => [
-      python(),
+      language === "markdown" ? markdown() : python(),
       EditorView.contentAttributes.of({ "aria-label": ariaLabel }),
     ],
-    [ariaLabel],
+    [ariaLabel, language],
   );
 
   // A parent with no height limit lets the editor grow forever, so the limit is

@@ -372,6 +372,39 @@ class Function(FunctionCreate, Timestamped):
     id: UUID
 
 
+class ArticleCreate(BaseModel):
+    """A knowledge base article written in Markdown."""
+
+    title: str
+    body: str
+    labels: Labels = Field(default_factory=list)
+
+
+class ArticleUpdate(BaseModel):
+    title: str | None = None
+    body: str | None = None
+    labels: Labels = Field(default_factory=list)
+
+    _reject_null_title = field_validator("title")(reject_null)
+    _reject_null_body = field_validator("body")(reject_null)
+
+
+class ArticleReplace(BaseModel):
+    title: str
+    body: str
+    labels: Labels = Field(default_factory=list)
+
+
+class Article(ArticleCreate, Timestamped):
+    id: UUID
+
+
+class ArticleDetail(Article):
+    """An article with its body rendered to sanitized HTML."""
+
+    html: str
+
+
 RunStatus = Literal["SUCCESS", "ERROR"]
 InvocationStatus = Literal["RUNNING", "SUCCESS", "ERROR"]
 

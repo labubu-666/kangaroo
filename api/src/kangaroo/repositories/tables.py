@@ -150,3 +150,12 @@ class FunctionRow(Base):
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     code: Mapped[str] = mapped_column(String)
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+
+
+class ArticleRow(Base):
+    __tablename__ = "articles"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    title: Mapped[str] = mapped_column(String)
+    body: Mapped[str] = mapped_column(String)
+    labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")

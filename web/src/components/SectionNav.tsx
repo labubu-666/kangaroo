@@ -35,6 +35,13 @@ export function SectionNav() {
       >
         Functions
       </Link>
+      <Link
+        to="/articles"
+        className="font-medium hover:underline"
+        activeProps={{ className: "text-blue-600" }}
+      >
+        Knowledge base
+      </Link>
     </nav>
   );
 }

@@ -8,6 +8,7 @@ from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
 from kangaroo.repositories import (
+    ArticleRepository,
     BoardRepository,
     FunctionRepository,
     InvocationRepository,
@@ -20,6 +21,7 @@ from kangaroo.repositories import (
 )
 from kangaroo.runners import BaseRunner, create_runner
 from kangaroo.services import (
+    ArticleService,
     BoardService,
     FunctionService,
     InvocationService,
@@ -136,6 +138,12 @@ def get_board_service(
     )
 
 
+def get_article_service(
+    session: Annotated[Session, Depends(get_session)],
+) -> ArticleService:
+    return ArticleService(articles=ArticleRepository(session))
+
+
 def get_report_service(
     session: Annotated[Session, Depends(get_session)],
 ) -> ReportService:
@@ -150,6 +158,7 @@ def get_report_service(
 ListParamsDep = Annotated[ListParams, Depends(list_params)]
 FilterQuery = Annotated[str | None, Query(max_length=1000)]
 FunctionServiceDep = Annotated[FunctionService, Depends(get_function_service)]
+ArticleServiceDep = Annotated[ArticleService, Depends(get_article_service)]
 InvocationServiceDep = Annotated[InvocationService, Depends(get_invocation_service)]
 WorkItemServiceDep = Annotated[WorkItemService, Depends(get_work_item_service)]
 ProjectServiceDep = Annotated[ProjectService, Depends(get_project_service)]
