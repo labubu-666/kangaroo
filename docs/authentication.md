@@ -6,17 +6,17 @@ docs. `/health` stays open.
 
 ## How login works
 
-1. The browser opens `/login`. If the user came from a page, that page is
+1. The browser opens `/auth/login`. If the user came from a page, that page is
    remembered so the user lands back on it after login.
 2. The API redirects to Dex, where the user logs in.
 3. Dex redirects to `/auth/callback`. The API exchanges the code for the
    user's details and stores them in a signed session cookie.
 4. The user is sent back to the page they came from, or to `/web/`.
 
-Logging out happens at `POST /logout`, which clears the session. The web UI
+Logging out happens at `POST /auth/logout`, which clears the session. The web UI
 does this from the profile menu.
 
-If Dex can't be reached, `/login` returns `503`.
+If Dex can't be reached, `/auth/login` returns `503`.
 
 ## Local setup
 

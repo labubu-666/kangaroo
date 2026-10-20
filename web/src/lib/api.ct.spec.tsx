@@ -13,7 +13,7 @@ test.describe("apiFetch when logged out", () => {
 
   test("sends the user to login", async ({ mount, page }) => {
     const logins: string[] = [];
-    await page.route("**/login**", (route) => {
+    await page.route("**/auth/login**", (route) => {
       logins.push(route.request().url());
       return route.fulfill({ body: "" });
     });
@@ -24,7 +24,7 @@ test.describe("apiFetch when logged out", () => {
       </TestRouter>,
     );
     await expect.poll(() => logins.length).toBe(1);
-    expect(logins[0]).toContain("/login?next=");
+    expect(logins[0]).toContain("/auth/login?next=");
   });
 
   test("does not loop back to login right after a login", async ({
@@ -32,7 +32,7 @@ test.describe("apiFetch when logged out", () => {
     page,
   }) => {
     const logins: string[] = [];
-    await page.route("**/login**", (route) => {
+    await page.route("**/auth/login**", (route) => {
       logins.push(route.request().url());
       return route.fulfill({ body: "" });
     });

@@ -92,7 +92,7 @@ async def require_login_for_web(request: Request, call_next):
     is_web = path == "/web" or path.startswith("/web/")
     if is_web and request.method in ("GET", "HEAD") and not request.session.get("user"):
         target = path + (f"?{request.url.query}" if request.url.query else "")
-        return RedirectResponse(url=f"/login?next={quote(target, safe='')}")
+        return RedirectResponse(url=f"/auth/login?next={quote(target, safe='')}")
     return await call_next(request)
 
 

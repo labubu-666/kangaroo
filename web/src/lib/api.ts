@@ -31,7 +31,7 @@ export async function apiFetch(
     sessionStorage.setItem(LOGIN_REDIRECTED_AT, String(Date.now()));
     const here =
       window.location.pathname + window.location.search + window.location.hash;
-    window.location.href = `/login?next=${encodeURIComponent(here)}`;
+    window.location.href = `/auth/login?next=${encodeURIComponent(here)}`;
     throw new Error("Not authenticated");
   }
   if (!res.ok) throw new Error(await errorMessage(res, fallback));
