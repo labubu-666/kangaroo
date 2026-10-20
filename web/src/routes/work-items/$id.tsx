@@ -161,11 +161,16 @@ function WorkItemDetail() {
           },
         ]
       : []),
-    {
-      label: "Work items",
-      to: "/work-items",
-      search: { filter: projectFilter(item?.project_id) },
-    },
+    ...(item
+      ? [
+          {
+            label: "Work items",
+            to: "/projects/$id",
+            params: { id: item.project_id },
+            search: { tab: "work-items" },
+          },
+        ]
+      : []),
     ...(parent
       ? [
           {
