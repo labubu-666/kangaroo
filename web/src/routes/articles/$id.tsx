@@ -103,8 +103,7 @@ function ArticleDetail() {
           }}
           submitLabel="Save"
           pendingLabel="Saving..."
-          cancelTo="/articles/$id"
-          cancelParams={{ id }}
+          onCancel={() => setEditing(false)}
           disabled={saveMutation.isPending}
           error={saveMutation.error?.message ?? null}
           onSubmit={(values) => saveMutation.mutate(values)}

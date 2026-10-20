@@ -22,10 +22,9 @@ test.describe("ArticleForm", () => {
           }}
           submitLabel="Save"
           pendingLabel="Saving..."
-          cancelTo="/knowledge-bases/$id"
-          cancelParams={{ id: "kb-1" }}
           disabled={false}
           error={null}
+          onCancel={() => {}}
           onSubmit={() => {}}
         />
       </TestRouter>,
@@ -45,10 +44,9 @@ test.describe("ArticleForm", () => {
           initial={empty}
           submitLabel="Create"
           pendingLabel="Creating..."
-          cancelTo="/knowledge-bases/$id"
-          cancelParams={{ id: "kb-1" }}
           disabled={false}
           error={null}
+          onCancel={() => {}}
           onSubmit={() => {
             submitted = true;
           }}
@@ -59,5 +57,26 @@ test.describe("ArticleForm", () => {
     await expect(component.getByText("Title is required")).toBeVisible();
     await expect(component.getByText("Body is required")).toBeVisible();
     expect(submitted).toBe(false);
+  });
+
+  test("Cancel calls onCancel instead of navigating", async ({ mount }) => {
+    let cancelled = false;
+    const component = await mount(
+      <TestRouter paths={paths}>
+        <ArticleForm
+          initial={empty}
+          submitLabel="Save"
+          pendingLabel="Saving..."
+          disabled={false}
+          error={null}
+          onCancel={() => {
+            cancelled = true;
+          }}
+          onSubmit={() => {}}
+        />
+      </TestRouter>,
+    );
+    await component.getByRole("button", { name: "Cancel" }).click();
+    expect(cancelled).toBe(true);
   });
 });

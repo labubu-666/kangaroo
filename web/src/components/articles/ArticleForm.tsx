@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { ErrorBanner } from "../shared/ErrorBanner";
 import { LabelsEditor } from "../shared/LabelsEditor";
@@ -14,8 +13,7 @@ export function ArticleForm({
   initial,
   submitLabel,
   pendingLabel,
-  cancelTo,
-  cancelParams,
+  onCancel,
   disabled,
   error,
   onSubmit,
@@ -23,11 +21,7 @@ export function ArticleForm({
   initial: ArticleFormValues;
   submitLabel: string;
   pendingLabel: string;
-  cancelTo:
-    | "/knowledge-bases/$id"
-    | "/knowledge-bases/$id/articles/create"
-    | "/articles/$id";
-  cancelParams?: { id: string };
+  onCancel: () => void;
   disabled: boolean;
   error: string | null;
   onSubmit: (values: ArticleFormValues) => void;
@@ -96,13 +90,14 @@ export function ArticleForm({
           >
             {disabled ? pendingLabel : submitLabel}
           </button>
-          <Link
-            to={cancelTo}
-            params={{ id: cancelParams?.id ?? "" }}
-            className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={disabled}
+            className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50 disabled:text-gray-400"
           >
             Cancel
-          </Link>
+          </button>
         </div>
       </form>
     </>
