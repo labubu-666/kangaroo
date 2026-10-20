@@ -16,6 +16,7 @@ from kangaroo.repositories import (
     BoardRepository,
     FunctionRepository,
     InvocationRepository,
+    KnowledgeBaseRepository,
     ProjectRepository,
     StatusRepository,
     StatusTransitionRepository,
@@ -85,6 +86,11 @@ def functions(session):
 @pytest.fixture
 def invocations(session):
     return InvocationRepository(session)
+
+
+@pytest.fixture
+def knowledge_bases(session):
+    return KnowledgeBaseRepository(session)
 
 
 @pytest.fixture

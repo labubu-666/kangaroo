@@ -36,11 +36,11 @@ export function SectionNav() {
         Functions
       </Link>
       <Link
-        to="/articles"
+        to="/knowledge-bases"
         className="font-medium hover:underline"
         activeProps={{ className: "text-blue-600" }}
       >
-        Knowledge base
+        Knowledge bases
       </Link>
     </nav>
   );

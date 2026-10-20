@@ -1,24 +1,38 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createArticle } from "../../lib/articles";
+import { fetchKnowledgeBase } from "../../lib/knowledge-bases";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 import { ArticleForm } from "../../components/articles/ArticleForm";
 
-export const Route = createFileRoute("/articles/create")({
+export const Route = createFileRoute("/knowledge-bases/$id_/articles/create")({
   component: CreateArticle,
 });
 
 function CreateArticle() {
-  useBreadcrumbs([
-    { label: "Knowledge base", to: "/articles" },
-    { label: "New" },
-  ]);
+  const { id } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const { data: knowledgeBase } = useQuery({
+    queryKey: ["knowledge-bases", id],
+    queryFn: () => fetchKnowledgeBase(id),
+  });
+
+  useBreadcrumbs([
+    { label: "Knowledge bases", to: "/knowledge-bases" },
+    {
+      label: knowledgeBase?.name ?? "Loading...",
+      to: "/knowledge-bases/$id",
+      params: { id },
+    },
+    { label: "New article" },
+  ]);
 
   const mutation = useMutation({
     mutationFn: (values: { title: string; body: string; labels: string[] }) =>
       createArticle({
+        knowledge_base_id: id,
         title: values.title.trim(),
         body: values.body,
         labels: values.labels,
@@ -36,7 +50,8 @@ function CreateArticle() {
         initial={{ title: "", body: "", labels: [] }}
         submitLabel="Create"
         pendingLabel="Creating..."
-        cancelTo="/articles"
+        cancelTo="/knowledge-bases/$id"
+        cancelParams={{ id }}
         disabled={mutation.isPending}
         error={mutation.error?.message ?? null}
         onSubmit={(values) => mutation.mutate(values)}

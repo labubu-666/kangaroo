@@ -152,10 +152,22 @@ class FunctionRow(Base):
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
 
 
+class KnowledgeBaseRow(Base):
+    __tablename__ = "knowledge_bases"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    name: Mapped[str] = mapped_column(String)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
+    labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+
+
 class ArticleRow(Base):
     __tablename__ = "articles"
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    knowledge_base_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("knowledge_bases.id", ondelete="RESTRICT"), nullable=False
+    )
     title: Mapped[str] = mapped_column(String)
     body: Mapped[str] = mapped_column(String)
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")

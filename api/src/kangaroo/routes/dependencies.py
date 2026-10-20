@@ -12,6 +12,7 @@ from kangaroo.repositories import (
     BoardRepository,
     FunctionRepository,
     InvocationRepository,
+    KnowledgeBaseRepository,
     ProjectRepository,
     StatusRepository,
     StatusTransitionRepository,
@@ -25,6 +26,7 @@ from kangaroo.services import (
     BoardService,
     FunctionService,
     InvocationService,
+    KnowledgeBaseService,
     ProjectService,
     ReportService,
     WorkflowService,
@@ -141,7 +143,19 @@ def get_board_service(
 def get_article_service(
     session: Annotated[Session, Depends(get_session)],
 ) -> ArticleService:
-    return ArticleService(articles=ArticleRepository(session))
+    return ArticleService(
+        articles=ArticleRepository(session),
+        knowledge_bases=KnowledgeBaseRepository(session),
+    )
+
+
+def get_knowledge_base_service(
+    session: Annotated[Session, Depends(get_session)],
+) -> KnowledgeBaseService:
+    return KnowledgeBaseService(
+        knowledge_bases=KnowledgeBaseRepository(session),
+        articles=ArticleRepository(session),
+    )
 
 
 def get_report_service(
@@ -159,6 +173,9 @@ ListParamsDep = Annotated[ListParams, Depends(list_params)]
 FilterQuery = Annotated[str | None, Query(max_length=1000)]
 FunctionServiceDep = Annotated[FunctionService, Depends(get_function_service)]
 ArticleServiceDep = Annotated[ArticleService, Depends(get_article_service)]
+KnowledgeBaseServiceDep = Annotated[
+    KnowledgeBaseService, Depends(get_knowledge_base_service)
+]
 InvocationServiceDep = Annotated[InvocationService, Depends(get_invocation_service)]
 WorkItemServiceDep = Annotated[WorkItemService, Depends(get_work_item_service)]
 ProjectServiceDep = Annotated[ProjectService, Depends(get_project_service)]

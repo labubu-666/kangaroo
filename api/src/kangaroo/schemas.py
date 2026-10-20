@@ -372,27 +372,50 @@ class Function(FunctionCreate, Timestamped):
     id: UUID
 
 
-class ArticleCreate(BaseModel):
-    """A knowledge base article written in Markdown."""
+class KnowledgeBaseCreate(BaseModel):
+    name: str
+    description: str | None = None
+    labels: Labels = Field(default_factory=list)
 
+
+class KnowledgeBaseUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    labels: Labels = Field(default_factory=list)
+
+    _reject_null_name = field_validator("name")(reject_null)
+
+
+class KnowledgeBaseReplace(KnowledgeBaseCreate):
+    pass
+
+
+class KnowledgeBase(KnowledgeBaseCreate, Timestamped):
+    id: UUID
+
+
+class ArticleCreate(BaseModel):
+    """A Markdown article that belongs to one knowledge base."""
+
+    knowledge_base_id: UUID
     title: str
     body: str
     labels: Labels = Field(default_factory=list)
 
 
 class ArticleUpdate(BaseModel):
+    knowledge_base_id: UUID | None = None
     title: str | None = None
     body: str | None = None
     labels: Labels = Field(default_factory=list)
 
+    _reject_null_knowledge_base_id = field_validator("knowledge_base_id")(reject_null)
     _reject_null_title = field_validator("title")(reject_null)
     _reject_null_body = field_validator("body")(reject_null)
 
 
-class ArticleReplace(BaseModel):
-    title: str
-    body: str
-    labels: Labels = Field(default_factory=list)
+class ArticleReplace(ArticleCreate):
+    pass
 
 
 class Article(ArticleCreate, Timestamped):

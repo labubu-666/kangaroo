@@ -2,6 +2,7 @@ import { apiFetch, apiJson, jsonBody, type Paginated } from "./api";
 
 export interface Article {
   id: string;
+  knowledge_base_id: string;
   title: string;
   body: string;
   labels: string[];
@@ -16,6 +17,7 @@ export interface ArticleDetail extends Article {
 export type PaginatedArticles = Paginated<Article>;
 
 export interface ArticleInput {
+  knowledge_base_id: string;
   title: string;
   body: string;
   labels: string[];
@@ -26,11 +28,13 @@ export const ARTICLE_LIMIT = 10;
 export function fetchArticles(
   limit: number,
   offset: number,
+  knowledgeBaseId: string,
   search?: string,
 ): Promise<PaginatedArticles> {
   const params = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
+    knowledge_base_id: knowledgeBaseId,
   });
   if (search) params.set("search", search);
   return apiJson(`/api/v1/articles/?${params}`, "Failed to fetch articles");
