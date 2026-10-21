@@ -14,6 +14,7 @@ import { InlineEdit } from "../../components/InlineEdit";
 import { ConfirmChange } from "../../components/workflow/ConfirmChange";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { Loading } from "../../components/shared/Loading";
+import { useDismiss } from "../../lib/use-dismiss";
 
 export const Route = createFileRoute("/functions/$id")({
   component: FunctionDetail,
@@ -64,6 +65,9 @@ function FunctionDetail() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
+  const menuRef = useDismiss<HTMLDivElement>(menuOpen, () =>
+    setMenuOpen(false),
+  );
 
   const handleDelete = () => {
     setMenuOpen(false);
@@ -155,7 +159,7 @@ function FunctionDetail() {
                 </svg>
                 {runMutation.isPending ? "Running..." : "Run"}
               </button>
-              <div className="relative">
+              <div ref={menuRef} className="relative">
                 <button
                   type="button"
                   aria-label="More actions"

@@ -8,6 +8,7 @@ import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { InlineEdit } from "../../components/InlineEdit";
 import { LabelsEditor } from "../../components/shared/LabelsEditor";
 import { Loading } from "../../components/shared/Loading";
+import { useDismiss } from "../../lib/use-dismiss";
 
 export const Route = createFileRoute("/articles/$id")({
   component: ArticleDetail,
@@ -19,6 +20,9 @@ function ArticleDetail() {
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
+  const menuRef = useDismiss<HTMLDivElement>(menuOpen, () =>
+    setMenuOpen(false),
+  );
 
   const {
     data: article,
@@ -108,7 +112,7 @@ function ArticleDetail() {
                 </h1>
               </InlineEdit>
             </div>
-            <div className="relative">
+            <div ref={menuRef} className="relative">
               <button
                 type="button"
                 aria-label="More actions"
