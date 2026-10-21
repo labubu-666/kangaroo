@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     # sqlite://memory is an in-memory database; sqlite:///path.db is a file.
     database_url: str = "sqlite://memory"
 
+    # Upper limit on the total uncompressed size of a restored backup. Guards
+    # against zip bombs that would fill the disk when extracted.
+    backup_max_uncompressed_bytes: int = 10 * 1024**3
+
     # Where saved functions run: "local" on this machine, or "nuclio" in the
     # deployed Nuclio runner at nuclio_runner_url.
     function_runner: str = "local"

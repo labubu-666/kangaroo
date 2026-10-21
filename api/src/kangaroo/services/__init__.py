@@ -1,4 +1,5 @@
 from kangaroo.services.articles import ArticleService
+from kangaroo.services.backup import BackupService
 from kangaroo.services.boards import BoardService
 from kangaroo.services.functions import FunctionService
 from kangaroo.services.invocations import InvocationService
@@ -10,6 +11,7 @@ from kangaroo.services.workflow import WorkflowService
 
 __all__ = [
     "ArticleService",
+    "BackupService",
     "BoardService",
     "FunctionService",
     "InvocationService",
