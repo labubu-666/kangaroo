@@ -158,7 +158,7 @@ function ArticleDetail() {
             >
               {article.body ? (
                 <article
-                  className="max-w-none"
+                  className="prose max-w-none"
                   dangerouslySetInnerHTML={{ __html: article.html }}
                 />
               ) : (
