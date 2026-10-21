@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from typing import Any, ClassVar
 from uuid import UUID, uuid7
@@ -11,7 +12,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Session
 
-from kangaroo.errors import NotFoundError
+from kangaroo.errors import InvalidSortError, NotFoundError
 from kangaroo.repositories.tables import (
     ArticleRow,
     Base,
@@ -74,6 +75,26 @@ def clean_search(search: str | None) -> str | None:
     if search is None or not search.strip():
         return None
     return search.strip()
+
+
+def parse_sort(sort: str | None, allowed: frozenset[str]) -> list[tuple[str, bool]]:
+    """Parse ``sort`` such as ``-modified_at,title`` into (field, descending) pairs.
+
+    A field with no prefix or a ``+`` prefix sorts ascending, ``-`` descending.
+    Raises InvalidSortError for a field that is not in ``allowed``.
+    """
+    if sort is None or not sort.strip():
+        return []
+    clauses = []
+    for part in sort.split(","):
+        field = part.strip()
+        descending = field.startswith("-")
+        if field[:1] in ("+", "-"):
+            field = field[1:]
+        if field not in allowed:
+            raise InvalidSortError(f"Unknown sort field {field!r}")
+        clauses.append((field, descending))
+    return clauses
 
 
 def utc_now() -> datetime:
@@ -150,10 +171,23 @@ class Repository[M: BaseModel, C: BaseModel, U: BaseModel, R: BaseModel]:
             raise NotFoundError(f"{self.entity} {item_id} not found")
         return row
 
-    def _query(self, filters: dict[str, Any], search: str | None) -> Select:
-        stmt = select(self.row_type).order_by(
-            self.row_type.created_at, self.row_type.id
-        )
+    def _default_order(self) -> list[Any]:
+        """Ordering used after any requested sort, so pages stay stable."""
+        return [self.row_type.created_at, self.row_type.id]
+
+    def _query(
+        self,
+        filters: dict[str, Any],
+        search: str | None,
+        sort: Sequence[tuple[str, bool]] = (),
+    ) -> Select:
+        order = [
+            getattr(self.row_type, name).desc()
+            if descending
+            else getattr(self.row_type, name).asc()
+            for name, descending in sort
+        ]
+        stmt = select(self.row_type).order_by(*order, *self._default_order())
         for name, value in filters.items():
             stmt = stmt.where(getattr(self.row_type, name) == value)
         if search is not None:
@@ -233,20 +267,29 @@ class Repository[M: BaseModel, C: BaseModel, U: BaseModel, R: BaseModel]:
         return self._select(self._checked(filters), None, None, 0)
 
     def list_paginated(
-        self, limit: int, offset: int, search: str | None = None, **filters: Any
+        self,
+        limit: int,
+        offset: int,
+        search: str | None = None,
+        sort: str | None = None,
+        **filters: Any,
     ) -> PaginatedResponse[M]:
         """Return a page of entities matching the filters and search, plus the total.
 
         ``search`` is a case-insensitive substring match on any of ``search_fields``.
-        A blank search is ignored.
+        A blank search is ignored. ``sort`` is a comma-separated list of
+        ``filter_fields`` names, each prefixed with ``+`` (or nothing) for ascending
+        or ``-`` for descending.
 
         Raises:
             ValueError: If a filter name is not one of ``filter_fields``.
+            InvalidSortError: If a sort field is not one of ``filter_fields``.
         """
         checked = self._checked(filters)
         text = clean_search(search)
+        ordering = parse_sort(sort, self.filter_fields)
         return PaginatedResponse[M](
-            results=self._select(checked, text, limit, offset),
+            results=self._select(checked, text, limit, offset, ordering),
             limit=limit,
             offset=offset,
             total=self._count(checked, text),
@@ -289,8 +332,9 @@ class Repository[M: BaseModel, C: BaseModel, U: BaseModel, R: BaseModel]:
         search: str | None,
         limit: int | None,
         offset: int,
+        sort: Sequence[tuple[str, bool]] = (),
     ) -> list[M]:
-        stmt = self._query(filters, search)
+        stmt = self._query(filters, search, sort)
         if limit is not None:
             stmt = stmt.limit(limit)
         rows = self._session.scalars(stmt.offset(offset)).all()
@@ -410,10 +454,5 @@ class InvocationRepository(
     model_type = Invocation
     row_type = InvocationRow
 
-    def _query(self, filters: dict[str, Any], search: str | None) -> Select:
-        return (
-            super()
-            ._query(filters, search)
-            .order_by(None)
-            .order_by(InvocationRow.id.desc())
-        )
+    def _default_order(self) -> list[Any]:
+        return [InvocationRow.id.desc()]

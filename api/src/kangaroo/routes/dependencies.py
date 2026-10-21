@@ -49,14 +49,16 @@ class ListParams:
     limit: int
     offset: int
     search: str | None
+    sort: str | None
 
 
 def list_params(
     limit: Annotated[int, Query(ge=1, le=100)] = 10,
     offset: Annotated[int, Query(ge=0)] = 0,
     search: Annotated[str | None, Query(max_length=200)] = None,
+    sort: Annotated[str | None, Query(max_length=200)] = None,
 ) -> ListParams:
-    return ListParams(limit=limit, offset=offset, search=search)
+    return ListParams(limit=limit, offset=offset, search=search, sort=sort)
 
 
 @lru_cache

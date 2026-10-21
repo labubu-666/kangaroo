@@ -33,6 +33,8 @@ def list_articles(
         limit: The maximum number of items to return (default: 10, max: 100).
         offset: The number of items to skip from the beginning (default: 0).
         search: Optional text to match case-insensitively in title or body.
+        sort: Optional comma-separated fields, e.g. "-modified_at,title". A "+"
+            or no prefix sorts ascending, "-" descending.
         knowledge_base_id: Optional knowledge base ID to list only its articles.
 
     Returns:
@@ -42,6 +44,7 @@ def list_articles(
         params.limit,
         params.offset,
         params.search,
+        params.sort,
         knowledge_base_id=knowledge_base_id,
     )
 

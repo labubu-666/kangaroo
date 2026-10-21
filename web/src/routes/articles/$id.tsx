@@ -6,6 +6,7 @@ import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext"
 import { fetchKnowledgeBase } from "../../lib/knowledge-bases";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { InlineEdit } from "../../components/InlineEdit";
+import { CopyId } from "../../components/shared/CopyId";
 import { LabelsEditor } from "../../components/shared/LabelsEditor";
 import { Loading } from "../../components/shared/Loading";
 import { useDismiss } from "../../lib/use-dismiss";
@@ -178,6 +179,27 @@ function ArticleDetail() {
             onChange={(labels) => labelsMutation.mutate(labels)}
             disabled={labelsMutation.isPending}
           />
+
+          <div>
+            <p className="text-sm font-medium text-gray-700">Created</p>
+            <p className="text-sm text-gray-500">
+              {new Date(article.created_at).toLocaleString()}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium text-gray-700">Modified</p>
+            <p className="text-sm text-gray-500">
+              {new Date(article.modified_at).toLocaleString()}
+            </p>
+          </div>
+
+          <div>
+            <CopyId
+              id={article.id}
+              url={`${window.location.origin}/web/articles/${article.id}`}
+            />
+          </div>
         </aside>
       </div>
     </div>

@@ -20,6 +20,7 @@ from kangaroo.errors import (
     InvalidBackupError,
     InvalidFilterError,
     InvalidReferenceError,
+    InvalidSortError,
     InvalidTemplateError,
     NotFoundError,
 )
@@ -114,6 +115,7 @@ ERROR_STATUS_CODES: dict[type[Exception], int] = {
     ConflictError: status.HTTP_409_CONFLICT,
     InvalidReferenceError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     InvalidFilterError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    InvalidSortError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     InvalidTemplateError: status.HTTP_400_BAD_REQUEST,
     InvalidBackupError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     RunnerUnavailableError: status.HTTP_503_SERVICE_UNAVAILABLE,

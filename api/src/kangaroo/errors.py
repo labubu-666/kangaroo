@@ -20,6 +20,10 @@ class InvalidFilterError(ValueError):
     """A board filter is not valid filter syntax."""
 
 
+class InvalidSortError(ValueError):
+    """A sort field is not one the list can be sorted by."""
+
+
 class InvalidTemplateError(ValueError):
     """The project template name does not match any template."""
 

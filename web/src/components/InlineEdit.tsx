@@ -63,6 +63,8 @@ export function InlineEdit({
         aria-label={`Edit ${ariaLabel}`}
         onClick={(e) => {
           if ((e.target as HTMLElement).closest("a")) return;
+          // A drag-select ends in a click too; keep the selection instead of editing
+          if (window.getSelection()?.toString()) return;
           startEditing();
         }}
         onKeyDown={(e) => {

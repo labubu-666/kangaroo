@@ -1,7 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useId, useState } from "react";
-import { ARTICLE_LIMIT, fetchArticles } from "../../lib/articles";
+import {
+  ARTICLE_DEFAULT_SORT,
+  ARTICLE_LIMIT,
+  ARTICLE_SORTS,
+  fetchArticles,
+} from "../../lib/articles";
 import {
   deleteKnowledgeBase,
   fetchKnowledgeBase,
@@ -16,10 +21,17 @@ import { useDismiss } from "../../lib/use-dismiss";
 
 export const Route = createFileRoute("/knowledge-bases/$id")({
   component: KnowledgeBaseDetail,
+  validateSearch: (search: Record<string, unknown>): { sort?: string } => ({
+    sort:
+      typeof search.sort === "string" && search.sort !== ""
+        ? search.sort
+        : undefined,
+  }),
 });
 
 function KnowledgeBaseDetail() {
   const { id } = Route.useParams();
+  const { sort = ARTICLE_DEFAULT_SORT } = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [offset, setOffset] = useState(0);
@@ -39,8 +51,8 @@ function KnowledgeBaseDetail() {
   });
 
   const { data: articles } = useQuery({
-    queryKey: ["articles", "in", id, offset],
-    queryFn: () => fetchArticles(ARTICLE_LIMIT, offset, id),
+    queryKey: ["articles", "in", id, offset, sort],
+    queryFn: () => fetchArticles(ARTICLE_LIMIT, offset, id, undefined, sort),
   });
 
   const deleteMutation = useMutation({
@@ -149,15 +161,36 @@ function KnowledgeBaseDetail() {
       )}
 
       <div className="space-y-4">
-        <div className="flex justify-between gap-4">
+        <div className="flex flex-wrap justify-between gap-4">
           <h2 className="text-xl font-semibold">Articles</h2>
-          <Link
-            to="/knowledge-bases/$id/articles/create"
-            params={{ id }}
-            className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
-          >
-            New article
-          </Link>
+          <div className="flex items-center gap-2">
+            <select
+              aria-label="Sort articles"
+              value={sort}
+              onChange={(e) => {
+                setOffset(0);
+                navigate({
+                  to: "/knowledge-bases/$id",
+                  params: { id },
+                  search: { sort: e.target.value },
+                });
+              }}
+              className="rounded border border-gray-300 px-3 py-2"
+            >
+              {ARTICLE_SORTS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <Link
+              to="/knowledge-bases/$id/articles/create"
+              params={{ id }}
+              className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+            >
+              New article
+            </Link>
+          </div>
         </div>
 
         {items.length === 0 ? (
