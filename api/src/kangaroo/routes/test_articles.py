@@ -108,6 +108,44 @@ def test_list_articles_paginates(client, knowledge_base_id):
     assert len(data["results"]) == 1
 
 
+def titles(response):
+    return [item["title"] for item in response.json()["results"]]
+
+
+def test_list_articles_sorts_ascending_by_default(client, knowledge_base_id):
+    """GET /api/v1/articles?sort=title sorts A to Z, and +title does the same."""
+    for title in ["Beta", "Alpha", "Gamma"]:
+        create(client, knowledge_base_id, title=title)
+    for sort in ["title", "+title"]:
+        response = client.get("/api/v1/articles", params={"sort": sort})
+        assert response.status_code == 200
+        assert titles(response) == ["Alpha", "Beta", "Gamma"]
+
+
+def test_list_articles_sorts_descending(client, knowledge_base_id):
+    """GET /api/v1/articles?sort=-title sorts Z to A."""
+    for title in ["Beta", "Alpha", "Gamma"]:
+        create(client, knowledge_base_id, title=title)
+    response = client.get("/api/v1/articles", params={"sort": "-title"})
+    assert titles(response) == ["Gamma", "Beta", "Alpha"]
+
+
+def test_list_articles_sorts_by_modified_at(client, knowledge_base_id):
+    """GET /api/v1/articles?sort=-modified_at puts the last edited article first."""
+    first = create(client, knowledge_base_id, title="First").json()
+    create(client, knowledge_base_id, title="Second")
+    client.patch(f"/api/v1/articles/{first['id']}", json={"body": "Edited"})
+    response = client.get("/api/v1/articles", params={"sort": "-modified_at"})
+    assert titles(response) == ["First", "Second"]
+
+
+def test_list_articles_rejects_unknown_sort_field(client, knowledge_base_id):
+    """GET /api/v1/articles returns 422 for a sort field it does not know."""
+    response = client.get("/api/v1/articles", params={"sort": "-nope"})
+    assert response.status_code == 422
+    assert "nope" in response.json()["detail"]
+
+
 def test_replace_article(client, knowledge_base_id):
     """PUT /api/v1/articles/{id} replaces the article and keeps its ID."""
     created = create(client, knowledge_base_id, labels=["old"]).json()

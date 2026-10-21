@@ -35,10 +35,11 @@ class ArticleService:
         limit: int,
         offset: int,
         search: str | None = None,
+        sort: str | None = None,
         knowledge_base_id: UUID | None = None,
     ) -> PaginatedResponse[Article]:
         return self._articles.list_paginated(
-            limit, offset, search, knowledge_base_id=knowledge_base_id
+            limit, offset, search, sort, knowledge_base_id=knowledge_base_id
         )
 
     def replace(self, item_id: UUID, replace: ArticleReplace) -> Article:
