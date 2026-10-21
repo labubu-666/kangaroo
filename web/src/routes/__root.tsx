@@ -2,6 +2,7 @@ import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { AppFooter } from "../components/app-footer/AppFooter";
 import { AppHeader } from "../components/app-header/AppHeader";
+import { CookieBanner } from "../components/CookieBanner";
 import {
   BreadcrumbsProvider,
   PageBreadcrumbs,
@@ -18,6 +19,7 @@ export const Route = createRootRoute({
         <Outlet />
         <AppFooter />
       </div>
+      <CookieBanner />
       <TanStackRouterDevtools />
     </BreadcrumbsProvider>
   ),
