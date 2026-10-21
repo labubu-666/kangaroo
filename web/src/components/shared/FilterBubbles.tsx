@@ -23,7 +23,7 @@ import {
   type Operator,
 } from "../../lib/filter-bubbles";
 
-export const CONTROL =
+const CONTROL =
   "rounded border border-gray-300 bg-white px-1 py-0.5 text-sm text-gray-800";
 
 const MOVE_BUTTON =

@@ -69,17 +69,6 @@ export function createKnowledgeBase(
   );
 }
 
-export function replaceKnowledgeBase(
-  id: string,
-  item: KnowledgeBaseInput,
-): Promise<KnowledgeBase> {
-  return apiJson(
-    `/api/v1/knowledge-bases/${id}`,
-    "Failed to save knowledge base",
-    jsonBody("PUT", item),
-  );
-}
-
 export async function deleteKnowledgeBase(id: string): Promise<void> {
   await apiFetch(
     `/api/v1/knowledge-bases/${id}`,

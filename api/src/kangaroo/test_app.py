@@ -108,12 +108,10 @@ def test_spa_static_files_fallback_to_index():
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir_path = Path(tmpdir)
 
-        # Create index.html and a static file
         index_content = b"<html><body>Index</body></html>"
         (tmpdir_path / "index.html").write_bytes(index_content)
         (tmpdir_path / "asset.js").write_bytes(b"console.log('asset');")
 
-        # Create a test app with SPAStaticFiles
         test_app = FastAPI()
         test_app.mount(
             "/static",

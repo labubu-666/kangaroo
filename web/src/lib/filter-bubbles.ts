@@ -30,7 +30,7 @@ export function isBoolField(field: string): boolean {
   return BOOL_FIELDS.includes(field);
 }
 
-export const OPERATORS = [
+const OPERATORS = [
   "==",
   "!=",
   "~",
@@ -138,7 +138,7 @@ export function parseCondition(
 // Quotes a value with whichever quote character it does not contain.
 // The filter language has no escapes, so a value with both kinds cannot be
 // written; the API then rejects the filter with a 422.
-export function quote(value: string): string {
+function quote(value: string): string {
   return value.includes("'") && !value.includes('"')
     ? `"${value}"`
     : `'${value}'`;
@@ -233,7 +233,7 @@ function splitTopLevel(text: string): FilterParts {
 }
 
 // Wraps text in brackets when it has a top-level and/or, so it stays one condition
-export function groupText(text: string): string {
+function groupText(text: string): string {
   const t = text.trim();
   return splitTopLevel(t).texts.length > 1 ? `(${t})` : t;
 }

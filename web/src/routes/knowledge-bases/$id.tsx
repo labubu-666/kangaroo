@@ -21,20 +21,37 @@ import { useDismiss } from "../../lib/use-dismiss";
 
 export const Route = createFileRoute("/knowledge-bases/$id")({
   component: KnowledgeBaseDetail,
-  validateSearch: (search: Record<string, unknown>): { sort?: string } => ({
-    sort:
-      typeof search.sort === "string" && search.sort !== ""
-        ? search.sort
-        : undefined,
-  }),
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { sort?: string; offset?: number; limit?: number } => {
+    const offset = Number(search.offset);
+    const limit = Number(search.limit);
+    return {
+      sort:
+        typeof search.sort === "string" && search.sort !== ""
+          ? search.sort
+          : undefined,
+      offset: Number.isInteger(offset) && offset > 0 ? offset : undefined,
+      limit:
+        Number.isInteger(limit) &&
+        limit >= 1 &&
+        limit <= 100 &&
+        limit !== ARTICLE_LIMIT
+          ? limit
+          : undefined,
+    };
+  },
 });
 
 function KnowledgeBaseDetail() {
   const { id } = Route.useParams();
-  const { sort = ARTICLE_DEFAULT_SORT } = Route.useSearch();
+  const {
+    sort = ARTICLE_DEFAULT_SORT,
+    offset = 0,
+    limit = ARTICLE_LIMIT,
+  } = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [offset, setOffset] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
   const menuRef = useDismiss<HTMLDivElement>(menuOpen, () =>
@@ -51,8 +68,8 @@ function KnowledgeBaseDetail() {
   });
 
   const { data: articles } = useQuery({
-    queryKey: ["articles", "in", id, offset, sort],
-    queryFn: () => fetchArticles(ARTICLE_LIMIT, offset, id, undefined, sort),
+    queryKey: ["articles", "in", id, offset, limit, sort],
+    queryFn: () => fetchArticles(limit, offset, id, undefined, sort),
   });
 
   const deleteMutation = useMutation({
@@ -168,11 +185,10 @@ function KnowledgeBaseDetail() {
               aria-label="Sort articles"
               value={sort}
               onChange={(e) => {
-                setOffset(0);
                 navigate({
                   to: "/knowledge-bases/$id",
                   params: { id },
-                  search: { sort: e.target.value },
+                  search: { sort: e.target.value, limit },
                 });
               }}
               className="rounded border border-gray-300 px-3 py-2"
@@ -217,10 +233,16 @@ function KnowledgeBaseDetail() {
 
         <Pagination
           offset={offset}
-          limit={ARTICLE_LIMIT}
+          limit={limit}
           total={total}
           disabled={false}
-          onChange={setOffset}
+          onChange={(nextOffset) =>
+            navigate({
+              to: "/knowledge-bases/$id",
+              params: { id },
+              search: { sort, limit, offset: nextOffset || undefined },
+            })
+          }
         />
       </div>
     </div>
