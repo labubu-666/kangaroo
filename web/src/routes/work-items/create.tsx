@@ -95,8 +95,9 @@ function CreateWorkItem() {
         navigate({ to: "/work-items/$id", params: { id: parentId } });
       } else {
         navigate({
-          to: "/work-items",
-          search: { filter: projectFilter(getValues("projectId")) },
+          to: "/projects/$id",
+          params: { id: getValues("projectId") },
+          search: { tab: "work-items" },
         });
       }
     },
