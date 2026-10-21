@@ -20,7 +20,7 @@ export const CATEGORY_LABELS: Record<StatusCategory, string> = {
   done: "Done",
 };
 
-export const LEVEL_LABELS: Record<TypeLevel, string> = {
+const LEVEL_LABELS: Record<TypeLevel, string> = {
   standard: "Standard",
   subtask: "Subtask",
 };

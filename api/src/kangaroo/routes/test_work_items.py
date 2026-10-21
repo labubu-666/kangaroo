@@ -8,6 +8,18 @@ from kangaroo.routes.dependencies import get_engine
 from kangaroo.testing import status_id, type_id
 
 
+def _create(client, project_id, title="Task", **extra):
+    return client.post(
+        "/api/v1/work-items",
+        json={
+            "title": title,
+            "project_id": project_id,
+            "type_id": type_id(client, project_id, "task"),
+            **extra,
+        },
+    )
+
+
 @pytest.fixture
 def client(engine):
     """Provide a TestClient that uses fresh database for each test."""
@@ -73,22 +85,8 @@ def test_list_work_items_empty(client):
 
 def test_list_work_items(client, project_id):
     """GET /api/v1/work-items returns created items with pagination."""
-    client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "title": "Task 1",
-            "project_id": project_id,
-        },
-    )
-    client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "title": "Task 2",
-            "project_id": project_id,
-        },
-    )
+    _create(client, project_id, title="Task 1")
+    _create(client, project_id, title="Task 2")
 
     response = client.get("/api/v1/work-items")
     assert response.status_code == 200
@@ -103,14 +101,7 @@ def test_list_work_items(client, project_id):
 
 def test_list_work_items_search(client, project_id):
     """GET /api/v1/work-items?search= matches title or description, ignoring case."""
-    client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "title": "Login bug",
-            "project_id": project_id,
-        },
-    )
+    _create(client, project_id, title="Login bug")
     client.post(
         "/api/v1/work-items",
         json={
@@ -120,14 +111,7 @@ def test_list_work_items_search(client, project_id):
             "project_id": project_id,
         },
     )
-    client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "title": "Unrelated",
-            "project_id": project_id,
-        },
-    )
+    _create(client, project_id, title="Unrelated")
 
     response = client.get("/api/v1/work-items?search=login")
     assert response.status_code == 200
@@ -144,14 +128,7 @@ def test_list_work_items_search_too_long(client):
 
 def test_list_work_items_filter(client, project_id):
     """GET /api/v1/work-items?filter= returns only the matching items."""
-    client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "title": "Open",
-            "project_id": project_id,
-        },
-    )
+    _create(client, project_id, title="Open")
     in_progress = client.post(
         "/api/v1/work-items",
         json={
@@ -175,14 +152,7 @@ def test_list_work_items_filter(client, project_id):
 def test_list_work_items_filter_with_paging_and_search(client, project_id):
     """The filter, search and paging are applied together, with total after the filter."""
     for title in ["Login bug", "Login task", "Other bug"]:
-        client.post(
-            "/api/v1/work-items",
-            json={
-                "type_id": type_id(client, project_id, "task"),
-                "title": title,
-                "project_id": project_id,
-            },
-        )
+        _create(client, project_id, title=title)
 
     response = client.get(
         "/api/v1/work-items?filter=title ~ 'bug'&search=login&limit=1&offset=0"
@@ -504,16 +474,8 @@ def test_delete_work_item_not_found(client):
 
 def test_list_work_items_with_limit(client, project_id):
     """GET /api/v1/work-items?limit=2 returns paginated results."""
-    # Create 5 work items
     for i in range(1, 6):
-        client.post(
-            "/api/v1/work-items",
-            json={
-                "type_id": type_id(client, project_id, "task"),
-                "title": f"Task {i}",
-                "project_id": project_id,
-            },
-        )
+        _create(client, project_id, title=f"Task {i}")
 
     response = client.get("/api/v1/work-items?limit=2")
     assert response.status_code == 200
@@ -528,16 +490,8 @@ def test_list_work_items_with_limit(client, project_id):
 
 def test_list_work_items_with_offset(client, project_id):
     """GET /api/v1/work-items?offset=2 skips items and returns from offset."""
-    # Create 5 work items
     for i in range(1, 6):
-        client.post(
-            "/api/v1/work-items",
-            json={
-                "type_id": type_id(client, project_id, "task"),
-                "title": f"Task {i}",
-                "project_id": project_id,
-            },
-        )
+        _create(client, project_id, title=f"Task {i}")
 
     response = client.get("/api/v1/work-items?offset=2")
     assert response.status_code == 200
@@ -553,16 +507,8 @@ def test_list_work_items_with_offset(client, project_id):
 
 def test_list_work_items_with_limit_and_offset(client, project_id):
     """GET /api/v1/work-items?limit=2&offset=1 returns middle page."""
-    # Create 5 work items
     for i in range(1, 6):
-        client.post(
-            "/api/v1/work-items",
-            json={
-                "type_id": type_id(client, project_id, "task"),
-                "title": f"Task {i}",
-                "project_id": project_id,
-            },
-        )
+        _create(client, project_id, title=f"Task {i}")
 
     response = client.get("/api/v1/work-items?limit=2&offset=1")
     assert response.status_code == 200
@@ -577,16 +523,8 @@ def test_list_work_items_with_limit_and_offset(client, project_id):
 
 def test_list_work_items_last_page(client, project_id):
     """GET /api/v1/work-items on last page."""
-    # Create 5 work items
     for i in range(1, 6):
-        client.post(
-            "/api/v1/work-items",
-            json={
-                "type_id": type_id(client, project_id, "task"),
-                "title": f"Task {i}",
-                "project_id": project_id,
-            },
-        )
+        _create(client, project_id, title=f"Task {i}")
 
     response = client.get("/api/v1/work-items?limit=2&offset=4")
     assert response.status_code == 200
@@ -618,23 +556,8 @@ def test_list_work_items_offset_validation_negative(client):
 
 def test_list_work_items_beyond_total(client, project_id):
     """GET /api/v1/work-items?offset=100 returns empty results when offset exceeds total."""
-    # Create 2 work items
-    client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "title": "Task 1",
-            "project_id": project_id,
-        },
-    )
-    client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "title": "Task 2",
-            "project_id": project_id,
-        },
-    )
+    _create(client, project_id, title="Task 1")
+    _create(client, project_id, title="Task 2")
 
     response = client.get("/api/v1/work-items?offset=100")
     assert response.status_code == 200
@@ -790,14 +713,7 @@ def test_list_work_items_filtered_by_project(client, project_id):
             "project_id": other_id,
         },
     )
-    client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "title": "In default",
-            "project_id": project_id,
-        },
-    )
+    _create(client, project_id, title="In default")
 
     response = client.get(f"/api/v1/work-items?project_id={other_id}")
     assert response.status_code == 200
@@ -1019,14 +935,7 @@ def test_list_subtasks_of_parent(client, project_id):
             "project_id": project_id,
         },
     )
-    client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "title": "Unrelated",
-            "project_id": project_id,
-        },
-    )
+    _create(client, project_id, title="Unrelated")
 
     response = client.get(f"/api/v1/work-items?parent_id={parent_id}")
     assert response.status_code == 200
@@ -1090,14 +999,7 @@ def test_bulk_delete_ids(client, project_id):
 def test_bulk_delete_all_matching(client, project_id):
     """all_matching with a filter deletes only the items the filter matches."""
     for title in ["Login bug", "Other bug", "Feature"]:
-        client.post(
-            "/api/v1/work-items",
-            json={
-                "type_id": type_id(client, project_id, "task"),
-                "title": title,
-                "project_id": project_id,
-            },
-        )
+        _create(client, project_id, title=title)
 
     response = client.post(
         "/api/v1/work-items/bulk-delete",
@@ -1369,18 +1271,6 @@ def test_rendered_description_is_read_only(client, project_id):
         },
     )
     assert response.status_code == 422
-
-
-def _create(client, project_id, title="Task", **extra):
-    return client.post(
-        "/api/v1/work-items",
-        json={
-            "title": title,
-            "project_id": project_id,
-            "type_id": type_id(client, project_id, "task"),
-            **extra,
-        },
-    )
 
 
 def test_new_work_item_starts_in_first_todo_status(client, project_id):

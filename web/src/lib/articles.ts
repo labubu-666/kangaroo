@@ -80,17 +80,6 @@ export function updateArticle(
   );
 }
 
-export function replaceArticle(
-  id: string,
-  item: ArticleInput,
-): Promise<Article> {
-  return apiJson(
-    `/api/v1/articles/${id}`,
-    "Failed to save article",
-    jsonBody("PUT", item),
-  );
-}
-
 export async function deleteArticle(id: string): Promise<void> {
   await apiFetch(`/api/v1/articles/${id}`, "Failed to delete article", {
     method: "DELETE",

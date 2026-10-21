@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export interface ReplacementOption {
+interface ReplacementOption {
   id: string;
   name: string;
 }
