@@ -215,7 +215,7 @@ function WorkItemDetail() {
               >
                 {item.description ? (
                   <div
-                    className="space-y-2 break-words text-gray-600 [&_a]:text-blue-600 [&_a]:underline [&_code]:rounded [&_code]:bg-gray-100 [&_code]:px-1 [&_h1]:text-xl [&_h1]:font-bold [&_h2]:text-lg [&_h2]:font-bold [&_h3]:font-semibold [&_li]:ml-5 [&_ol]:list-decimal [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-gray-100 [&_pre]:p-2 [&_table]:border-collapse [&_td]:border [&_td]:px-2 [&_th]:border [&_th]:px-2 [&_ul]:list-disc"
+                    className="prose prose-sm max-w-none break-words"
                     dangerouslySetInnerHTML={{
                       __html: item.rendered_description ?? "",
                     }}
