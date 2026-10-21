@@ -12,6 +12,7 @@ import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { InlineEdit } from "../../components/InlineEdit";
 import { Loading } from "../../components/shared/Loading";
 import { Pagination } from "../../components/shared/Pagination";
+import { useDismiss } from "../../lib/use-dismiss";
 
 export const Route = createFileRoute("/knowledge-bases/$id")({
   component: KnowledgeBaseDetail,
@@ -24,6 +25,9 @@ function KnowledgeBaseDetail() {
   const [offset, setOffset] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
+  const menuRef = useDismiss<HTMLDivElement>(menuOpen, () =>
+    setMenuOpen(false),
+  );
 
   const {
     data: knowledgeBase,
@@ -107,7 +111,7 @@ function KnowledgeBaseDetail() {
             </ul>
           )}
         </div>
-        <div className="relative">
+        <div ref={menuRef} className="relative">
           <button
             type="button"
             aria-label="More actions"

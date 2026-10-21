@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useId, useState } from "react";
 import { fetchProject, updateProject } from "../../lib/projects";
+import { useDismiss } from "../../lib/use-dismiss";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 
 import { BoardList } from "../../components/boards/BoardList";
@@ -27,6 +29,11 @@ function ProjectDetail() {
   const { id } = Route.useParams();
   const { tab = "work-items" } = Route.useSearch();
   const queryClient = useQueryClient();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuId = useId();
+  const menuRef = useDismiss<HTMLDivElement>(menuOpen, () =>
+    setMenuOpen(false),
+  );
 
   const {
     data: project,
@@ -70,21 +77,45 @@ function ProjectDetail() {
                 </h1>
               </InlineEdit>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/projects/$id/statuses"
-                params={{ id: project.id }}
-                className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+            <div ref={menuRef} className="relative">
+              <button
+                type="button"
+                aria-label="More actions"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-controls={menuId}
+                onClick={() => setMenuOpen((open) => !open)}
+                className="flex h-10 items-center rounded border border-gray-300 px-4 font-medium hover:bg-gray-50"
               >
-                Statuses and types
-              </Link>
-              <Link
-                to="/projects/$id/edit"
-                params={{ id: project.id }}
-                className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
-              >
-                Edit
-              </Link>
+                ⋯
+              </button>
+              {menuOpen && (
+                <div
+                  id={menuId}
+                  role="menu"
+                  aria-label="Project actions"
+                  className="absolute right-0 z-10 mt-2 flex min-w-40 flex-col rounded border border-gray-200 bg-white py-1 shadow-lg"
+                >
+                  <Link
+                    to="/projects/$id/statuses"
+                    params={{ id: project.id }}
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                    className="px-3 py-2 font-medium hover:bg-gray-100"
+                  >
+                    Statuses and types
+                  </Link>
+                  <Link
+                    to="/projects/$id/edit"
+                    params={{ id: project.id }}
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                    className="px-3 py-2 font-medium hover:bg-gray-100"
+                  >
+                    Edit
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 

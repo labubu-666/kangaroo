@@ -2,11 +2,15 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { fetchCurrentUser } from "../../lib/user";
+import { useDismiss } from "../../lib/use-dismiss";
 import { SearchBar } from "./SearchBar";
 
 export function AppHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
+  const menuRef = useDismiss<HTMLDivElement>(menuOpen, () =>
+    setMenuOpen(false),
+  );
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: fetchCurrentUser,
@@ -22,7 +26,7 @@ export function AppHeader() {
         <span aria-hidden="true">🦘</span>
       </Link>
       <SearchBar />
-      <div className="relative ml-auto flex">
+      <div ref={menuRef} className="relative ml-auto flex">
         <button
           type="button"
           aria-label="Profile menu"
