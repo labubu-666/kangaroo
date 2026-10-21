@@ -22,3 +22,7 @@ class InvalidFilterError(ValueError):
 
 class InvalidTemplateError(ValueError):
     """The project template name does not match any template."""
+
+
+class InvalidBackupError(ValueError):
+    """The uploaded file is not a valid backup of this schema."""

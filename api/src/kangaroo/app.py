@@ -17,6 +17,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from kangaroo.errors import (
     ConflictError,
+    InvalidBackupError,
     InvalidFilterError,
     InvalidReferenceError,
     InvalidTemplateError,
@@ -114,6 +115,7 @@ ERROR_STATUS_CODES: dict[type[Exception], int] = {
     InvalidReferenceError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     InvalidFilterError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     InvalidTemplateError: status.HTTP_400_BAD_REQUEST,
+    InvalidBackupError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     RunnerUnavailableError: status.HTTP_503_SERVICE_UNAVAILABLE,
 }
 for error_type, status_code in ERROR_STATUS_CODES.items():

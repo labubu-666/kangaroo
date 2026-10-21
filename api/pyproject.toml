@@ -5,16 +5,17 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "authlib>=1.9.1",
+    "authlib==1.9.1",
     "click==8.5.0",
     "fastapi==0.143.0",
-    "httpx>=0.28.1",
+    "httpx==0.28.1",
     "httpx2==2.13.1",
-    "itsdangerous>=2.2.0",
-    "markdown>=3.11",
-    "nh3>=0.3.7",
+    "itsdangerous==2.2.0",
+    "markdown==3.11",
+    "nh3==0.3.7",
     "pydantic==2.14.1",
     "pydantic-settings==2.15.0",
+    "python-multipart==0.0.32",
     "sqlalchemy==2.1.4",
     "uvicorn==0.54.0",
 ]
