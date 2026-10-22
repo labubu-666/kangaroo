@@ -19,14 +19,27 @@ import { Loading } from "../../components/shared/Loading";
 import { Pagination } from "../../components/shared/Pagination";
 import { useDismiss } from "../../lib/use-dismiss";
 
+type KnowledgeBaseTab = "articles" | "summary";
+
+const TABS: { value: KnowledgeBaseTab; label: string }[] = [
+  { value: "articles", label: "Articles" },
+  { value: "summary", label: "Summary" },
+];
+
 export const Route = createFileRoute("/knowledge-bases/$id")({
   component: KnowledgeBaseDetail,
   validateSearch: (
     search: Record<string, unknown>,
-  ): { sort?: string; offset?: number; limit?: number } => {
+  ): {
+    tab?: KnowledgeBaseTab;
+    sort?: string;
+    offset?: number;
+    limit?: number;
+  } => {
     const offset = Number(search.offset);
     const limit = Number(search.limit);
     return {
+      tab: search.tab === "summary" ? "summary" : "articles",
       sort:
         typeof search.sort === "string" && search.sort !== ""
           ? search.sort
@@ -46,6 +59,7 @@ export const Route = createFileRoute("/knowledge-bases/$id")({
 function KnowledgeBaseDetail() {
   const { id } = Route.useParams();
   const {
+    tab = "articles",
     sort = ARTICLE_DEFAULT_SORT,
     offset = 0,
     limit = ARTICLE_LIMIT,
@@ -178,72 +192,105 @@ function KnowledgeBaseDetail() {
       )}
 
       <div className="space-y-4">
-        <div className="flex flex-wrap justify-between gap-4">
-          <h2 className="text-xl font-semibold">Articles</h2>
-          <div className="flex items-center gap-2">
-            <select
-              aria-label="Sort articles"
-              value={sort}
-              onChange={(e) => {
+        <div role="tablist" className="flex gap-4 border-b border-gray-200">
+          {TABS.map((t) => (
+            <Link
+              key={t.value}
+              role="tab"
+              aria-selected={tab === t.value}
+              to="/knowledge-bases/$id"
+              params={{ id }}
+              search={{ tab: t.value }}
+              replace
+              className={`-mb-px border-b-2 px-1 pb-2 font-semibold ${
+                tab === t.value
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              {t.label}
+            </Link>
+          ))}
+        </div>
+
+        {tab === "summary" ? (
+          <div className="text-center text-gray-500">No summary yet</div>
+        ) : (
+          <>
+            <div className="flex flex-wrap justify-end gap-4">
+              <div className="flex items-center gap-2">
+                <select
+                  aria-label="Sort articles"
+                  value={sort}
+                  onChange={(e) => {
+                    navigate({
+                      to: "/knowledge-bases/$id",
+                      params: { id },
+                      search: { tab, sort: e.target.value, limit },
+                    });
+                  }}
+                  className="rounded border border-gray-300 px-3 py-2"
+                >
+                  {ARTICLE_SORTS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <Link
+                  to="/knowledge-bases/$id/articles/create"
+                  params={{ id }}
+                  className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+                >
+                  New article
+                </Link>
+              </div>
+            </div>
+
+            {items.length === 0 ? (
+              <div className="text-center text-gray-500">No articles yet</div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {items.map((article) => (
+                  <Link
+                    key={article.id}
+                    to="/articles/$id"
+                    params={{ id: article.id }}
+                    className="flex flex-col gap-1 rounded border border-gray-200 p-4 hover:border-blue-400 hover:bg-blue-50 transition"
+                  >
+                    <h3 className="font-semibold text-blue-600">
+                      {article.title}
+                    </h3>
+                    {article.labels.length > 0 && (
+                      <span className="text-xs text-gray-600">
+                        {article.labels.join(", ")}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <Pagination
+              offset={offset}
+              limit={limit}
+              total={total}
+              disabled={false}
+              onChange={(nextOffset) =>
                 navigate({
                   to: "/knowledge-bases/$id",
                   params: { id },
-                  search: { sort: e.target.value, limit },
-                });
-              }}
-              className="rounded border border-gray-300 px-3 py-2"
-            >
-              {ARTICLE_SORTS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <Link
-              to="/knowledge-bases/$id/articles/create"
-              params={{ id }}
-              className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
-            >
-              New article
-            </Link>
-          </div>
-        </div>
-
-        {items.length === 0 ? (
-          <div className="text-center text-gray-500">No articles yet</div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {items.map((article) => (
-              <Link
-                key={article.id}
-                to="/articles/$id"
-                params={{ id: article.id }}
-                className="flex flex-col gap-1 rounded border border-gray-200 p-4 hover:border-blue-400 hover:bg-blue-50 transition"
-              >
-                <h3 className="font-semibold text-blue-600">{article.title}</h3>
-                {article.labels.length > 0 && (
-                  <span className="text-xs text-gray-600">
-                    {article.labels.join(", ")}
-                  </span>
-                )}
-              </Link>
-            ))}
-          </div>
+                  search: {
+                    tab,
+                    sort,
+                    limit,
+                    offset: nextOffset || undefined,
+                  },
+                })
+              }
+            />
+          </>
         )}
-
-        <Pagination
-          offset={offset}
-          limit={limit}
-          total={total}
-          disabled={false}
-          onChange={(nextOffset) =>
-            navigate({
-              to: "/knowledge-bases/$id",
-              params: { id },
-              search: { sort, limit, offset: nextOffset || undefined },
-            })
-          }
-        />
       </div>
     </div>
   );

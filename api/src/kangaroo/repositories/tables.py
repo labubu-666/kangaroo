@@ -171,3 +171,4 @@ class ArticleRow(Base):
     title: Mapped[str] = mapped_column(String)
     body: Mapped[str] = mapped_column(String)
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    viewed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
