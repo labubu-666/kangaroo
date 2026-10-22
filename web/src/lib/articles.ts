@@ -8,6 +8,7 @@ export interface Article {
   labels: string[];
   created_at: string;
   modified_at: string;
+  viewed_at: string | null;
 }
 
 export interface ArticleDetail extends Article {

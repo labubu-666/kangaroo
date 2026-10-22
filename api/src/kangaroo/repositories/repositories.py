@@ -444,6 +444,19 @@ class ArticleRepository(
     model_type = Article
     row_type = ArticleRow
 
+    def mark_viewed(self, item_id: UUID) -> None:
+        """Record that the article was viewed now.
+
+        This does not touch ``modified_at``, since viewing is not an edit.
+
+        Raises:
+            NotFoundError: If the article does not exist.
+        """
+        row = self._get_row(item_id)
+        assert isinstance(row, ArticleRow)
+        row.viewed_at = utc_now()
+        self._session.flush()
+
 
 class InvocationRepository(
     Repository[Invocation, InvocationCreate, InvocationUpdate, InvocationCreate]

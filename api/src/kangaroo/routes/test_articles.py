@@ -70,6 +70,17 @@ def test_get_article_renders_markdown(client, knowledge_base_id):
     assert "<script>" not in data["html"]
 
 
+def test_get_article_records_view(client, knowledge_base_id):
+    """GET /api/v1/articles/{id} sets viewed_at without changing modified_at."""
+    created = create(client, knowledge_base_id).json()
+    assert created["viewed_at"] is None
+
+    response = client.get(f"/api/v1/articles/{created['id']}")
+    data = response.json()
+    assert data["viewed_at"] is not None
+    assert data["modified_at"] == created["modified_at"]
+
+
 def test_get_missing_article(client):
     """GET /api/v1/articles/{id} returns 404 for an unknown ID."""
     response = client.get("/api/v1/articles/00000000-0000-0000-0000-000000000000")

@@ -27,6 +27,7 @@ class ArticleService:
         return self._articles.create(item)
 
     def get(self, item_id: UUID) -> ArticleDetail:
+        self._articles.mark_viewed(item_id)
         article = self._articles.get_by_id(item_id)
         return ArticleDetail(**article.model_dump(), html=render_markdown(article.body))
 

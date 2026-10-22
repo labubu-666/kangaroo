@@ -420,6 +420,7 @@ class ArticleReplace(ArticleCreate):
 
 class Article(ArticleCreate, Timestamped):
     id: UUID
+    viewed_at: datetime | None
 
 
 class ArticleDetail(Article):
