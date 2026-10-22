@@ -37,7 +37,7 @@ export function InvocationList() {
       {isLoading ? (
         <Loading />
       ) : items.length === 0 ? (
-        <div className="text-center text-gray-500">No invocations yet</div>
+        <div className="text-center text-fg-muted">No invocations yet</div>
       ) : (
         <div className="flex flex-col gap-4">
           {items.map((invocation) => (
@@ -45,10 +45,10 @@ export function InvocationList() {
               key={invocation.id}
               to="/invocations/$id"
               params={{ id: invocation.id }}
-              className="flex flex-col gap-1 rounded border border-gray-200 p-4 hover:border-blue-400 hover:bg-blue-50 transition"
+              className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
             >
               <div className="flex flex-wrap items-center gap-3">
-                <h3 className="font-semibold text-blue-600">
+                <h3 className="font-semibold text-primary">
                   {functionNames.get(invocation.function_id) ?? "Unknown"}
                 </h3>
                 <span
@@ -57,7 +57,7 @@ export function InvocationList() {
                   {invocation.status}
                 </span>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-fg-muted">
                 {new Date(invocation.created_at).toLocaleString()}
               </p>
             </Link>

@@ -123,7 +123,7 @@ function BoardDetail() {
             <Link
               to="/projects/$id/boards/$boardId/edit"
               params={{ id, boardId: board.id }}
-              className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+              className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
             >
               Edit
             </Link>
@@ -162,17 +162,17 @@ function BoardColumnView({
       ref={ref}
       className={`flex min-h-64 min-w-0 flex-col gap-3 rounded border p-3 transition-colors ${
         isDropTarget
-          ? "border-blue-400 bg-blue-50"
-          : "border-gray-200 bg-gray-50"
+          ? "border-blue-400 dark:border-blue-500 bg-primary-subtle"
+          : "border-border bg-surface-muted"
       }`}
     >
       <h2 className="flex items-center justify-between font-semibold">
         {status.name}
-        <span className="text-sm text-gray-500">{items.length}</span>
+        <span className="text-sm text-fg-muted">{items.length}</span>
       </h2>
 
       {items.length === 0 ? (
-        <p className="text-center text-sm text-gray-400">No items</p>
+        <p className="text-center text-sm text-fg-muted">No items</p>
       ) : (
         items.map((item) => <BoardCard key={item.id} item={item} />)
       )}

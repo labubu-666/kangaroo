@@ -131,7 +131,7 @@ function EditBoard() {
         <form
           onSubmit={handleSubmit(onSubmit)}
           autoComplete="off"
-          className="space-y-4 rounded border border-gray-200 p-4"
+          className="space-y-4 rounded border border-border p-4"
         >
           {errors.root && <ErrorBanner>{errors.root.message}</ErrorBanner>}
 
@@ -144,11 +144,11 @@ function EditBoard() {
               type="text"
               disabled={mutation.isPending}
               placeholder="Enter board name"
-              className="w-full rounded border border-gray-300 px-3 py-2"
+              className="w-full rounded border border-border-strong px-3 py-2"
               {...register("name", { required: "Name is required" })}
             />
             {errors.name && (
-              <p className="text-sm text-red-600">{errors.name.message}</p>
+              <p className="text-sm text-danger">{errors.name.message}</p>
             )}
           </div>
 
@@ -161,10 +161,10 @@ function EditBoard() {
               type="text"
               disabled={mutation.isPending}
               placeholder="status != 'done' and type == 'task'"
-              className="w-full rounded border border-gray-300 px-3 py-2 font-mono"
+              className="w-full rounded border border-border-strong px-3 py-2 font-mono"
               {...register("filter")}
             />
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-fg-muted">
               Narrows the project's work items. Text fields: title, description,
               status, type, parent_id, project.id, project.name. List field:
               labels (use contains, in, ~ or is empty). Combine with and, or,
@@ -175,7 +175,7 @@ function EditBoard() {
                 params={{ doc: "filter-language" }}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 underline"
+                className="text-primary underline"
               >
                 the filter language docs
               </Link>{" "}
@@ -190,7 +190,7 @@ function EditBoard() {
             <select
               id="projectId"
               disabled={mutation.isPending}
-              className="w-full rounded border border-gray-300 px-3 py-2"
+              className="w-full rounded border border-border-strong px-3 py-2"
               {...register("projectId")}
             >
               {(projects?.results ?? []).map((option) => (
@@ -210,7 +210,7 @@ function EditBoard() {
               disabled={mutation.isPending}
               placeholder="Enter board description (optional)"
               rows={4}
-              className="w-full rounded border border-gray-300 px-3 py-2"
+              className="w-full rounded border border-border-strong px-3 py-2"
               {...register("description")}
             />
           </div>
@@ -219,14 +219,14 @@ function EditBoard() {
             <button
               type="submit"
               disabled={mutation.isPending || !isDirty}
-              className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+              className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
             >
               {mutation.isPending ? "Saving..." : "Save"}
             </button>
             <Link
               to="/projects/$id/boards/$boardId"
               params={{ id, boardId }}
-              className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+              className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
             >
               Cancel
             </Link>
@@ -235,14 +235,14 @@ function EditBoard() {
       ) : null}
 
       {board && (
-        <div className="border-t border-gray-200 pt-4">
+        <div className="border-t border-border pt-4">
           {deleteBoardMutation.error && (
             <ErrorBanner>{deleteBoardMutation.error.message}</ErrorBanner>
           )}
           <button
             onClick={handleDeleteBoard}
             disabled={deleteBoardMutation.isPending}
-            className="rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:bg-gray-400"
+            className="rounded bg-danger px-4 py-2 font-medium text-on-primary hover:bg-danger-hover disabled:bg-fg-disabled"
           >
             Delete board
           </button>

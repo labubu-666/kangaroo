@@ -42,7 +42,7 @@ export function BoardList({ projectId, filter }: BoardListProps) {
       {isLoading ? (
         <Loading />
       ) : items.length === 0 ? (
-        <div className="text-center text-gray-500">
+        <div className="text-center text-fg-muted">
           {filter ? "No boards match this filter" : "No boards yet"}
         </div>
       ) : (
@@ -52,16 +52,16 @@ export function BoardList({ projectId, filter }: BoardListProps) {
               key={board.id}
               to="/projects/$id/boards/$boardId"
               params={{ id: board.project_id, boardId: board.id }}
-              className="flex flex-col gap-3 rounded border border-gray-200 p-4 hover:border-blue-400 hover:bg-blue-50 transition"
+              className="flex flex-col gap-3 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
             >
               <div className="min-w-0 flex-1 break-words">
-                <h3 className="font-semibold text-blue-600">{board.name}</h3>
+                <h3 className="font-semibold text-primary">{board.name}</h3>
                 {board.description && (
-                  <p className="mt-1 text-sm text-gray-600">
+                  <p className="mt-1 text-sm text-fg-secondary">
                     {board.description}
                   </p>
                 )}
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-fg-muted">
                   {projectNames.get(board.project_id) ?? "Unknown"}
                 </p>
               </div>

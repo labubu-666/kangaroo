@@ -33,7 +33,7 @@ export function Pagination({
       <button
         onClick={() => goToPage(currentPage - 1)}
         disabled={!hasPrevPage || disabled}
-        className="flex items-center gap-1 px-2 py-1 text-blue-600 hover:underline disabled:text-gray-400 disabled:no-underline"
+        className="flex items-center gap-1 px-2 py-1 text-primary hover:underline disabled:text-fg-disabled disabled:no-underline"
       >
         <span className="text-lg">‹</span> Previous
       </button>
@@ -46,8 +46,8 @@ export function Pagination({
               aria-current={page === currentPage ? "page" : undefined}
               className={
                 page === currentPage
-                  ? "min-w-6 font-semibold text-gray-900"
-                  : "min-w-6 text-blue-600 hover:underline"
+                  ? "min-w-6 font-semibold text-fg"
+                  : "min-w-6 text-primary hover:underline"
               }
             >
               {page}
@@ -58,7 +58,7 @@ export function Pagination({
       <button
         onClick={() => goToPage(currentPage + 1)}
         disabled={!hasNextPage || disabled}
-        className="flex items-center gap-1 px-2 py-1 text-blue-600 hover:underline disabled:text-gray-400 disabled:no-underline"
+        className="flex items-center gap-1 px-2 py-1 text-primary hover:underline disabled:text-fg-disabled disabled:no-underline"
       >
         Next <span className="text-lg">›</span>
       </button>

@@ -137,7 +137,7 @@ function KnowledgeBaseDetail() {
             </h1>
           </InlineEdit>
           {knowledgeBase.description && (
-            <p className="mt-2 whitespace-pre-wrap text-gray-600">
+            <p className="mt-2 whitespace-pre-wrap text-fg-secondary">
               {knowledgeBase.description}
             </p>
           )}
@@ -146,7 +146,7 @@ function KnowledgeBaseDetail() {
               {knowledgeBase.labels.map((label) => (
                 <li
                   key={label}
-                  className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+                  className="rounded bg-surface-strong px-2 py-0.5 text-xs font-medium text-fg-secondary"
                 >
                   {label}
                 </li>
@@ -162,7 +162,7 @@ function KnowledgeBaseDetail() {
             aria-expanded={menuOpen}
             aria-controls={menuId}
             onClick={() => setMenuOpen((open) => !open)}
-            className="flex h-10 items-center rounded border border-gray-300 px-4 font-medium hover:bg-gray-50"
+            className="flex h-10 items-center rounded border border-border-strong px-4 font-medium hover:bg-surface-muted"
           >
             ⋯
           </button>
@@ -171,14 +171,14 @@ function KnowledgeBaseDetail() {
               id={menuId}
               role="menu"
               aria-label="Knowledge base actions"
-              className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-gray-200 bg-white py-1 shadow-lg"
+              className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-border bg-surface py-1 shadow-lg"
             >
               <button
                 type="button"
                 role="menuitem"
                 onClick={handleDelete}
                 disabled={deleteMutation.isPending}
-                className="px-3 py-2 text-left font-medium text-red-600 hover:bg-gray-100 disabled:text-gray-400"
+                className="px-3 py-2 text-left font-medium text-danger hover:bg-surface-strong disabled:text-fg-disabled"
               >
                 Delete
               </button>
@@ -192,7 +192,7 @@ function KnowledgeBaseDetail() {
       )}
 
       <div className="space-y-4">
-        <div role="tablist" className="flex gap-4 border-b border-gray-200">
+        <div role="tablist" className="flex gap-4 border-b border-border">
           {TABS.map((t) => (
             <Link
               key={t.value}
@@ -204,8 +204,8 @@ function KnowledgeBaseDetail() {
               replace
               className={`-mb-px border-b-2 px-1 pb-2 font-semibold ${
                 tab === t.value
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-800"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-fg-muted hover:text-fg"
               }`}
             >
               {t.label}
@@ -214,7 +214,7 @@ function KnowledgeBaseDetail() {
         </div>
 
         {tab === "summary" ? (
-          <div className="text-center text-gray-500">No summary yet</div>
+          <div className="text-center text-fg-muted">No summary yet</div>
         ) : (
           <>
             <div className="flex flex-wrap justify-end gap-4">
@@ -229,7 +229,7 @@ function KnowledgeBaseDetail() {
                       search: { tab, sort: e.target.value, limit },
                     });
                   }}
-                  className="rounded border border-gray-300 px-3 py-2"
+                  className="rounded border border-border-strong px-3 py-2"
                 >
                   {ARTICLE_SORTS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -240,7 +240,7 @@ function KnowledgeBaseDetail() {
                 <Link
                   to="/knowledge-bases/$id/articles/create"
                   params={{ id }}
-                  className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+                  className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover"
                 >
                   New article
                 </Link>
@@ -248,7 +248,7 @@ function KnowledgeBaseDetail() {
             </div>
 
             {items.length === 0 ? (
-              <div className="text-center text-gray-500">No articles yet</div>
+              <div className="text-center text-fg-muted">No articles yet</div>
             ) : (
               <div className="flex flex-col gap-4">
                 {items.map((article) => (
@@ -256,13 +256,13 @@ function KnowledgeBaseDetail() {
                     key={article.id}
                     to="/articles/$id"
                     params={{ id: article.id }}
-                    className="flex flex-col gap-1 rounded border border-gray-200 p-4 hover:border-blue-400 hover:bg-blue-50 transition"
+                    className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
                   >
-                    <h3 className="font-semibold text-blue-600">
+                    <h3 className="font-semibold text-primary">
                       {article.title}
                     </h3>
                     {article.labels.length > 0 && (
-                      <span className="text-xs text-gray-600">
+                      <span className="text-xs text-fg-secondary">
                         {article.labels.join(", ")}
                       </span>
                     )}

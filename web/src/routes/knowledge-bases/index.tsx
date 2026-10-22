@@ -34,7 +34,7 @@ function KnowledgeBasesPage() {
         <h1 className="text-2xl font-bold">Knowledge bases</h1>
         <Link
           to="/knowledge-bases/create"
-          className="rounded bg-blue-600 px-4 py-2 text-center font-medium text-white hover:bg-blue-700"
+          className="rounded bg-primary px-4 py-2 text-center font-medium text-on-primary hover:bg-primary-hover"
         >
           New knowledge base
         </Link>
@@ -49,7 +49,7 @@ function KnowledgeBasesPage() {
           setSearch(e.target.value);
           setOffset(0);
         }}
-        className="w-full rounded border border-gray-300 px-3 py-2"
+        className="w-full rounded border border-border-strong px-3 py-2"
       />
 
       {error && <ErrorBanner>Error loading knowledge bases</ErrorBanner>}
@@ -57,7 +57,7 @@ function KnowledgeBasesPage() {
       {isLoading ? (
         <Loading />
       ) : items.length === 0 ? (
-        <div className="text-center text-gray-500">
+        <div className="text-center text-fg-muted">
           {search.trim()
             ? "No knowledge bases match this search"
             : "No knowledge bases yet"}
@@ -69,11 +69,11 @@ function KnowledgeBasesPage() {
               key={kb.id}
               to="/knowledge-bases/$id"
               params={{ id: kb.id }}
-              className="flex flex-col gap-1 rounded border border-gray-200 p-4 hover:border-blue-400 hover:bg-blue-50 transition"
+              className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
             >
-              <h2 className="font-semibold text-blue-600">{kb.name}</h2>
+              <h2 className="font-semibold text-primary">{kb.name}</h2>
               {kb.description && (
-                <p className="text-sm text-gray-600">{kb.description}</p>
+                <p className="text-sm text-fg-secondary">{kb.description}</p>
               )}
             </Link>
           ))}

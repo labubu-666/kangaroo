@@ -32,12 +32,12 @@ export function ReplacementDialog({
       role="dialog"
       aria-modal="true"
       aria-labelledby="replacement-title"
-      className="space-y-4 rounded border border-red-200 bg-white p-4 shadow"
+      className="space-y-4 rounded border border-red-200 dark:border-red-900 bg-surface p-4 shadow"
     >
       <h3 id="replacement-title" className="font-semibold">
         Delete {kind} “{name}”?
       </h3>
-      <p className="text-sm text-gray-700">
+      <p className="text-sm text-fg-secondary">
         {count} work {count === 1 ? "item uses" : "items use"} this {kind}.
         Choose the {kind} they should move to.
       </p>
@@ -49,7 +49,7 @@ export function ReplacementDialog({
         value={replacementId}
         disabled={busy}
         onChange={(e) => setReplacementId(e.target.value)}
-        className="w-full rounded border border-gray-300 px-3 py-2"
+        className="w-full rounded border border-border-strong px-3 py-2"
       >
         <option value="">Choose a {kind}…</option>
         {options.map((option) => (
@@ -58,20 +58,20 @@ export function ReplacementDialog({
           </option>
         ))}
       </select>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
       <div className="flex gap-3">
         <button
           type="button"
           disabled={busy || !replacementId}
           onClick={() => onConfirm(replacementId)}
-          className="rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:bg-gray-400"
+          className="rounded bg-danger px-4 py-2 font-medium text-on-primary hover:bg-danger-hover disabled:bg-fg-disabled"
         >
           Delete and move items
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+          className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
         >
           Cancel
         </button>

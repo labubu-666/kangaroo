@@ -15,7 +15,7 @@ export function StatCard({
 }) {
   const content = (
     <>
-      <div className="text-sm font-medium text-gray-600">{label}</div>
+      <div className="text-sm font-medium text-fg-secondary">{label}</div>
       <div className="mt-1 text-3xl font-bold">{value}</div>
     </>
   );
@@ -24,7 +24,7 @@ export function StatCard({
     <Link
       to={to}
       search={search}
-      className={`${base} hover:border-blue-400 hover:bg-blue-50 transition`}
+      className={`${base} hover:border-primary hover:bg-primary-subtle transition`}
     >
       {content}
     </Link>

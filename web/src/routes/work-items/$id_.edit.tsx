@@ -93,7 +93,7 @@ function EditWorkItem() {
         <form
           onSubmit={handleSubmit(onSubmit)}
           autoComplete="off"
-          className="space-y-4 rounded border border-gray-200 p-4"
+          className="space-y-4 rounded border border-border p-4"
         >
           {errors.root && <ErrorBanner>{errors.root.message}</ErrorBanner>}
 
@@ -106,11 +106,11 @@ function EditWorkItem() {
               type="text"
               disabled={mutation.isPending}
               placeholder="Enter work item title"
-              className="w-full rounded border border-gray-300 px-3 py-2"
+              className="w-full rounded border border-border-strong px-3 py-2"
               {...register("title", { required: "Title is required" })}
             />
             {errors.title && (
-              <p className="text-sm text-red-600">{errors.title.message}</p>
+              <p className="text-sm text-danger">{errors.title.message}</p>
             )}
           </div>
 
@@ -123,7 +123,7 @@ function EditWorkItem() {
               disabled={mutation.isPending}
               placeholder="Enter work item description (optional)"
               rows={4}
-              className="w-full rounded border border-gray-300 px-3 py-2"
+              className="w-full rounded border border-border-strong px-3 py-2"
               {...register("description")}
             />
           </div>
@@ -132,14 +132,14 @@ function EditWorkItem() {
             <button
               type="submit"
               disabled={mutation.isPending || !isDirty}
-              className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+              className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
             >
               {mutation.isPending ? "Saving..." : "Save"}
             </button>
             <Link
               to="/work-items/$id"
               params={{ id }}
-              className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+              className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
             >
               Cancel
             </Link>

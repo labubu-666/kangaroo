@@ -11,7 +11,7 @@ export function ReorderButtons({
   onMove: (delta: -1 | 1) => void;
 }) {
   const button =
-    "rounded border border-gray-300 px-2 py-1 text-sm hover:bg-gray-50 disabled:text-gray-300";
+    "rounded border border-border-strong px-2 py-1 text-sm hover:bg-surface-muted disabled:text-fg-disabled";
   return (
     <div className="flex gap-1">
       <button

@@ -25,11 +25,12 @@ const LEVEL_LABELS: Record<TypeLevel, string> = {
   subtask: "Subtask",
 };
 
-const FIELD = "rounded border border-gray-300 px-3 py-2 disabled:bg-gray-100";
+const FIELD =
+  "rounded border border-border-strong px-3 py-2 disabled:bg-surface-strong";
 const PRIMARY =
-  "rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400";
+  "rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled";
 const DANGER =
-  "rounded border border-red-300 px-3 py-1 text-sm text-red-700 hover:bg-red-50 disabled:text-gray-400";
+  "rounded border border-red-300 dark:border-red-800 px-3 py-1 text-sm text-danger-hover hover:bg-danger-subtle disabled:text-fg-disabled";
 
 // Swaps positions with the neighbour, so the list order follows the new numbers
 function swapPositions<T extends { id: string; position: number }>(
@@ -94,11 +95,11 @@ export function StatusSection({
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-semibold">Statuses</h2>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-fg-secondary">
         Work items move through these in order. The category decides how a
         status counts on boards and reports.
       </p>
-      <ul className="divide-y divide-gray-200 rounded border border-gray-200">
+      <ul className="divide-y divide-border rounded border border-border">
         {statuses.map((status, index) => (
           <li
             key={status.id}
@@ -185,7 +186,7 @@ export function StatusSection({
           Add status
         </button>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </section>
   );
 }
@@ -218,7 +219,7 @@ function RenameStatus({
         type="button"
         disabled={busy || !changed}
         onClick={() => onRename(name.trim())}
-        className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 disabled:text-gray-300"
+        className="rounded border border-border-strong px-3 py-1 text-sm hover:bg-surface-muted disabled:text-fg-disabled"
       >
         Rename
       </button>
@@ -266,11 +267,11 @@ export function TypeSection({
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-semibold">Work item types</h2>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-fg-secondary">
         The level decides parent and subtask rules. A type's level can't change
         while work items use it.
       </p>
-      <ul className="divide-y divide-gray-200 rounded border border-gray-200">
+      <ul className="divide-y divide-border rounded border border-border">
         {types.map((type, index) => (
           <li
             key={type.id}
@@ -278,7 +279,7 @@ export function TypeSection({
           >
             <span className="font-medium">{type.name}</span>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-fg-secondary">
                 {LEVEL_LABELS[type.level]}
               </span>
               <ReorderButtons
@@ -332,7 +333,7 @@ export function TypeSection({
           Add type
         </button>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </section>
   );
 }
@@ -363,12 +364,12 @@ export function TransitionSection({
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-semibold">Transitions</h2>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-fg-secondary">
         {transitions.length === 0
           ? "No transitions: work items can move between any two statuses."
           : "Work items can only move along these transitions. Other moves are refused."}
       </p>
-      <ul className="divide-y divide-gray-200 rounded border border-gray-200">
+      <ul className="divide-y divide-border rounded border border-border">
         {transitions.map((transition) => (
           <li
             key={transition.id}

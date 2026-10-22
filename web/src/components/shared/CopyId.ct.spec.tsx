@@ -13,7 +13,7 @@ test.describe("CopyId", () => {
 
     const button = page.getByRole("button", { name: "Copy link for abc123" });
     await expect(button).toHaveClass(/font-mono/);
-    await expect(button).toHaveClass(/bg-gray-100/);
+    await expect(button).toHaveClass(/bg-surface-strong/);
 
     await button.click();
 

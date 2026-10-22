@@ -21,7 +21,7 @@ export function StatusPicker({
     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
       <label
         htmlFor="status-picker"
-        className="text-sm font-medium text-gray-700"
+        className="text-sm font-medium text-fg-secondary"
       >
         Status
       </label>
@@ -30,7 +30,7 @@ export function StatusPicker({
         value={statusId ?? ""}
         disabled={!statuses}
         onChange={(e) => onChange(e.target.value || undefined)}
-        className="rounded border border-gray-300 px-3 py-2"
+        className="rounded border border-border-strong px-3 py-2"
       >
         <option value="">All statuses</option>
         {(statuses ?? []).map((status) => (
@@ -40,7 +40,7 @@ export function StatusPicker({
         ))}
       </select>
       {error && (
-        <span className="text-sm text-red-600">Error loading statuses</span>
+        <span className="text-sm text-danger">Error loading statuses</span>
       )}
     </div>
   );

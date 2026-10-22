@@ -24,10 +24,10 @@ import {
 } from "../../lib/filter-bubbles";
 
 const CONTROL =
-  "rounded border border-gray-300 bg-white px-1 py-0.5 text-sm text-gray-800";
+  "rounded border border-border-strong bg-surface px-1 py-0.5 text-sm text-fg";
 
 const MOVE_BUTTON =
-  "flex h-5 w-5 shrink-0 items-center justify-center rounded text-xs leading-none text-gray-500 hover:bg-gray-200 hover:text-gray-900 disabled:text-gray-300 disabled:hover:bg-transparent";
+  "flex h-5 w-5 shrink-0 items-center justify-center rounded text-xs leading-none text-fg-muted hover:bg-surface-emphasis hover:text-fg disabled:text-fg-disabled disabled:hover:bg-transparent";
 
 export function FilterBubbles({
   filter,
@@ -117,7 +117,7 @@ export function FilterBubbles({
             ),
           )
         }
-        className="rounded px-2 py-1 text-sm font-medium text-blue-600 hover:bg-blue-50"
+        className="rounded px-2 py-1 text-sm font-medium text-primary hover:bg-primary-subtle"
       >
         + Filter
       </button>
@@ -134,7 +134,7 @@ export function FilterBubbles({
             setDraft("");
           }
         }}
-        className="rounded border border-gray-300 px-2 py-1 text-sm"
+        className="rounded border border-border-strong px-2 py-1 text-sm"
       />
     </div>
   );
@@ -153,7 +153,7 @@ function JoinToggle({
       type="button"
       aria-label={`Join ${join}, click to change`}
       onClick={onToggle}
-      className="rounded px-1.5 py-0.5 text-xs font-semibold uppercase text-blue-700 hover:bg-blue-100"
+      className="rounded px-1.5 py-0.5 text-xs font-semibold uppercase text-primary-hover hover:bg-primary-subtle"
     >
       {join}
     </button>
@@ -187,7 +187,7 @@ function ConditionBubble({
   const projectPicker = isProjectField(field) && (op === "==" || op === "!=");
 
   return (
-    <div className="flex flex-wrap items-center gap-1 rounded border border-blue-200 bg-blue-50 px-2 py-1">
+    <div className="flex flex-wrap items-center gap-1 rounded border border-blue-200 dark:border-blue-900 bg-primary-subtle px-2 py-1">
       <select
         aria-label="Field"
         value={field}
@@ -273,7 +273,7 @@ function ConditionBubble({
         type="button"
         aria-label="Remove filter"
         onClick={onRemove}
-        className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-xs leading-none text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+        className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-xs leading-none text-fg-muted hover:bg-surface-emphasis hover:text-fg"
       >
         ✕
       </button>
@@ -298,7 +298,7 @@ function RawBubble({
   };
 
   return (
-    <div className="flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-2 py-1">
+    <div className="flex items-center gap-1 rounded border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 px-2 py-1">
       <input
         aria-label="Filter expression"
         type="text"
@@ -308,13 +308,13 @@ function RawBubble({
         onKeyDown={(e) => {
           if (e.key === "Enter") e.currentTarget.blur();
         }}
-        className="min-w-[12rem] bg-transparent font-mono text-sm text-gray-800 outline-none"
+        className="min-w-[12rem] bg-transparent font-mono text-sm text-fg outline-none"
       />
       <button
         type="button"
         aria-label="Remove filter"
         onClick={onRemove}
-        className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-xs leading-none text-gray-500 hover:bg-gray-200 hover:text-gray-900"
+        className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-xs leading-none text-fg-muted hover:bg-surface-emphasis hover:text-fg"
       >
         ✕
       </button>

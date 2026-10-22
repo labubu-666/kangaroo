@@ -113,6 +113,43 @@ test.describe("AppHeader", () => {
     await expect(home).toHaveText("🦘");
   });
 
+  test("the theme toggle switches between light, system and dark", async ({
+    mount,
+    page,
+  }) => {
+    await page.evaluate(() => localStorage.clear());
+    const component = await mount(
+      <TestRouter paths={paths}>
+        <AppHeader />
+      </TestRouter>,
+    );
+    const themeButton = component.getByRole("button", { name: "Theme" });
+    const option = (name: string) =>
+      component.getByRole("menuitemradio", { name });
+
+    await themeButton.click();
+    await expect(option("System")).toHaveAttribute("aria-checked", "true");
+
+    await option("Dark").click();
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    expect(
+      await page.evaluate(() => localStorage.getItem("kangaroo-theme")),
+    ).toBe("dark");
+
+    await themeButton.click();
+    await option("Light").click();
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
+
+    await themeButton.click();
+    await option("System").click();
+    await themeButton.click();
+    await expect(option("System")).toHaveAttribute("aria-checked", "true");
+    expect(
+      await page.evaluate(() => localStorage.getItem("kangaroo-theme")),
+    ).toBeNull();
+    await page.evaluate(() => localStorage.clear());
+  });
+
   test("highlights the about link for the current route", async ({ mount }) => {
     const component = await mount(
       <TestRouter paths={paths} initialPath="/about">
@@ -122,9 +159,9 @@ test.describe("AppHeader", () => {
     await component.getByRole("button", { name: "Profile menu" }).click();
     await expect(
       component.getByRole("menuitem", { name: "About" }),
-    ).toHaveClass(/text-blue-600/);
+    ).toHaveClass(/text-primary/);
     await expect(component.getByRole("link", { name: "Home" })).not.toHaveClass(
-      /text-blue-600/,
+      /text-primary/,
     );
   });
 });

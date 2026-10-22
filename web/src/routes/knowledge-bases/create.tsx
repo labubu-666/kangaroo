@@ -51,7 +51,7 @@ function CreateKnowledgeBase() {
       <form
         onSubmit={handleSubmit}
         autoComplete="off"
-        className="space-y-4 rounded border border-gray-200 p-4"
+        className="space-y-4 rounded border border-border p-4"
       >
         <div className="space-y-2">
           <label htmlFor="name" className="block font-medium">
@@ -64,9 +64,9 @@ function CreateKnowledgeBase() {
             placeholder="Enter knowledge base name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
           />
-          {nameError && <p className="text-sm text-red-600">{nameError}</p>}
+          {nameError && <p className="text-sm text-danger">{nameError}</p>}
         </div>
 
         <div className="space-y-2">
@@ -80,7 +80,7 @@ function CreateKnowledgeBase() {
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
           />
         </div>
 
@@ -94,13 +94,13 @@ function CreateKnowledgeBase() {
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+            className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
           >
             {mutation.isPending ? "Creating..." : "Create"}
           </button>
           <Link
             to="/knowledge-bases"
-            className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+            className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
           >
             Cancel
           </Link>

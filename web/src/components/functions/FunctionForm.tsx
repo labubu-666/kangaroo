@@ -49,7 +49,7 @@ export function FunctionForm({
       <form
         onSubmit={handleSubmit}
         autoComplete="off"
-        className="space-y-4 rounded border border-gray-200 p-4"
+        className="space-y-4 rounded border border-border p-4"
       >
         <div className="space-y-2">
           <label htmlFor="name" className="block font-medium">
@@ -62,14 +62,14 @@ export function FunctionForm({
             placeholder="Enter function name"
             value={values.name}
             onChange={(e) => setValues({ ...values, name: e.target.value })}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
           />
-          {nameError && <p className="text-sm text-red-600">{nameError}</p>}
+          {nameError && <p className="text-sm text-danger">{nameError}</p>}
         </div>
 
         <div className="space-y-2">
           <label className="block font-medium">Code *</label>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-fg-muted">
             A Python script. Put dependencies in a PEP 723 header, for example{" "}
             <code># /// script</code>.
           </p>
@@ -82,7 +82,7 @@ export function FunctionForm({
             }
             onChange={(code) => setValues({ ...values, code })}
           />
-          {codeError && <p className="text-sm text-red-600">{codeError}</p>}
+          {codeError && <p className="text-sm text-danger">{codeError}</p>}
         </div>
 
         <div className="space-y-2">
@@ -98,7 +98,7 @@ export function FunctionForm({
             onChange={(e) =>
               setValues({ ...values, description: e.target.value })
             }
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
           />
         </div>
 
@@ -112,14 +112,14 @@ export function FunctionForm({
           <button
             type="submit"
             disabled={disabled}
-            className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+            className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
           >
             {disabled ? pendingLabel : submitLabel}
           </button>
           <Link
             to={cancelTo}
             params={cancelParams}
-            className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+            className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
           >
             Cancel
           </Link>

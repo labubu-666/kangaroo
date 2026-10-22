@@ -56,14 +56,14 @@ function InvocationDetail() {
               <h1 className="break-words text-2xl font-bold sm:text-3xl">
                 {fn?.name ?? "Invocation"}
               </h1>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-fg-muted">
                 {new Date(invocation.created_at).toLocaleString()}
               </p>
               {fn && (
                 <Link
                   to="/functions/$id"
                   params={{ id: fn.id }}
-                  className="mt-2 inline-block text-sm text-blue-600 hover:underline"
+                  className="mt-2 inline-block text-sm text-primary hover:underline"
                 >
                   Back to function
                 </Link>
@@ -72,7 +72,7 @@ function InvocationDetail() {
             <button
               onClick={() => rerunMutation.mutate()}
               disabled={rerunMutation.isPending || !functionId}
-              className="flex h-10 items-center gap-2 rounded bg-green-600 px-4 font-medium text-white hover:bg-green-700 disabled:bg-gray-400"
+              className="flex h-10 items-center gap-2 rounded bg-green-600 px-4 font-medium text-on-primary hover:bg-green-700 disabled:bg-fg-disabled"
             >
               <svg
                 aria-hidden="true"

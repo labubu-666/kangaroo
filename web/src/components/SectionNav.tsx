@@ -10,35 +10,35 @@ export function SectionNav() {
         to="/"
         activeOptions={{ exact: true }}
         className="font-medium hover:underline"
-        activeProps={{ className: "text-blue-600" }}
+        activeProps={{ className: "text-primary" }}
       >
         Home
       </Link>
       <Link
         to="/projects"
         className="font-medium hover:underline"
-        activeProps={{ className: "text-blue-600" }}
+        activeProps={{ className: "text-primary" }}
       >
         Projects
       </Link>
       <Link
         to="/work-items"
         className="font-medium hover:underline"
-        activeProps={{ className: "text-blue-600" }}
+        activeProps={{ className: "text-primary" }}
       >
         Work items
       </Link>
       <Link
         to="/functions"
         className="font-medium hover:underline"
-        activeProps={{ className: "text-blue-600" }}
+        activeProps={{ className: "text-primary" }}
       >
         Functions
       </Link>
       <Link
         to="/knowledge-bases"
         className="font-medium hover:underline"
-        activeProps={{ className: "text-blue-600" }}
+        activeProps={{ className: "text-primary" }}
       >
         Knowledge bases
       </Link>

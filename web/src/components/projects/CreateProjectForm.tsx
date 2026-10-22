@@ -76,7 +76,7 @@ export function CreateProjectForm() {
       <form
         onSubmit={handleSubmit(onSubmit)}
         autoComplete="off"
-        className="space-y-4 rounded border border-gray-200 p-4"
+        className="space-y-4 rounded border border-border p-4"
       >
         <div className="space-y-2">
           <label htmlFor="name" className="block font-medium">
@@ -87,11 +87,11 @@ export function CreateProjectForm() {
             type="text"
             disabled={mutation.isPending}
             placeholder="Enter project name"
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
             {...register("name", { required: "Name is required" })}
           />
           {errors.name && (
-            <p className="text-sm text-red-600">{errors.name.message}</p>
+            <p className="text-sm text-danger">{errors.name.message}</p>
           )}
         </div>
 
@@ -104,7 +104,7 @@ export function CreateProjectForm() {
             disabled={mutation.isPending}
             placeholder="Enter project description (optional)"
             rows={4}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
             {...register("description")}
           />
         </div>
@@ -116,7 +116,7 @@ export function CreateProjectForm() {
           <select
             id="template"
             disabled={mutation.isPending || !templates}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
             {...register("template", { required: "Template is required" })}
           >
             {(templates?.names ?? []).map((name) => (
@@ -126,10 +126,10 @@ export function CreateProjectForm() {
             ))}
           </select>
           {templatesError && (
-            <p className="text-sm text-red-600">Error loading templates</p>
+            <p className="text-sm text-danger">Error loading templates</p>
           )}
           {errors.template && (
-            <p className="text-sm text-red-600">{errors.template.message}</p>
+            <p className="text-sm text-danger">{errors.template.message}</p>
           )}
         </div>
 
@@ -137,13 +137,13 @@ export function CreateProjectForm() {
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+            className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
           >
             {mutation.isPending ? "Creating..." : "Create"}
           </button>
           <Link
             to="/projects"
-            className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+            className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
           >
             Cancel
           </Link>

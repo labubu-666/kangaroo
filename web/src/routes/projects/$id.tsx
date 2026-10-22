@@ -85,7 +85,7 @@ function ProjectDetail() {
                 aria-expanded={menuOpen}
                 aria-controls={menuId}
                 onClick={() => setMenuOpen((open) => !open)}
-                className="flex h-10 items-center rounded border border-gray-300 px-4 font-medium hover:bg-gray-50"
+                className="flex h-10 items-center rounded border border-border-strong px-4 font-medium hover:bg-surface-muted"
               >
                 ⋯
               </button>
@@ -94,14 +94,14 @@ function ProjectDetail() {
                   id={menuId}
                   role="menu"
                   aria-label="Project actions"
-                  className="absolute right-0 z-10 mt-2 flex min-w-40 flex-col rounded border border-gray-200 bg-white py-1 shadow-lg"
+                  className="absolute right-0 z-10 mt-2 flex min-w-40 flex-col rounded border border-border bg-surface py-1 shadow-lg"
                 >
                   <Link
                     to="/projects/$id/statuses"
                     params={{ id: project.id }}
                     role="menuitem"
                     onClick={() => setMenuOpen(false)}
-                    className="px-3 py-2 font-medium hover:bg-gray-100"
+                    className="px-3 py-2 font-medium hover:bg-surface-strong"
                   >
                     Statuses and types
                   </Link>
@@ -110,7 +110,7 @@ function ProjectDetail() {
                     params={{ id: project.id }}
                     role="menuitem"
                     onClick={() => setMenuOpen(false)}
-                    className="px-3 py-2 font-medium hover:bg-gray-100"
+                    className="px-3 py-2 font-medium hover:bg-surface-strong"
                   >
                     Edit
                   </Link>
@@ -121,15 +121,17 @@ function ProjectDetail() {
 
           {project.description && (
             <div className="mt-4">
-              <h2 className="mb-2 font-semibold text-gray-700">Description</h2>
-              <p className="whitespace-pre-wrap text-gray-600">
+              <h2 className="mb-2 font-semibold text-fg-secondary">
+                Description
+              </h2>
+              <p className="whitespace-pre-wrap text-fg-secondary">
                 {project.description}
               </p>
             </div>
           )}
 
           <div className="space-y-4">
-            <div role="tablist" className="flex gap-4 border-b border-gray-200">
+            <div role="tablist" className="flex gap-4 border-b border-border">
               {TABS.map((t) => (
                 <Link
                   key={t.value}
@@ -141,8 +143,8 @@ function ProjectDetail() {
                   replace
                   className={`-mb-px border-b-2 px-1 pb-2 font-semibold ${
                     tab === t.value
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-800"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-fg-muted hover:text-fg"
                   }`}
                 >
                   {t.label}
@@ -156,7 +158,7 @@ function ProjectDetail() {
                   <Link
                     to="/projects/$id/boards/create"
                     params={{ id: project.id }}
-                    className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+                    className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover"
                   >
                     New board
                   </Link>
@@ -169,7 +171,7 @@ function ProjectDetail() {
                   <Link
                     to="/work-items/create"
                     search={{ projectId: project.id }}
-                    className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+                    className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover"
                   >
                     New work item
                   </Link>

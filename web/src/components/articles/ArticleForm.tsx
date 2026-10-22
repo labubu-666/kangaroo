@@ -45,7 +45,7 @@ export function ArticleForm({
       <form
         onSubmit={handleSubmit}
         autoComplete="off"
-        className="space-y-4 rounded border border-gray-200 p-4"
+        className="space-y-4 rounded border border-border p-4"
       >
         <div className="space-y-2">
           <label htmlFor="title" className="block font-medium">
@@ -58,9 +58,9 @@ export function ArticleForm({
             placeholder="Enter article title"
             value={values.title}
             onChange={(e) => setValues({ ...values, title: e.target.value })}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
           />
-          {titleError && <p className="text-sm text-red-600">{titleError}</p>}
+          {titleError && <p className="text-sm text-danger">{titleError}</p>}
         </div>
 
         <div className="space-y-2">
@@ -73,7 +73,7 @@ export function ArticleForm({
             placeholder="Write the article in Markdown"
             onChange={(body) => setValues({ ...values, body })}
           />
-          {bodyError && <p className="text-sm text-red-600">{bodyError}</p>}
+          {bodyError && <p className="text-sm text-danger">{bodyError}</p>}
         </div>
 
         <LabelsEditor
@@ -86,7 +86,7 @@ export function ArticleForm({
           <button
             type="submit"
             disabled={disabled}
-            className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+            className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
           >
             {disabled ? pendingLabel : submitLabel}
           </button>
@@ -94,7 +94,7 @@ export function ArticleForm({
             type="button"
             onClick={onCancel}
             disabled={disabled}
-            className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50 disabled:text-gray-400"
+            className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted disabled:text-fg-disabled"
           >
             Cancel
           </button>

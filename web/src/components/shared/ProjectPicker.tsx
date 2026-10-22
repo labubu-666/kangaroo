@@ -63,7 +63,7 @@ export function ProjectPicker({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((isOpen) => !isOpen)}
-        className="min-w-[10rem] rounded border border-gray-300 bg-white px-2 py-0.5 text-left text-sm text-gray-800"
+        className="min-w-[10rem] rounded border border-border-strong bg-surface px-2 py-0.5 text-left text-sm text-fg"
       >
         {label || "Choose a project"}
       </button>
@@ -72,7 +72,7 @@ export function ProjectPicker({
           onKeyDown={(e) => {
             if (e.key === "Escape") close();
           }}
-          className="absolute left-0 z-10 mt-1 w-64 rounded border border-gray-200 bg-white p-2 shadow-md"
+          className="absolute left-0 z-10 mt-1 w-64 rounded border border-border bg-surface p-2 shadow-md"
         >
           <input
             aria-label="Search projects"
@@ -81,7 +81,7 @@ export function ProjectPicker({
             placeholder="Search projects"
             autoFocus
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+            className="w-full rounded border border-border-strong px-2 py-1 text-sm"
           />
           <ul role="listbox" className="mt-2 flex flex-col">
             {shown.map((project) => (
@@ -93,7 +93,7 @@ export function ProjectPicker({
                 <button
                   type="button"
                   onClick={() => choose(project)}
-                  className="w-full rounded px-2 py-1 text-left text-sm hover:bg-blue-50"
+                  className="w-full rounded px-2 py-1 text-left text-sm hover:bg-primary-subtle"
                 >
                   {project.name}
                 </button>
@@ -101,10 +101,10 @@ export function ProjectPicker({
             ))}
           </ul>
           {shown.length === 0 && (
-            <p className="px-2 py-1 text-sm text-gray-500">No projects match</p>
+            <p className="px-2 py-1 text-sm text-fg-muted">No projects match</p>
           )}
           {hidden > 0 && (
-            <p className="px-2 pt-1 text-xs text-gray-500">
+            <p className="px-2 pt-1 text-xs text-fg-muted">
               {hidden} more, type to search
             </p>
           )}
