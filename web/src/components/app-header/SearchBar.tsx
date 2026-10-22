@@ -130,7 +130,7 @@ export function SearchBar() {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
-          className="block h-8 w-full rounded border border-gray-300 px-3 py-1.5 text-sm"
+          className="block h-8 w-full rounded border border-border-strong px-3 py-1.5 text-sm"
         />
       </form>
 
@@ -139,7 +139,7 @@ export function SearchBar() {
           id={listId}
           role="listbox"
           aria-label="Search suggestions"
-          className="absolute left-0 right-0 z-10 mt-1 max-h-96 overflow-auto rounded border border-gray-200 bg-white py-1 shadow-lg"
+          className="absolute left-0 right-0 z-10 mt-1 max-h-96 overflow-auto rounded border border-border bg-surface py-1 shadow-lg"
         >
           {suggestions.map((s, index) => (
             <li
@@ -149,7 +149,7 @@ export function SearchBar() {
               aria-selected={index === active}
               onMouseDown={(e) => e.preventDefault()}
               className={`px-3 py-2 text-sm ${
-                index === active ? "bg-blue-50" : ""
+                index === active ? "bg-primary-subtle" : ""
               }`}
             >
               <Link
@@ -160,7 +160,7 @@ export function SearchBar() {
                 className="flex items-center justify-between gap-2 hover:underline"
               >
                 <span className="truncate">{s.label}</span>
-                <span className="shrink-0 text-xs text-gray-400">
+                <span className="shrink-0 text-xs text-fg-muted">
                   {s.group}
                 </span>
               </Link>

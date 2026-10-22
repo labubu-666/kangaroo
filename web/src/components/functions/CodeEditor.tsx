@@ -2,6 +2,7 @@ import { markdown } from "@codemirror/lang-markdown";
 import { python } from "@codemirror/lang-python";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTheme } from "../../lib/theme";
 
 // Space kept free below the editor for the footer and page padding.
 const FILL_RESERVE_PX = 120;
@@ -31,6 +32,8 @@ export function CodeEditor({
   stretch?: boolean;
   language?: "python" | "markdown";
 }) {
+  const { theme } = useTheme();
+
   // Memoized so CodeMirror does not reconfigure the editor on every render.
   const extensions = useMemo(
     () => [
@@ -66,13 +69,14 @@ export function CodeEditor({
         value={value}
         onChange={onChange}
         extensions={extensions}
+        theme={theme}
         placeholder={placeholder}
         readOnly={readOnly}
         editable={!readOnly}
         height={stretch ? "100%" : undefined}
         minHeight="12rem"
         maxHeight={grow ? undefined : fill ? fillHeight : DEFAULT_MAX_HEIGHT}
-        className={`overflow-hidden rounded border border-gray-300 font-mono text-sm ${stretch ? "min-h-0 flex-1" : ""}`}
+        className={`overflow-hidden rounded border border-border-strong font-mono text-sm ${stretch ? "min-h-0 flex-1" : ""}`}
       />
     </div>
   );

@@ -21,13 +21,13 @@ export function BoardCard({ item }: { item: WorkItem }) {
       ref={ref}
       to="/work-items/$id"
       params={{ id: item.id }}
-      className={`flex cursor-pointer flex-col gap-3 rounded border border-gray-200 bg-white p-3 shadow-sm hover:bg-gray-50 ${
+      className={`flex cursor-pointer flex-col gap-3 rounded border border-border bg-surface p-3 shadow-sm hover:bg-surface-muted ${
         isDragging ? "opacity-50" : ""
       }`}
     >
       <div className="flex items-center gap-2">
         <TypeIcon type={item.type} />
-        <p className="min-w-0 flex-1 truncate font-medium text-gray-900">
+        <p className="min-w-0 flex-1 truncate font-medium text-fg">
           {item.title}
         </p>
       </div>
@@ -36,14 +36,14 @@ export function BoardCard({ item }: { item: WorkItem }) {
           {item.labels.map((label) => (
             <li
               key={label}
-              className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+              className="rounded bg-surface-strong px-2 py-0.5 text-xs font-medium text-fg-secondary"
             >
               {label}
             </li>
           ))}
         </ul>
       )}
-      <div className="flex items-center justify-between gap-2 text-xs text-gray-500">
+      <div className="flex items-center justify-between gap-2 text-xs text-fg-muted">
         <div className="flex min-w-0 items-center gap-2">
           <CopyId
             id={item.id}
@@ -56,12 +56,12 @@ export function BoardCard({ item }: { item: WorkItem }) {
           <img
             src={user.avatar_url}
             alt={user.username}
-            className="h-6 w-6 shrink-0 border border-gray-200"
+            className="h-6 w-6 shrink-0 border border-border"
           />
         ) : (
           <span
             aria-label="Unassigned"
-            className="h-6 w-6 shrink-0 rounded-full bg-gray-300"
+            className="h-6 w-6 shrink-0 rounded-full bg-border-strong"
           />
         )}
       </div>

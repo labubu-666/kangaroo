@@ -60,10 +60,10 @@ test.describe("SectionNav", () => {
     );
     await expect(
       component.getByRole("link", { name: "Work items" }),
-    ).toHaveClass(/text-blue-600/);
+    ).toHaveClass(/text-primary/);
     await expect(
       component.getByRole("link", { name: "Projects" }),
-    ).not.toHaveClass(/text-blue-600/);
+    ).not.toHaveClass(/text-primary/);
   });
 
   test("highlights home only on the root route", async ({ mount }) => {
@@ -73,7 +73,7 @@ test.describe("SectionNav", () => {
       </TestRouter>,
     );
     await expect(component.getByRole("link", { name: "Home" })).not.toHaveClass(
-      /text-blue-600/,
+      /text-primary/,
     );
   });
 });

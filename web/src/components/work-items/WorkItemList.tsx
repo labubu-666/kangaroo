@@ -77,11 +77,11 @@ export function WorkItemList({
       {isLoading ? (
         <Loading />
       ) : items.length === 0 ? (
-        <div className="text-center text-gray-500">No work items yet</div>
+        <div className="text-center text-fg-muted">No work items yet</div>
       ) : (
         <div className="flex flex-col gap-4">
           {selection && (
-            <label className="flex items-center gap-2 text-sm text-gray-700">
+            <label className="flex items-center gap-2 text-sm text-fg-secondary">
               <input
                 type="checkbox"
                 aria-label="Select all on this page"
@@ -105,15 +105,15 @@ export function WorkItemList({
               <Link
                 to="/work-items/$id"
                 params={{ id: item.id }}
-                className="flex min-w-0 flex-1 flex-col gap-3 rounded border border-gray-200 p-3 hover:border-blue-400 hover:bg-blue-50 transition"
+                className="flex min-w-0 flex-1 flex-col gap-3 rounded border border-border p-3 hover:border-primary hover:bg-primary-subtle transition"
               >
                 <div className="flex items-center gap-2">
                   <TypeIcon type={item.type} />
-                  <h3 className="min-w-0 flex-1 truncate font-semibold text-blue-600">
+                  <h3 className="min-w-0 flex-1 truncate font-semibold text-primary">
                     {item.title}
                   </h3>
                   {item.trashed && (
-                    <span className="shrink-0 rounded bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
+                    <span className="shrink-0 rounded bg-surface-emphasis px-2 py-0.5 text-xs font-medium text-fg-secondary">
                       Trashed
                     </span>
                   )}
@@ -126,7 +126,7 @@ export function WorkItemList({
                     {item.labels.map((label) => (
                       <span
                         key={label}
-                        className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+                        className="rounded bg-surface-strong px-2 py-0.5 text-xs font-medium text-fg-secondary"
                       >
                         {label}
                       </span>

@@ -17,7 +17,7 @@ function BoardProjectName({ projectId }: { projectId: string }) {
     queryFn: () => fetchProject(projectId),
   });
   return project ? (
-    <p className="text-sm text-gray-600">Project: {project.name}</p>
+    <p className="text-sm text-fg-secondary">Project: {project.name}</p>
   ) : null;
 }
 
@@ -45,7 +45,7 @@ function SearchResults() {
       </h1>
 
       {!term ? (
-        <div className="text-center text-gray-500">
+        <div className="text-center text-fg-muted">
           Type something in the search bar to find work items, projects and
           boards.
         </div>
@@ -60,19 +60,17 @@ function SearchResults() {
               Work items ({data.workItems.total})
             </h2>
             {data.workItems.results.length === 0 ? (
-              <p className="text-sm text-gray-500">No matching work items</p>
+              <p className="text-sm text-fg-muted">No matching work items</p>
             ) : (
               data.workItems.results.map((item) => (
                 <Link
                   key={item.id}
                   to="/work-items/$id"
                   params={{ id: item.id }}
-                  className="flex flex-col gap-2 rounded border border-gray-200 p-4 hover:border-blue-400 hover:bg-blue-50 transition sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-2 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-semibold text-blue-600">
-                      {item.title}
-                    </h3>
+                    <h3 className="font-semibold text-primary">{item.title}</h3>
                     <TypeBadge type={item.type} />
                   </div>
                   <StatusBadge status={item.status} />
@@ -86,20 +84,18 @@ function SearchResults() {
               Projects ({data.projects.total})
             </h2>
             {data.projects.results.length === 0 ? (
-              <p className="text-sm text-gray-500">No matching projects</p>
+              <p className="text-sm text-fg-muted">No matching projects</p>
             ) : (
               data.projects.results.map((project) => (
                 <Link
                   key={project.id}
                   to="/projects/$id"
                   params={{ id: project.id }}
-                  className="flex flex-col gap-1 rounded border border-gray-200 p-4 hover:border-blue-400 hover:bg-blue-50 transition"
+                  className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
                 >
-                  <h3 className="font-semibold text-blue-600">
-                    {project.name}
-                  </h3>
+                  <h3 className="font-semibold text-primary">{project.name}</h3>
                   {project.description && (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-fg-secondary">
                       {project.description}
                     </p>
                   )}
@@ -113,19 +109,21 @@ function SearchResults() {
               Boards ({data.boards.total})
             </h2>
             {data.boards.results.length === 0 ? (
-              <p className="text-sm text-gray-500">No matching boards</p>
+              <p className="text-sm text-fg-muted">No matching boards</p>
             ) : (
               data.boards.results.map((board) => (
                 <Link
                   key={board.id}
                   to="/projects/$id/boards/$boardId"
                   params={{ id: board.project_id, boardId: board.id }}
-                  className="flex flex-col gap-1 rounded border border-gray-200 p-4 hover:border-blue-400 hover:bg-blue-50 transition"
+                  className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
                 >
-                  <h3 className="font-semibold text-blue-600">{board.name}</h3>
+                  <h3 className="font-semibold text-primary">{board.name}</h3>
                   <BoardProjectName projectId={board.project_id} />
                   {board.description && (
-                    <p className="text-sm text-gray-600">{board.description}</p>
+                    <p className="text-sm text-fg-secondary">
+                      {board.description}
+                    </p>
                   )}
                 </Link>
               ))

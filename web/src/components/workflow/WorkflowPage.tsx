@@ -217,7 +217,7 @@ export function WorkflowPage({ projectId: id }: { projectId: string }) {
         <Link
           to="/projects/$id"
           params={{ id }}
-          className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+          className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
         >
           Back to project
         </Link>

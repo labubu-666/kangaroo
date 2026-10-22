@@ -18,12 +18,12 @@ export function ConfirmChange({
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-change-title"
-      className="space-y-3 rounded border border-yellow-300 bg-yellow-50 p-4"
+      className="space-y-3 rounded border border-yellow-300 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950 p-4"
     >
       <h3 id="confirm-change-title" className="font-semibold">
         {title}
       </h3>
-      <ul className="list-disc space-y-1 pl-5 text-sm text-gray-800">
+      <ul className="list-disc space-y-1 pl-5 text-sm text-fg">
         {lines.map((line) => (
           <li key={line}>{line}</li>
         ))}
@@ -33,14 +33,14 @@ export function ConfirmChange({
           type="button"
           disabled={busy}
           onClick={onConfirm}
-          className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+          className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
         >
           Continue
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+          className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
         >
           Cancel
         </button>

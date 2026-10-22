@@ -127,7 +127,7 @@ function FunctionDetail() {
                 </h1>
               </InlineEdit>
               {fn.description && (
-                <p className="mt-2 whitespace-pre-wrap text-gray-600">
+                <p className="mt-2 whitespace-pre-wrap text-fg-secondary">
                   {fn.description}
                 </p>
               )}
@@ -136,7 +136,7 @@ function FunctionDetail() {
                   {fn.labels.map((label) => (
                     <li
                       key={label}
-                      className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+                      className="rounded bg-surface-strong px-2 py-0.5 text-xs font-medium text-fg-secondary"
                     >
                       {label}
                     </li>
@@ -148,7 +148,7 @@ function FunctionDetail() {
               <button
                 onClick={() => runMutation.mutate()}
                 disabled={runMutation.isPending}
-                className="flex h-10 items-center gap-2 rounded bg-green-600 px-4 font-medium text-white hover:bg-green-700 disabled:bg-gray-400"
+                className="flex h-10 items-center gap-2 rounded bg-green-600 px-4 font-medium text-on-primary hover:bg-green-700 disabled:bg-fg-disabled"
               >
                 <svg
                   aria-hidden="true"
@@ -167,7 +167,7 @@ function FunctionDetail() {
                   aria-expanded={menuOpen}
                   aria-controls={menuId}
                   onClick={() => setMenuOpen((open) => !open)}
-                  className="flex h-10 items-center rounded border border-gray-300 px-4 font-medium hover:bg-gray-50"
+                  className="flex h-10 items-center rounded border border-border-strong px-4 font-medium hover:bg-surface-muted"
                 >
                   ⋯
                 </button>
@@ -176,14 +176,14 @@ function FunctionDetail() {
                     id={menuId}
                     role="menu"
                     aria-label="Function actions"
-                    className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-gray-200 bg-white py-1 shadow-lg"
+                    className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-border bg-surface py-1 shadow-lg"
                   >
                     <button
                       type="button"
                       role="menuitem"
                       onClick={handleDelete}
                       disabled={deleteMutation.isPending}
-                      className="px-3 py-2 text-left font-medium text-red-600 hover:bg-gray-100 disabled:text-gray-400"
+                      className="px-3 py-2 text-left font-medium text-danger hover:bg-surface-strong disabled:text-fg-disabled"
                     >
                       Delete
                     </button>
@@ -202,7 +202,7 @@ function FunctionDetail() {
           {codeMutation.error && (
             <ErrorBanner>{codeMutation.error.message}</ErrorBanner>
           )}
-          {codeError && <p className="text-sm text-red-600">{codeError}</p>}
+          {codeError && <p className="text-sm text-danger">{codeError}</p>}
 
           <div className="flex min-h-0 flex-1 flex-col">
             <CodeEditor
@@ -219,18 +219,18 @@ function FunctionDetail() {
               <button
                 onClick={() => codeMutation.mutate()}
                 disabled={codeMutation.isPending || codeError !== null}
-                className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+                className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
               >
                 {codeMutation.isPending ? "Saving..." : "Save"}
               </button>
               <button
                 onClick={() => setDraftCode(null)}
                 disabled={codeMutation.isPending}
-                className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted disabled:bg-surface-strong disabled:text-fg-disabled"
               >
                 Discard
               </button>
-              <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+              <span className="rounded bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-200">
                 Modified
               </span>
             </div>

@@ -15,21 +15,23 @@ const STATUS_CARDS = [
   {
     key: "todo",
     label: "To do",
-    className: "border-yellow-200 bg-yellow-50",
+    className:
+      "border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-950",
     to: "/work-items",
     search: { filter: "statusCategory == 'todo'" },
   },
   {
     key: "in_progress",
     label: "In progress",
-    className: "border-blue-200 bg-blue-50",
+    className: "border-blue-200 dark:border-blue-900 bg-primary-subtle",
     to: "/work-items",
     search: { filter: "statusCategory == 'in_progress'" },
   },
   {
     key: "done",
     label: "Done",
-    className: "border-green-200 bg-green-50",
+    className:
+      "border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950",
     to: "/work-items",
     search: { filter: "statusCategory == 'done'" },
   },

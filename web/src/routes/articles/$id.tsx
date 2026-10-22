@@ -119,7 +119,7 @@ function ArticleDetail() {
             aria-expanded={menuOpen}
             aria-controls={menuId}
             onClick={() => setMenuOpen((open) => !open)}
-            className="flex h-10 items-center rounded border border-gray-300 px-4 font-medium hover:bg-gray-50"
+            className="flex h-10 items-center rounded border border-border-strong px-4 font-medium hover:bg-surface-muted"
           >
             ⋯
           </button>
@@ -128,14 +128,14 @@ function ArticleDetail() {
               id={menuId}
               role="menu"
               aria-label="Article actions"
-              className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-gray-200 bg-white py-1 shadow-lg"
+              className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-border bg-surface py-1 shadow-lg"
             >
               <button
                 type="button"
                 role="menuitem"
                 onClick={handleDelete}
                 disabled={deleteMutation.isPending}
-                className="px-3 py-2 text-left font-medium text-red-600 hover:bg-gray-100 disabled:text-gray-400"
+                className="px-3 py-2 text-left font-medium text-danger hover:bg-surface-strong disabled:text-fg-disabled"
               >
                 Delete
               </button>
@@ -149,7 +149,7 @@ function ArticleDetail() {
       )}
 
       <div className="grid flex-1 grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col rounded border border-gray-200 p-4 sm:p-6 md:col-span-2">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col rounded border border-border p-4 sm:p-6 md:col-span-2">
           {/* The HTML is sanitized by the API before it reaches the page. */}
           <InlineEdit
             value={article.body}
@@ -162,16 +162,16 @@ function ArticleDetail() {
           >
             {article.body ? (
               <article
-                className="prose max-w-none"
+                className="prose dark:prose-invert max-w-none"
                 dangerouslySetInnerHTML={{ __html: article.html }}
               />
             ) : (
-              <p className="text-sm text-gray-500">No body yet</p>
+              <p className="text-sm text-fg-muted">No body yet</p>
             )}
           </InlineEdit>
         </div>
 
-        <aside className="space-y-5 rounded border border-gray-200 p-4 sm:p-6 md:col-span-1">
+        <aside className="space-y-5 rounded border border-border p-4 sm:p-6 md:col-span-1">
           <LabelsEditor
             labels={article.labels}
             onChange={(labels) => labelsMutation.mutate(labels)}
@@ -179,8 +179,8 @@ function ArticleDetail() {
           />
 
           <div>
-            <p className="text-sm font-medium text-gray-700">Viewed</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm font-medium text-fg-secondary">Viewed</p>
+            <p className="text-sm text-fg-muted">
               {article.viewed_at
                 ? new Date(article.viewed_at).toLocaleString()
                 : "Never"}
@@ -188,15 +188,15 @@ function ArticleDetail() {
           </div>
 
           <div>
-            <p className="text-sm font-medium text-gray-700">Created</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm font-medium text-fg-secondary">Created</p>
+            <p className="text-sm text-fg-muted">
               {new Date(article.created_at).toLocaleString()}
             </p>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-gray-700">Modified</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm font-medium text-fg-secondary">Modified</p>
+            <p className="text-sm text-fg-muted">
               {new Date(article.modified_at).toLocaleString()}
             </p>
           </div>

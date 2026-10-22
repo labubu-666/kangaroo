@@ -31,7 +31,7 @@ function ProjectsList() {
         <h1 className="text-2xl font-bold">Projects</h1>
         <Link
           to="/projects/create"
-          className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+          className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover"
         >
           New project
         </Link>
@@ -42,7 +42,7 @@ function ProjectsList() {
       {isLoading ? (
         <Loading />
       ) : items.length === 0 ? (
-        <div className="text-center text-gray-500">No projects yet</div>
+        <div className="text-center text-fg-muted">No projects yet</div>
       ) : (
         <div className="flex flex-col gap-4">
           {items.map((project) => (
@@ -50,12 +50,12 @@ function ProjectsList() {
               key={project.id}
               to="/projects/$id"
               params={{ id: project.id }}
-              className="flex flex-col gap-3 rounded border border-gray-200 p-4 hover:border-blue-400 hover:bg-blue-50 transition"
+              className="flex flex-col gap-3 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
             >
               <div className="min-w-0 flex-1 break-words">
-                <h3 className="font-semibold text-blue-600">{project.name}</h3>
+                <h3 className="font-semibold text-primary">{project.name}</h3>
                 {project.description && (
-                  <p className="mt-1 text-sm text-gray-600">
+                  <p className="mt-1 text-sm text-fg-secondary">
                     {project.description}
                   </p>
                 )}

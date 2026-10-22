@@ -34,11 +34,11 @@ export function CopyBase({
       onClick={handleClick}
       onPointerDown={(e) => e.stopPropagation()}
       style={{ display: "inline-flex" }}
-      className="max-w-full cursor-pointer items-center gap-1 whitespace-nowrap rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-700 hover:bg-gray-200"
+      className="max-w-full cursor-pointer items-center gap-1 whitespace-nowrap rounded bg-surface-strong px-1.5 py-0.5 font-mono text-xs text-fg-secondary hover:bg-surface-emphasis"
     >
       {children}
       {copied ? (
-        <span className="shrink-0 font-sans font-medium text-gray-700">
+        <span className="shrink-0 font-sans font-medium text-fg-secondary">
           Copied!
         </span>
       ) : (

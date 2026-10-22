@@ -205,7 +205,7 @@ function WorkItemDetail() {
               </h1>
             </InlineEdit>
 
-            <div className="rounded border border-gray-200 p-4 sm:p-6">
+            <div className="rounded border border-border p-4 sm:p-6">
               <InlineEdit
                 value={item.description ?? ""}
                 onSave={saveDescription}
@@ -215,31 +215,31 @@ function WorkItemDetail() {
               >
                 {item.description ? (
                   <div
-                    className="prose prose-sm max-w-none break-words"
+                    className="prose dark:prose-invert prose-sm max-w-none break-words"
                     dangerouslySetInnerHTML={{
                       __html: item.rendered_description ?? "",
                     }}
                   />
                 ) : (
-                  <p className="text-sm text-gray-500">No description yet</p>
+                  <p className="text-sm text-fg-muted">No description yet</p>
                 )}
               </InlineEdit>
             </div>
 
             {isTask && (
-              <div className="space-y-2 rounded border border-gray-200 p-4 sm:p-6">
+              <div className="space-y-2 rounded border border-border p-4 sm:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="font-semibold text-gray-700">Subtasks</h2>
+                  <h2 className="font-semibold text-fg-secondary">Subtasks</h2>
                   <Link
                     to="/work-items/create"
                     search={{ parentId: item.id, projectId: item.project_id }}
-                    className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
+                    className="rounded bg-primary px-3 py-1 text-sm font-medium text-on-primary hover:bg-primary-hover"
                   >
                     Add subtask
                   </Link>
                 </div>
                 {(subtasks?.results ?? []).length === 0 ? (
-                  <p className="text-sm text-gray-500">No subtasks yet</p>
+                  <p className="text-sm text-fg-muted">No subtasks yet</p>
                 ) : (
                   <ul className="list-disc space-y-1 pl-5">
                     {(subtasks?.results ?? []).map((subtask) => (
@@ -247,11 +247,11 @@ function WorkItemDetail() {
                         <Link
                           to="/work-items/$id"
                           params={{ id: subtask.id }}
-                          className="text-blue-600 hover:underline"
+                          className="text-primary hover:underline"
                         >
                           {subtask.title}
                         </Link>{" "}
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-fg-muted">
                           ({subtask.status.name})
                         </span>
                       </li>
@@ -262,23 +262,23 @@ function WorkItemDetail() {
             )}
           </div>
 
-          <aside className="space-y-5 rounded border border-gray-200 p-4 sm:p-6 md:col-span-1">
+          <aside className="space-y-5 rounded border border-border p-4 sm:p-6 md:col-span-1">
             <div>
-              <p className="text-sm font-medium text-gray-700">Type</p>
-              <span className="mt-1 inline-block rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+              <p className="text-sm font-medium text-fg-secondary">Type</p>
+              <span className="mt-1 inline-block rounded bg-surface-strong px-2 py-0.5 text-xs font-medium text-fg-secondary">
                 {item.type.name}
               </span>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-fg-secondary">
                 Status
               </label>
               <select
                 value={item.status_id}
                 onChange={(e) => handleStatusChange(e.target.value)}
                 disabled={updateMutation.isPending}
-                className="mt-2 w-full rounded border border-gray-300 px-3 py-2"
+                className="mt-2 w-full rounded border border-border-strong px-3 py-2"
               >
                 {(statuses ?? []).map((status) => (
                   <option key={status.id} value={status.id}>
@@ -289,14 +289,14 @@ function WorkItemDetail() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-fg-secondary">
                 Project
               </label>
               <select
                 value={item.project_id}
                 onChange={(e) => projectMutation.mutate(e.target.value)}
                 disabled={projectMutation.isPending}
-                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                className="mt-1 w-full rounded border border-border-strong px-3 py-2"
               >
                 {(projects?.results ?? []).map((project) => (
                   <option key={project.id} value={project.id}>
@@ -313,23 +313,23 @@ function WorkItemDetail() {
             />
 
             <div>
-              <p className="text-sm font-medium text-gray-700">Created</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm font-medium text-fg-secondary">Created</p>
+              <p className="text-sm text-fg-muted">
                 {new Date(item.created_at).toLocaleString()}
               </p>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-gray-700">Modified</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm font-medium text-fg-secondary">Modified</p>
+              <p className="text-sm text-fg-muted">
                 {new Date(item.modified_at).toLocaleString()}
               </p>
             </div>
 
-            <div className="space-y-2 border-t border-gray-200 pt-4">
+            <div className="space-y-2 border-t border-border pt-4">
               {item.trashed ? (
                 <>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-fg-secondary">
                     This item is in the trash.
                   </p>
                   {restoreMutation.error && (
@@ -341,14 +341,14 @@ function WorkItemDetail() {
                   <button
                     onClick={() => restoreMutation.mutate()}
                     disabled={restoreMutation.isPending}
-                    className="w-full rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+                    className="w-full rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
                   >
                     Restore
                   </button>
                   <button
                     onClick={handleDelete}
                     disabled={deleteMutation.isPending}
-                    className="w-full rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:bg-gray-400"
+                    className="w-full rounded bg-danger px-4 py-2 font-medium text-on-primary hover:bg-danger-hover disabled:bg-fg-disabled"
                   >
                     Delete permanently
                   </button>
@@ -361,7 +361,7 @@ function WorkItemDetail() {
                   <button
                     onClick={handleTrash}
                     disabled={trashMutation.isPending}
-                    className="w-full rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                    className="w-full rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted disabled:bg-surface-strong disabled:text-fg-disabled"
                   >
                     Trash
                   </button>

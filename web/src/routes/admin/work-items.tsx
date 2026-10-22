@@ -76,14 +76,14 @@ function AdminWorkItems() {
         <button
           onClick={deleteSelected}
           disabled={selected.size === 0 || deleteMutation.isPending}
-          className="rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:bg-gray-400"
+          className="rounded bg-danger px-4 py-2 font-medium text-on-primary hover:bg-danger-hover disabled:bg-fg-disabled"
         >
           Delete selected ({selected.size})
         </button>
         <button
           onClick={deleteAllMatching}
           disabled={matchingTotal === 0 || deleteMutation.isPending}
-          className="rounded border border-red-600 px-4 py-2 font-medium text-red-600 hover:bg-red-50 disabled:border-gray-400 disabled:text-gray-400"
+          className="rounded border border-danger px-4 py-2 font-medium text-danger hover:bg-danger-subtle disabled:border-fg-disabled disabled:text-fg-disabled"
         >
           Delete all matching ({matchingTotal})
         </button>

@@ -31,7 +31,7 @@ function FunctionsPage() {
 
   return (
     <div className="space-y-4 p-4">
-      <div role="tablist" className="flex gap-4 border-b border-gray-200">
+      <div role="tablist" className="flex gap-4 border-b border-border">
         {TABS.map((t) => (
           <Link
             key={t.value}
@@ -42,8 +42,8 @@ function FunctionsPage() {
             replace
             className={`-mb-px border-b-2 px-1 pb-2 font-semibold ${
               tab === t.value
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-800"
+                ? "border-primary text-primary"
+                : "border-transparent text-fg-muted hover:text-fg"
             }`}
           >
             {t.label}
@@ -74,7 +74,7 @@ function FunctionList() {
         <h2 className="text-xl font-semibold">Functions</h2>
         <Link
           to="/functions/create"
-          className="rounded bg-blue-600 px-4 py-2 text-center font-medium text-white hover:bg-blue-700"
+          className="rounded bg-primary px-4 py-2 text-center font-medium text-on-primary hover:bg-primary-hover"
         >
           New function
         </Link>
@@ -89,7 +89,7 @@ function FunctionList() {
           setSearch(e.target.value);
           setOffset(0);
         }}
-        className="w-full rounded border border-gray-300 px-3 py-2"
+        className="w-full rounded border border-border-strong px-3 py-2"
       />
 
       {error && <ErrorBanner>Error loading functions</ErrorBanner>}
@@ -97,7 +97,7 @@ function FunctionList() {
       {isLoading ? (
         <Loading />
       ) : items.length === 0 ? (
-        <div className="text-center text-gray-500">
+        <div className="text-center text-fg-muted">
           {search.trim()
             ? "No functions match this search"
             : "No functions yet"}
@@ -109,11 +109,11 @@ function FunctionList() {
               key={fn.id}
               to="/functions/$id"
               params={{ id: fn.id }}
-              className="flex flex-col gap-1 rounded border border-gray-200 p-4 hover:border-blue-400 hover:bg-blue-50 transition"
+              className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
             >
-              <h3 className="font-semibold text-blue-600">{fn.name}</h3>
+              <h3 className="font-semibold text-primary">{fn.name}</h3>
               {fn.description && (
-                <p className="text-sm text-gray-600">{fn.description}</p>
+                <p className="text-sm text-fg-secondary">{fn.description}</p>
               )}
             </Link>
           ))}

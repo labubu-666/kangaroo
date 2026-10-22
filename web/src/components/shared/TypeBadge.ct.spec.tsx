@@ -11,10 +11,10 @@ test.describe("TypeBadge", () => {
     );
 
     await expect(component.getByText("Task", { exact: true })).toHaveClass(
-      /bg-gray-100 text-gray-800/,
+      /bg-surface-strong text-fg/,
     );
     await expect(component.getByText("Subtask", { exact: true })).toHaveClass(
-      /bg-purple-100 text-purple-800/,
+      /bg-purple-100 dark:bg-purple-900\/40 text-purple-800 dark:text-purple-200/,
     );
   });
 });

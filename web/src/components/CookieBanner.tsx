@@ -6,9 +6,9 @@ export function CookieBanner() {
       location="bottom"
       cookieName="kangaroo-cookie-consent"
       buttonText="Accept"
-      containerClasses="flex flex-wrap items-center gap-4 border-t border-gray-200 bg-white p-4 text-sm text-gray-600"
+      containerClasses="flex flex-wrap items-center gap-4 border-t border-border bg-surface p-4 text-sm text-fg-secondary"
       contentClasses="flex-1"
-      buttonClasses="rounded bg-gray-900 px-4 py-2 font-medium text-white hover:bg-gray-700"
+      buttonClasses="rounded bg-fg px-4 py-2 font-medium text-surface hover:bg-fg-secondary"
     >
       This site uses cookies to keep you signed in and remember your settings.
     </CookieConsent>

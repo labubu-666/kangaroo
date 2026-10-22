@@ -41,7 +41,7 @@ function WorkItemsList() {
         <Link
           to="/work-items/create"
           search={{ projectId }}
-          className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+          className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover"
         >
           New work item
         </Link>

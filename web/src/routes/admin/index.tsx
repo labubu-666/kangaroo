@@ -47,7 +47,7 @@ function Admin() {
           <a
             href={BACKUP_URL}
             download
-            className="text-blue-600 hover:underline"
+            className="text-primary hover:underline"
           >
             Download backup
           </a>
@@ -64,13 +64,13 @@ function Admin() {
           <button
             onClick={restore}
             disabled={!file || restoreMutation.isPending}
-            className="rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:bg-gray-400"
+            className="rounded bg-danger px-4 py-2 font-medium text-on-primary hover:bg-danger-hover disabled:bg-fg-disabled"
           >
             {restoreMutation.isPending ? "Restoring..." : "Restore from file"}
           </button>
         </div>
         {restoreMutation.isSuccess && (
-          <p className="text-green-700">Backup restored.</p>
+          <p className="text-green-700 dark:text-green-400">Backup restored.</p>
         )}
         {restoreMutation.isError && (
           <ErrorBanner>{restoreMutation.error.message}</ErrorBanner>
@@ -83,7 +83,7 @@ function Admin() {
           <li>
             <Link
               to="/admin/work-items"
-              className="text-blue-600 hover:underline"
+              className="text-primary hover:underline"
             >
               All work items
             </Link>
@@ -92,7 +92,7 @@ function Admin() {
             <Link
               to="/admin/work-items"
               search={{ filter: "trashed == true" }}
-              className="text-blue-600 hover:underline"
+              className="text-primary hover:underline"
             >
               Trashed work items
             </Link>

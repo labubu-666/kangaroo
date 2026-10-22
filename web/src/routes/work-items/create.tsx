@@ -142,7 +142,7 @@ function CreateWorkItem() {
       <form
         onSubmit={handleSubmit(onSubmit)}
         autoComplete="off"
-        className="space-y-4 rounded border border-gray-200 p-4"
+        className="space-y-4 rounded border border-border p-4"
       >
         <div className="space-y-2">
           <label htmlFor="title" className="block font-medium">
@@ -153,11 +153,11 @@ function CreateWorkItem() {
             type="text"
             disabled={mutation.isPending}
             placeholder="Enter work item title"
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
             {...register("title", { required: "Title is required" })}
           />
           {errors.title && (
-            <p className="text-sm text-red-600">{errors.title.message}</p>
+            <p className="text-sm text-danger">{errors.title.message}</p>
           )}
         </div>
 
@@ -170,7 +170,7 @@ function CreateWorkItem() {
             disabled={mutation.isPending}
             placeholder="Enter work item description (optional)"
             rows={4}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
             {...register("description")}
           />
         </div>
@@ -183,7 +183,7 @@ function CreateWorkItem() {
             <select
               id="project"
               disabled={mutation.isPending}
-              className="w-full rounded border border-gray-300 px-3 py-2"
+              className="w-full rounded border border-border-strong px-3 py-2"
               {...register("projectId", { required: "Project is required" })}
             >
               {projects?.results.map((project) => (
@@ -193,7 +193,7 @@ function CreateWorkItem() {
               ))}
             </select>
           ) : (
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-fg-secondary">
               Create a project first before adding work items.
             </p>
           )}
@@ -206,7 +206,7 @@ function CreateWorkItem() {
           <select
             id="type"
             disabled={mutation.isPending || offeredTypes.length === 0}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="w-full rounded border border-border-strong px-3 py-2"
             {...register("typeId", { required: "Type is required" })}
           >
             {offeredTypes.map((type) => (
@@ -216,7 +216,7 @@ function CreateWorkItem() {
             ))}
           </select>
           {errors.typeId && (
-            <p className="text-sm text-red-600">{errors.typeId.message}</p>
+            <p className="text-sm text-danger">{errors.typeId.message}</p>
           )}
         </div>
 
@@ -230,13 +230,13 @@ function CreateWorkItem() {
           <button
             type="submit"
             disabled={mutation.isPending || !hasProjects}
-            className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+            className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
           >
             {mutation.isPending ? "Creating..." : "Create"}
           </button>
           <Link
             to="/work-items"
-            className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50"
+            className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
           >
             Cancel
           </Link>

@@ -53,7 +53,7 @@ export function InlineEdit({
     mutation.mutate(draft);
   };
 
-  const inputClassName = `w-full rounded border border-gray-300 px-3 py-2 ${textClassName ?? ""}`;
+  const inputClassName = `w-full rounded border border-border-strong px-3 py-2 ${textClassName ?? ""}`;
 
   if (!isEditing) {
     return (
@@ -119,13 +119,13 @@ export function InlineEdit({
         />
       )}
       {validationError && (
-        <p className="text-sm text-red-600">{validationError}</p>
+        <p className="text-sm text-danger">{validationError}</p>
       )}
       <div className="flex flex-wrap gap-3">
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+          className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
         >
           {mutation.isPending ? "Saving..." : "Save"}
         </button>
@@ -133,7 +133,7 @@ export function InlineEdit({
           type="button"
           onClick={() => setIsEditing(false)}
           disabled={mutation.isPending}
-          className="rounded border border-gray-300 px-4 py-2 font-medium hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+          className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted disabled:bg-surface-strong disabled:text-fg-disabled"
         >
           Cancel
         </button>

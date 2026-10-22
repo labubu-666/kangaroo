@@ -15,7 +15,7 @@ export function Breadcrumbs({ items: pageItems }: { items: BreadcrumbItem[] }) {
       : [{ label: "Home", to: "/" }, ...pageItems];
   return (
     <nav aria-label="Breadcrumb">
-      <ol className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+      <ol className="flex flex-wrap items-center gap-2 text-sm text-fg-muted">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
           return (
@@ -27,7 +27,7 @@ export function Breadcrumbs({ items: pageItems }: { items: BreadcrumbItem[] }) {
               {isLast || !item.to ? (
                 <span
                   aria-current={isLast ? "page" : undefined}
-                  className="text-gray-700"
+                  className="text-fg-secondary"
                 >
                   {item.label}
                 </span>
@@ -36,7 +36,7 @@ export function Breadcrumbs({ items: pageItems }: { items: BreadcrumbItem[] }) {
                   to={item.to}
                   params={item.params}
                   search={item.search}
-                  className="text-blue-600 hover:text-blue-700 hover:underline"
+                  className="text-primary hover:text-primary-hover hover:underline"
                 >
                   {item.label}
                 </Link>

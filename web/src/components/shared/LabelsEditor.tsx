@@ -26,7 +26,7 @@ export function LabelsEditor({
     <div>
       <label
         htmlFor="new-label"
-        className="block text-sm font-medium text-gray-700"
+        className="block text-sm font-medium text-fg-secondary"
       >
         Labels
       </label>
@@ -34,7 +34,7 @@ export function LabelsEditor({
         {labels.map((label) => (
           <li
             key={label}
-            className="flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+            className="flex items-center gap-1 rounded bg-surface-strong px-2 py-0.5 text-xs font-medium text-fg-secondary"
           >
             <span>{label}</span>
             <button
@@ -42,7 +42,7 @@ export function LabelsEditor({
               aria-label={`Remove label ${label}`}
               onClick={() => removeLabel(label)}
               disabled={disabled}
-              className="text-gray-500 hover:text-gray-900 disabled:text-gray-300"
+              className="text-fg-muted hover:text-fg disabled:text-fg-disabled"
             >
               ✕
             </button>
@@ -62,7 +62,7 @@ export function LabelsEditor({
             addLabel();
           }
         }}
-        className="mt-2 w-full rounded border border-gray-300 px-3 py-2"
+        className="mt-2 w-full rounded border border-border-strong px-3 py-2"
       />
     </div>
   );

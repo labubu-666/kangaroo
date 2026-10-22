@@ -34,7 +34,7 @@ test.describe("RunOutput", () => {
         result={{ ...BASE, status: "ERROR", error: "Exited with code 1" }}
       />,
     );
-    await expect(component.getByText("ERROR")).toHaveClass(/text-red-700/);
+    await expect(component.getByText("ERROR")).toHaveClass(/text-danger-hover/);
     await expect(component.getByText("Exited with code 1")).toBeVisible();
     await expect(component.getByText("(empty)")).toHaveCount(1);
   });

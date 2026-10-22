@@ -1,3 +1,3 @@
 export function Loading() {
-  return <div className="text-center text-gray-500">Loading...</div>;
+  return <div className="text-center text-fg-muted">Loading...</div>;
 }
