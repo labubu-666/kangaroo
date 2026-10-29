@@ -1,3 +1,4 @@
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SESSION_SECRET_KEY = "dev-only-change-me"
@@ -29,12 +30,12 @@ class Settings(BaseSettings):
     api_public_url: str = "http://localhost:8000"
 
     # OpenID Connect login via Dex. The session key signs the session cookie.
-    session_secret_key: str = SESSION_SECRET_KEY
+    session_secret_key: SecretStr = SecretStr(SESSION_SECRET_KEY)
     oidc_metadata_url: str = (
         "http://localhost:5556/dex/.well-known/openid-configuration"
     )
     oidc_client_id: str = "fastapi-app"
-    oidc_client_secret: str = OIDC_CLIENT_SECRET
+    oidc_client_secret: SecretStr = SecretStr(OIDC_CLIENT_SECRET)
     oidc_redirect_uri: str = "http://localhost:8000/auth/callback"
 
 

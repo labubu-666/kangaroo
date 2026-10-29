@@ -98,7 +98,9 @@ async def require_login_for_web(request: Request, call_next):
     return await call_next(request)
 
 
-app.add_middleware(SessionMiddleware, secret_key=settings.session_secret_key)
+app.add_middleware(
+    SessionMiddleware, secret_key=settings.session_secret_key.get_secret_value()
+)
 app.include_router(auth_router)
 app.include_router(api_v1_router, prefix="/api/v1")
 
