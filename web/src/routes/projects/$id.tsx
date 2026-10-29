@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { fetchProject, updateProject } from "../../lib/projects";
 import { useDismiss } from "../../lib/use-dismiss";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
+import { useRecordRecent } from "../../lib/recent";
 
 import { BoardList } from "../../components/boards/BoardList";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
@@ -53,6 +54,16 @@ function ProjectDetail() {
     { label: "Projects", to: "/projects" },
     { label: project?.name ?? "Loading..." },
   ]);
+
+  useRecordRecent(
+    project && {
+      type: "project",
+      id: project.id,
+      title: project.name,
+      to: "/projects/$id",
+      params: { id: project.id },
+    },
+  );
 
   return (
     <div className="space-y-6 p-4">

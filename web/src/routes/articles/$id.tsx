@@ -10,6 +10,7 @@ import { CopyId } from "../../components/shared/CopyId";
 import { LabelsEditor } from "../../components/shared/LabelsEditor";
 import { Loading } from "../../components/shared/Loading";
 import { useDismiss } from "../../lib/use-dismiss";
+import { removeRecent, useRecordRecent } from "../../lib/recent";
 
 export const Route = createFileRoute("/articles/$id")({
   component: ArticleDetail,
@@ -61,6 +62,7 @@ function ArticleDetail() {
     mutationFn: () => deleteArticle(id),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ["articles", id] });
+      removeRecent("article", id);
       queryClient.invalidateQueries({ queryKey: ["articles"] });
       navigate({
         to: "/knowledge-bases/$id",
@@ -88,6 +90,16 @@ function ArticleDetail() {
     },
     { label: article?.title ?? "Loading..." },
   ]);
+
+  useRecordRecent(
+    article && {
+      type: "article",
+      id: article.id,
+      title: article.title,
+      to: "/articles/$id",
+      params: { id: article.id },
+    },
+  );
 
   if (isLoading) return <Loading />;
   if (error || !article) {

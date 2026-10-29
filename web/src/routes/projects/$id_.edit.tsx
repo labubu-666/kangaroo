@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { deleteProject, fetchProject, updateProject } from "../../lib/projects";
+import { removeRecent } from "../../lib/recent";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
@@ -62,6 +63,7 @@ function EditProject() {
     mutationFn: () => deleteProject(id),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ["projects", id] });
+      removeRecent("project", id);
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       navigate({ to: "/projects" });
     },

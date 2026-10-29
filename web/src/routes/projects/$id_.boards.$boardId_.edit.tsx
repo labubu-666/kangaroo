@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { deleteBoard, fetchBoard, updateBoard } from "../../lib/boards";
+import { removeRecent } from "../../lib/recent";
 import { fetchProject, useProjectOptions } from "../../lib/projects";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 
@@ -82,6 +83,7 @@ function EditBoard() {
     mutationFn: () => deleteBoard(boardId),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ["boards", boardId] });
+      removeRecent("board", boardId);
       queryClient.invalidateQueries({ queryKey: ["boards"] });
       navigate({ to: "/projects/$id", params: { id } });
     },
