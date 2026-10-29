@@ -15,6 +15,7 @@ import { ConfirmChange } from "../../components/workflow/ConfirmChange";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { Loading } from "../../components/shared/Loading";
 import { useDismiss } from "../../lib/use-dismiss";
+import { removeRecent, useRecordRecent } from "../../lib/recent";
 
 export const Route = createFileRoute("/functions/$id")({
   component: FunctionDetail,
@@ -44,6 +45,7 @@ function FunctionDetail() {
     mutationFn: () => deleteFunction(id),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ["functions", id] });
+      removeRecent("function", id);
       queryClient.invalidateQueries({ queryKey: ["functions"] });
       navigate({ to: "/functions" });
     },
@@ -80,6 +82,16 @@ function FunctionDetail() {
     { label: "Functions", to: "/functions" },
     { label: fn?.name ?? "Loading..." },
   ]);
+
+  useRecordRecent(
+    fn && {
+      type: "function",
+      id: fn.id,
+      title: fn.name,
+      to: "/functions/$id",
+      params: { id: fn.id },
+    },
+  );
 
   const code = draftCode ?? fn?.code ?? "";
   const isModified =

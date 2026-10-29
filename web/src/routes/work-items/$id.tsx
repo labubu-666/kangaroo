@@ -10,6 +10,7 @@ import {
 import { fetchStatuses } from "../../lib/workflow";
 import { fetchProject, useProjectOptions } from "../../lib/projects";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
+import { removeRecent, useRecordRecent } from "../../lib/recent";
 import { useGoBackOr } from "../../lib/navigation";
 import { projectFilter } from "../../lib/filter-bubbles";
 
@@ -124,6 +125,7 @@ function WorkItemDetail() {
   const deleteMutation = useMutation({
     mutationFn: () => deleteWorkItem(id),
     onSuccess: () => {
+      removeRecent("work-item", id);
       queryClient.invalidateQueries({ queryKey: ["work-items"] });
       goBackOr(() =>
         navigate({
@@ -133,6 +135,16 @@ function WorkItemDetail() {
       );
     },
   });
+
+  useRecordRecent(
+    item && {
+      type: "work-item",
+      id: item.id,
+      title: item.title,
+      to: "/work-items/$id",
+      params: { id: item.id },
+    },
+  );
 
   const handleStatusChange = (newStatusId: string) => {
     updateMutation.mutate(newStatusId);

@@ -8,6 +8,7 @@ import { fetchProject } from "../../lib/projects";
 import { updateWorkItem, type WorkItem } from "../../lib/work-items";
 import type { ProjectStatus } from "../../lib/workflow";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
+import { useRecordRecent } from "../../lib/recent";
 import { BoardCard } from "../../components/boards/BoardCard";
 import { DoneStatusWarning } from "../../components/workflow/DoneStatusWarning";
 import { lacksDoneStatus } from "../../lib/done-status";
@@ -84,6 +85,16 @@ function BoardDetail() {
     },
     { label: board?.name ?? "Loading..." },
   ]);
+
+  useRecordRecent(
+    board && {
+      type: "board",
+      id: board.id,
+      title: board.name,
+      to: "/projects/$id/boards/$boardId",
+      params: { id, boardId: board.id },
+    },
+  );
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (event.canceled) return;
