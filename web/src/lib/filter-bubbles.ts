@@ -2,14 +2,14 @@
 // The filter language is documented in docs/filter-language.md.
 
 export const BOARD_FIELDS = [
-  "title",
+  "summary",
   "description",
   "project.id",
   "project.name",
 ] as const;
 
 export const WORK_ITEM_FIELDS = [
-  "title",
+  "summary",
   "description",
   "status",
   "statusCategory",
@@ -102,7 +102,7 @@ function makeCondition(
     : null;
 }
 
-// Reads one simple condition such as `title ~ 'bug'`. Anything more complex
+// Reads one simple condition such as `summary ~ 'bug'`. Anything more complex
 // (or, not, brackets, unknown fields) returns null and stays a text bubble.
 export function parseCondition(
   text: string,

@@ -100,8 +100,8 @@ function WorkItemDetail() {
     },
   });
 
-  const saveTitle = async (title: string) => {
-    await updateWorkItem(id, { title: title.trim() });
+  const saveSummary = async (summary: string) => {
+    await updateWorkItem(id, { summary: summary.trim() });
     queryClient.invalidateQueries({ queryKey: ["work-items", id] });
   };
 
@@ -157,7 +157,7 @@ function WorkItemDetail() {
       project && {
         type: "work-item",
         id: item.id,
-        title: item.title,
+        title: item.summary,
         parent: project.name,
         to: "/work-items/$id",
         params: { id: item.id },
@@ -204,13 +204,13 @@ function WorkItemDetail() {
     ...(parent
       ? [
           {
-            label: parent.title,
+            label: parent.summary,
             to: "/work-items/$id",
             params: { id: parent.id },
           },
         ]
       : []),
-    { label: item?.title ?? "Loading..." },
+    { label: item?.summary ?? "Loading..." },
   ]);
 
   return (
@@ -225,15 +225,15 @@ function WorkItemDetail() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <InlineEdit
-                  value={item.title}
-                  onSave={saveTitle}
-                  ariaLabel="title"
-                  placeholder="Enter work item title"
-                  requiredMessage="Title is required"
+                  value={item.summary}
+                  onSave={saveSummary}
+                  ariaLabel="summary"
+                  placeholder="Enter work item summary"
+                  requiredMessage="Summary is required"
                   textClassName="text-2xl font-bold sm:text-3xl"
                 >
                   <h1 className="cursor-pointer break-words text-2xl font-bold sm:text-3xl">
-                    {item.title}
+                    {item.summary}
                   </h1>
                 </InlineEdit>
               </div>
@@ -337,7 +337,7 @@ function WorkItemDetail() {
                           params={{ id: subtask.id }}
                           className="text-primary hover:underline"
                         >
-                          {subtask.title}
+                          {subtask.summary}
                         </Link>{" "}
                         <span className="text-xs text-fg-muted">
                           ({subtask.status.name})

@@ -5,11 +5,11 @@ The language is documented in docs/filter-language.md.
 Examples:
     project.name == 'foo'
     project.name == 'foo' and status != 'done'
-    type == 'task' and (title ~ 'bug' or status in ['open', 'in_progress'])
+    type == 'task' and (summary ~ 'bug' or status in ['open', 'in_progress'])
     labels contains 'derstandard' and labels is not empty
     trashed == false
 
-Text fields: title, description, status, statusCategory, type, typeLevel,
+Text fields: summary, description, status, statusCategory, type, typeLevel,
 parent_id, project.id, project.name
 List fields: labels
 True/false field: trashed (compared with true or false, unquoted)
@@ -24,7 +24,7 @@ from kangaroo.errors import InvalidFilterError
 
 TEXT_FIELDS = frozenset(
     {
-        "title",
+        "summary",
         "description",
         "status",
         "statusCategory",

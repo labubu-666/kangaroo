@@ -14,7 +14,7 @@ const workItems = {
   results: [
     {
       id: "3f2a9c1d-0000-4000-8000-000000000001",
-      title: "Login bug",
+      summary: "Login bug",
       description: null,
       rendered_description: null,
       project_id: "p1",

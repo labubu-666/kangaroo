@@ -12,15 +12,15 @@ from kangaroo.schemas import (
 )
 
 
-def task(seeded, title="Task", **extra):
+def task(seeded, summary="Task", **extra):
     return WorkItemCreate(
-        title=title, project_id=seeded.project_id, type_id=seeded.task_id, **extra
+        summary=summary, project_id=seeded.project_id, type_id=seeded.task_id, **extra
     )
 
 
-def subtask(seeded, parent_id, title="Child", **extra):
+def subtask(seeded, parent_id, summary="Child", **extra):
     return WorkItemCreate(
-        title=title,
+        summary=summary,
         project_id=seeded.project_id,
         type_id=seeded.subtask_id,
         parent_id=parent_id,
@@ -31,7 +31,7 @@ def subtask(seeded, parent_id, title="Child", **extra):
 def test_create_work_item_with_missing_project_raises(work_item_service, seeded):
     with pytest.raises(InvalidReferenceError, match="Project not found"):
         work_item_service.create(
-            WorkItemCreate(title="Task", project_id=uuid4(), type_id=seeded.task_id)
+            WorkItemCreate(summary="Task", project_id=uuid4(), type_id=seeded.task_id)
         )
 
 
@@ -45,7 +45,7 @@ def test_create_work_item_with_given_status(work_item_service, seeded):
     assert item.status_id == seeded.in_progress_id
 
 
-def test_duplicate_copies_fields_with_copy_title(work_item_service, seeded):
+def test_duplicate_copies_fields_with_copy_summary(work_item_service, seeded):
     original = work_item_service.create(
         task(
             seeded,
@@ -57,7 +57,7 @@ def test_duplicate_copies_fields_with_copy_title(work_item_service, seeded):
     )
     copy = work_item_service.duplicate(original.id)
     assert copy.id != original.id
-    assert copy.title == "Fix bug (copy)"
+    assert copy.summary == "Fix bug (copy)"
     assert copy.description == "Details"
     assert copy.project_id == original.project_id
     assert copy.type_id == original.type_id
@@ -77,7 +77,7 @@ def test_duplicate_subtask_keeps_parent(work_item_service, seeded):
     child = work_item_service.create(subtask(seeded, parent.id, "Child"))
     copy = work_item_service.duplicate(child.id)
     assert copy.parent_id == parent.id
-    assert copy.title == "Child (copy)"
+    assert copy.summary == "Child (copy)"
 
 
 def test_duplicate_task_does_not_copy_subtasks(work_item_service, seeded):
@@ -96,7 +96,7 @@ def test_create_with_type_of_other_project_raises(work_item_service, seeded, oth
     with pytest.raises(InvalidReferenceError, match="type is not in the project"):
         work_item_service.create(
             WorkItemCreate(
-                title="Task", project_id=seeded.project_id, type_id=other.task_id
+                summary="Task", project_id=seeded.project_id, type_id=other.task_id
             )
         )
 
@@ -109,7 +109,9 @@ def test_create_with_status_of_other_project_raises(work_item_service, seeded, o
 def test_create_with_unknown_type_or_status_raises(work_item_service, seeded):
     with pytest.raises(InvalidReferenceError, match="type not found"):
         work_item_service.create(
-            WorkItemCreate(title="Task", project_id=seeded.project_id, type_id=uuid4())
+            WorkItemCreate(
+                summary="Task", project_id=seeded.project_id, type_id=uuid4()
+            )
         )
     with pytest.raises(InvalidReferenceError, match="Status not found"):
         work_item_service.create(task(seeded, status_id=uuid4()))
@@ -119,7 +121,7 @@ def test_subtask_needs_parent_and_task_rejects_one(work_item_service, seeded):
     with pytest.raises(InvalidReferenceError, match="needs a parent_id"):
         work_item_service.create(
             WorkItemCreate(
-                title="Child", project_id=seeded.project_id, type_id=seeded.subtask_id
+                summary="Child", project_id=seeded.project_id, type_id=seeded.subtask_id
             )
         )
     parent = work_item_service.create(task(seeded))
@@ -144,7 +146,7 @@ def test_create_subtask_must_match_parent_project(work_item_service, seeded, oth
     with pytest.raises(InvalidReferenceError, match="same project"):
         work_item_service.create(
             WorkItemCreate(
-                title="Child",
+                summary="Child",
                 project_id=other.project_id,
                 type_id=other.subtask_id,
                 parent_id=parent.id,
@@ -169,7 +171,7 @@ def test_replace_work_item_with_missing_project_raises(work_item_service, seeded
     with pytest.raises(InvalidReferenceError):
         work_item_service.replace(
             item.id,
-            WorkItemReplace(title="Task", project_id=uuid4(), type_id=seeded.task_id),
+            WorkItemReplace(summary="Task", project_id=uuid4(), type_id=seeded.task_id),
         )
 
 
@@ -185,7 +187,7 @@ def test_move_task_with_subtasks_raises(work_item_service, seeded, other):
         work_item_service.replace(
             parent.id,
             WorkItemReplace(
-                title="Parent",
+                summary="Parent",
                 project_id=other.project_id,
                 type_id=other.task_id,
                 status_id=other.open_id,
@@ -251,9 +253,9 @@ def test_same_project_update_skips_move_rules(work_item_service, seeded):
     parent = work_item_service.create(task(seeded, "Parent"))
     work_item_service.create(subtask(seeded, parent.id))
     updated = work_item_service.update(
-        parent.id, WorkItemUpdate(project_id=seeded.project_id, title="Renamed")
+        parent.id, WorkItemUpdate(project_id=seeded.project_id, summary="Renamed")
     )
-    assert updated.title == "Renamed"
+    assert updated.summary == "Renamed"
 
 
 def test_type_change_must_keep_level(
@@ -306,7 +308,7 @@ def test_replace_uses_first_todo_status_when_omitted(work_item_service, seeded):
     replaced = work_item_service.replace(
         item.id,
         WorkItemReplace(
-            title="Task", project_id=seeded.project_id, type_id=seeded.task_id
+            summary="Task", project_id=seeded.project_id, type_id=seeded.task_id
         ),
     )
     assert replaced.status_id == seeded.open_id
@@ -348,11 +350,13 @@ def test_bulk_delete_all_matching_uses_filter(work_item_service, seeded):
     work_item_service.create(task(seeded, "Login bug"))
     work_item_service.create(task(seeded, "Other"))
     deleted = work_item_service.bulk_delete(
-        WorkItemBulkDelete(all_matching=True, filter="title ~ 'bug'")
+        WorkItemBulkDelete(all_matching=True, filter="summary ~ 'bug'")
     )
     assert deleted == 1
-    titles = [item.title for item in work_item_service.list_paginated(10, 0).results]
-    assert titles == ["Other"]
+    summaries = [
+        item.summary for item in work_item_service.list_paginated(10, 0).results
+    ]
+    assert summaries == ["Other"]
 
 
 def test_bulk_delete_all_matching_without_filter_deletes_everything(

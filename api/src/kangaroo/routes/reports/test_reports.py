@@ -43,7 +43,7 @@ def test_summary_excludes_trashed_work_items(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Live",
+            "summary": "Live",
             "project_id": project_id,
         },
     ).json()
@@ -51,7 +51,7 @@ def test_summary_excludes_trashed_work_items(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Gone",
+            "summary": "Gone",
             "project_id": project_id,
         },
     ).json()
@@ -78,7 +78,7 @@ def test_summary_counts_by_status(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project["id"], "task"),
-            "title": "One",
+            "summary": "One",
             "project_id": project["id"],
         },
     ).json()
@@ -86,7 +86,7 @@ def test_summary_counts_by_status(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Two",
+            "summary": "Two",
             "project_id": project_id,
         },
     )
@@ -119,7 +119,7 @@ def test_summary_counts_by_category_across_custom_statuses(client, project_id):
         client.post(
             "/api/v1/work-items",
             json={
-                "title": "T",
+                "summary": "T",
                 "project_id": project_id,
                 "type_id": type_id(client, project_id, "task"),
                 "status_id": status,

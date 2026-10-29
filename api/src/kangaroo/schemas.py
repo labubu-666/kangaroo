@@ -50,7 +50,7 @@ class WorkItemCreate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    title: str
+    summary: str
     description: str | None = None
     project_id: UUID
     type_id: UUID
@@ -67,7 +67,7 @@ def reject_null[T](value: T | None) -> T | None:
 
 
 class WorkItemUpdate(BaseModel):
-    title: str | None = None
+    summary: str | None = None
     description: str | None = None
     project_id: UUID | None = None
     status_id: UUID | None = None
@@ -75,7 +75,7 @@ class WorkItemUpdate(BaseModel):
     labels: Labels = Field(default_factory=list)
     trashed: bool | None = None
 
-    _reject_null_title = field_validator("title")(reject_null)
+    _reject_null_summary = field_validator("summary")(reject_null)
     _reject_null_status = field_validator("status_id")(reject_null)
     _reject_null_type = field_validator("type_id")(reject_null)
     _reject_null_trashed = field_validator("trashed")(reject_null)
@@ -112,7 +112,7 @@ class WorkItemBulkDeleted(BaseModel):
 class WorkItemReplace(BaseModel):
     """Full replacement. Without a ``status_id`` the item goes to the first To Do status."""
 
-    title: str
+    summary: str
     description: str | None = None
     project_id: UUID
     type_id: UUID
@@ -125,7 +125,7 @@ class WorkItem(Timestamped):
     """A stored work item. Its status and type belong to its project."""
 
     id: UUID
-    title: str
+    summary: str
     description: str | None = None
     project_id: UUID
     status_id: UUID

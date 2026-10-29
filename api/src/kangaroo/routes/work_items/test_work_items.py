@@ -8,11 +8,11 @@ from kangaroo.routes.dependencies import get_engine
 from kangaroo.testing import status_id, type_id
 
 
-def _create(client, project_id, title="Task", **extra):
+def _create(client, project_id, summary="Task", **extra):
     return client.post(
         "/api/v1/work-items",
         json={
-            "title": title,
+            "summary": summary,
             "project_id": project_id,
             "type_id": type_id(client, project_id, "task"),
             **extra,
@@ -40,7 +40,7 @@ def test_create_work_item(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Fix bug",
+            "summary": "Fix bug",
             "description": "There's a bug in the UI",
             "project_id": project_id,
         },
@@ -48,20 +48,20 @@ def test_create_work_item(client, project_id):
     assert response.status_code == 201
     data = response.json()
     assert isinstance(UUID(data["id"]), UUID)
-    assert data["title"] == "Fix bug"
+    assert data["summary"] == "Fix bug"
     assert data["description"] == "There's a bug in the UI"
     assert data["status_id"] == status_id(client, project_id, "open")
     assert "created_at" in data
 
 
 def test_duplicate_work_item(client, project_id):
-    """POST /api/v1/work-items/{id}/duplicate creates a copy titled "(copy)"."""
+    """POST /api/v1/work-items/{id}/duplicate creates a copy with summary "(copy)"."""
     original = _create(client, project_id, "Fix bug", labels=["urgent"]).json()
     response = client.post(f"/api/v1/work-items/{original['id']}/duplicate")
     assert response.status_code == 201
     data = response.json()
     assert data["id"] != original["id"]
-    assert data["title"] == "Fix bug (copy)"
+    assert data["summary"] == "Fix bug (copy)"
     assert data["labels"] == ["urgent"]
     assert data["status_id"] == original["status_id"]
 
@@ -73,19 +73,19 @@ def test_duplicate_missing_work_item_returns_404(client):
 
 
 def test_create_work_item_minimal(client, project_id):
-    """POST /api/v1/work-items creates a work item with title only."""
+    """POST /api/v1/work-items creates a work item with summary only."""
     response = client.post(
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "New task",
+            "summary": "New task",
             "project_id": project_id,
         },
     )
     assert response.status_code == 201
     data = response.json()
     assert isinstance(UUID(data["id"]), UUID)
-    assert data["title"] == "New task"
+    assert data["summary"] == "New task"
     assert data["description"] is None
     assert data["status_id"] == status_id(client, project_id, "open")
 
@@ -103,39 +103,39 @@ def test_list_work_items_empty(client):
 
 def test_list_work_items(client, project_id):
     """GET /api/v1/work-items returns created items with pagination."""
-    _create(client, project_id, title="Task 1")
-    _create(client, project_id, title="Task 2")
+    _create(client, project_id, summary="Task 1")
+    _create(client, project_id, summary="Task 2")
 
     response = client.get("/api/v1/work-items")
     assert response.status_code == 200
     data = response.json()
     assert len(data["results"]) == 2
-    assert data["results"][0]["title"] == "Task 1"
-    assert data["results"][1]["title"] == "Task 2"
+    assert data["results"][0]["summary"] == "Task 1"
+    assert data["results"][1]["summary"] == "Task 2"
     assert data["limit"] == 10
     assert data["offset"] == 0
     assert data["total"] == 2
 
 
 def test_list_work_items_search(client, project_id):
-    """GET /api/v1/work-items?search= matches title or description, ignoring case."""
-    _create(client, project_id, title="Login bug")
+    """GET /api/v1/work-items?search= matches summary or description, ignoring case."""
+    _create(client, project_id, summary="Login bug")
     client.post(
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Other",
+            "summary": "Other",
             "description": "LOGIN page",
             "project_id": project_id,
         },
     )
-    _create(client, project_id, title="Unrelated")
+    _create(client, project_id, summary="Unrelated")
 
     response = client.get("/api/v1/work-items?search=login")
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 2
-    assert [item["title"] for item in data["results"]] == ["Login bug", "Other"]
+    assert [item["summary"] for item in data["results"]] == ["Login bug", "Other"]
 
 
 def test_list_work_items_search_too_long(client):
@@ -146,12 +146,12 @@ def test_list_work_items_search_too_long(client):
 
 def test_list_work_items_filter(client, project_id):
     """GET /api/v1/work-items?filter= returns only the matching items."""
-    _create(client, project_id, title="Open")
+    _create(client, project_id, summary="Open")
     in_progress = client.post(
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Working",
+            "summary": "Working",
             "project_id": project_id,
         },
     ).json()
@@ -164,21 +164,21 @@ def test_list_work_items_filter(client, project_id):
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
-    assert [item["title"] for item in data["results"]] == ["Working"]
+    assert [item["summary"] for item in data["results"]] == ["Working"]
 
 
 def test_list_work_items_filter_with_paging_and_search(client, project_id):
     """The filter, search and paging are applied together, with total after the filter."""
-    for title in ["Login bug", "Login task", "Other bug"]:
-        _create(client, project_id, title=title)
+    for summary in ["Login bug", "Login task", "Other bug"]:
+        _create(client, project_id, summary=summary)
 
     response = client.get(
-        "/api/v1/work-items?filter=title ~ 'bug'&search=login&limit=1&offset=0"
+        "/api/v1/work-items?filter=summary ~ 'bug'&search=login&limit=1&offset=0"
     )
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
-    assert [item["title"] for item in data["results"]] == ["Login bug"]
+    assert [item["summary"] for item in data["results"]] == ["Login bug"]
 
 
 def test_list_work_items_invalid_filter(client):
@@ -193,7 +193,7 @@ def test_get_work_item(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     )
@@ -203,7 +203,7 @@ def test_get_work_item(client, project_id):
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == item_id
-    assert data["title"] == "Task"
+    assert data["summary"] == "Task"
 
 
 def test_get_work_item_not_found(client):
@@ -213,29 +213,29 @@ def test_get_work_item_not_found(client):
     assert response.status_code == 404
 
 
-def test_update_work_item_title_null_returns_422(client, project_id):
-    """PATCH /api/v1/work-items/{id} rejects an explicit null title."""
+def test_update_work_item_summary_null_returns_422(client, project_id):
+    """PATCH /api/v1/work-items/{id} rejects an explicit null summary."""
     item_id = client.post(
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Keep",
+            "summary": "Keep",
             "project_id": project_id,
         },
     ).json()["id"]
 
-    response = client.patch(f"/api/v1/work-items/{item_id}", json={"title": None})
+    response = client.patch(f"/api/v1/work-items/{item_id}", json={"summary": None})
     assert response.status_code == 422
-    assert client.get(f"/api/v1/work-items/{item_id}").json()["title"] == "Keep"
+    assert client.get(f"/api/v1/work-items/{item_id}").json()["summary"] == "Keep"
 
 
-def test_update_work_item_title(client, project_id):
-    """PATCH /api/v1/work-items/{id} updates title."""
+def test_update_work_item_summary(client, project_id):
+    """PATCH /api/v1/work-items/{id} updates summary."""
     create_response = client.post(
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Old Title",
+            "summary": "Old Title",
             "description": "Desc",
             "project_id": project_id,
         },
@@ -244,11 +244,11 @@ def test_update_work_item_title(client, project_id):
 
     response = client.patch(
         f"/api/v1/work-items/{item_id}",
-        json={"type_id": type_id(client, project_id, "task"), "title": "New Title"},
+        json={"type_id": type_id(client, project_id, "task"), "summary": "New Title"},
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["title"] == "New Title"
+    assert data["summary"] == "New Title"
     assert data["description"] == "Desc"
 
 
@@ -258,7 +258,7 @@ def test_update_work_item_status(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     )
@@ -278,7 +278,7 @@ def test_update_work_item_description(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     )
@@ -296,7 +296,7 @@ def test_update_work_item_not_found(client, project_id):
     fake_uuid = "11111111-1111-1111-1111-111111111111"
     response = client.patch(
         f"/api/v1/work-items/{fake_uuid}",
-        json={"type_id": type_id(client, project_id, "task"), "title": "New"},
+        json={"type_id": type_id(client, project_id, "task"), "summary": "New"},
     )
     assert response.status_code == 404
 
@@ -307,7 +307,7 @@ def test_replace_work_item_full(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Old",
+            "summary": "Old",
             "description": "Old desc",
             "project_id": project_id,
         },
@@ -319,7 +319,7 @@ def test_replace_work_item_full(client, project_id):
         f"/api/v1/work-items/{item_id}",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "New",
+            "summary": "New",
             "description": "New desc",
             "status_id": status_id(client, project_id, "in_progress"),
             "project_id": project_id,
@@ -327,19 +327,19 @@ def test_replace_work_item_full(client, project_id):
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["title"] == "New"
+    assert data["summary"] == "New"
     assert data["description"] == "New desc"
     assert data["status_id"] == status_id(client, project_id, "in_progress")
     assert data["created_at"] == original_created_at  # preserved
 
 
 def test_replace_work_item_minimal(client, project_id):
-    """PUT /api/v1/work-items/{id} with title only, description defaults to None."""
+    """PUT /api/v1/work-items/{id} with summary only, description defaults to None."""
     create_response = client.post(
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Original",
+            "summary": "Original",
             "description": "Desc",
             "project_id": project_id,
         },
@@ -350,13 +350,13 @@ def test_replace_work_item_minimal(client, project_id):
         f"/api/v1/work-items/{item_id}",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Replaced",
+            "summary": "Replaced",
             "project_id": project_id,
         },
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["title"] == "Replaced"
+    assert data["summary"] == "Replaced"
     assert data["description"] is None
     assert data["status_id"] == status_id(client, project_id, "open")
 
@@ -368,7 +368,7 @@ def test_replace_work_item_not_found(client, project_id):
         f"/api/v1/work-items/{fake_uuid}",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "New",
+            "summary": "New",
             "project_id": project_id,
         },
     )
@@ -381,7 +381,7 @@ def test_delete_work_item(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     )
@@ -401,7 +401,7 @@ def test_trash_and_restore_work_item(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -421,7 +421,7 @@ def test_new_work_item_is_not_trashed(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     )
@@ -434,7 +434,7 @@ def test_replace_work_item_resets_trashed(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -443,7 +443,7 @@ def test_replace_work_item_resets_trashed(client, project_id):
     response = client.put(
         f"/api/v1/work-items/{item_id}",
         json={
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
             "type_id": type_id(client, project_id, "task"),
         },
@@ -457,7 +457,7 @@ def test_list_work_items_filters_trashed(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Live",
+            "summary": "Live",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -465,7 +465,7 @@ def test_list_work_items_filters_trashed(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Trashed",
+            "summary": "Trashed",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -493,14 +493,14 @@ def test_delete_work_item_not_found(client):
 def test_list_work_items_with_limit(client, project_id):
     """GET /api/v1/work-items?limit=2 returns paginated results."""
     for i in range(1, 6):
-        _create(client, project_id, title=f"Task {i}")
+        _create(client, project_id, summary=f"Task {i}")
 
     response = client.get("/api/v1/work-items?limit=2")
     assert response.status_code == 200
     data = response.json()
     assert len(data["results"]) == 2
-    assert data["results"][0]["title"] == "Task 1"
-    assert data["results"][1]["title"] == "Task 2"
+    assert data["results"][0]["summary"] == "Task 1"
+    assert data["results"][1]["summary"] == "Task 2"
     assert data["limit"] == 2
     assert data["offset"] == 0
     assert data["total"] == 5
@@ -509,15 +509,15 @@ def test_list_work_items_with_limit(client, project_id):
 def test_list_work_items_with_offset(client, project_id):
     """GET /api/v1/work-items?offset=2 skips items and returns from offset."""
     for i in range(1, 6):
-        _create(client, project_id, title=f"Task {i}")
+        _create(client, project_id, summary=f"Task {i}")
 
     response = client.get("/api/v1/work-items?offset=2")
     assert response.status_code == 200
     data = response.json()
     assert len(data["results"]) == 3  # 5 - 2 = 3
-    assert data["results"][0]["title"] == "Task 3"
-    assert data["results"][1]["title"] == "Task 4"
-    assert data["results"][2]["title"] == "Task 5"
+    assert data["results"][0]["summary"] == "Task 3"
+    assert data["results"][1]["summary"] == "Task 4"
+    assert data["results"][2]["summary"] == "Task 5"
     assert data["limit"] == 10
     assert data["offset"] == 2
     assert data["total"] == 5
@@ -526,14 +526,14 @@ def test_list_work_items_with_offset(client, project_id):
 def test_list_work_items_with_limit_and_offset(client, project_id):
     """GET /api/v1/work-items?limit=2&offset=1 returns middle page."""
     for i in range(1, 6):
-        _create(client, project_id, title=f"Task {i}")
+        _create(client, project_id, summary=f"Task {i}")
 
     response = client.get("/api/v1/work-items?limit=2&offset=1")
     assert response.status_code == 200
     data = response.json()
     assert len(data["results"]) == 2
-    assert data["results"][0]["title"] == "Task 2"
-    assert data["results"][1]["title"] == "Task 3"
+    assert data["results"][0]["summary"] == "Task 2"
+    assert data["results"][1]["summary"] == "Task 3"
     assert data["limit"] == 2
     assert data["offset"] == 1
     assert data["total"] == 5
@@ -542,13 +542,13 @@ def test_list_work_items_with_limit_and_offset(client, project_id):
 def test_list_work_items_last_page(client, project_id):
     """GET /api/v1/work-items on last page."""
     for i in range(1, 6):
-        _create(client, project_id, title=f"Task {i}")
+        _create(client, project_id, summary=f"Task {i}")
 
     response = client.get("/api/v1/work-items?limit=2&offset=4")
     assert response.status_code == 200
     data = response.json()
     assert len(data["results"]) == 1
-    assert data["results"][0]["title"] == "Task 5"
+    assert data["results"][0]["summary"] == "Task 5"
     assert data["limit"] == 2
     assert data["offset"] == 4
     assert data["total"] == 5
@@ -574,8 +574,8 @@ def test_list_work_items_offset_validation_negative(client):
 
 def test_list_work_items_beyond_total(client, project_id):
     """GET /api/v1/work-items?offset=100 returns empty results when offset exceeds total."""
-    _create(client, project_id, title="Task 1")
-    _create(client, project_id, title="Task 2")
+    _create(client, project_id, summary="Task 1")
+    _create(client, project_id, summary="Task 2")
 
     response = client.get("/api/v1/work-items?offset=100")
     assert response.status_code == 200
@@ -594,7 +594,7 @@ def test_create_work_item_in_project(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     )
@@ -609,7 +609,7 @@ def test_create_work_item_unknown_project(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": fake_uuid,
         },
     )
@@ -622,7 +622,7 @@ def test_create_work_item_null_project_returns_422(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": None,
         },
     )
@@ -635,7 +635,7 @@ def test_update_work_item_trashed_null_returns_422(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Keep",
+            "summary": "Keep",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -651,7 +651,7 @@ def test_update_work_item_null_project(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -667,7 +667,7 @@ def test_update_work_item_project(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -685,7 +685,7 @@ def test_update_work_item_unknown_project(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -703,7 +703,7 @@ def test_replace_work_item_unknown_project(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -713,7 +713,7 @@ def test_replace_work_item_unknown_project(client, project_id):
         f"/api/v1/work-items/{item_id}",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": fake_uuid,
         },
     )
@@ -727,17 +727,17 @@ def test_list_work_items_filtered_by_project(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, other_id, "task"),
-            "title": "In project",
+            "summary": "In project",
             "project_id": other_id,
         },
     )
-    _create(client, project_id, title="In default")
+    _create(client, project_id, summary="In default")
 
     response = client.get(f"/api/v1/work-items?project_id={other_id}")
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
-    assert data["results"][0]["title"] == "In project"
+    assert data["results"][0]["summary"] == "In project"
 
 
 def test_create_task_has_no_parent_field(client, project_id):
@@ -746,7 +746,7 @@ def test_create_task_has_no_parent_field(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     )
@@ -760,7 +760,7 @@ def test_create_work_item_without_type_returns_422(client, project_id):
     """type is required on create."""
     response = client.post(
         "/api/v1/work-items",
-        json={"title": "Task", "project_id": project_id},
+        json={"summary": "Task", "project_id": project_id},
     )
     assert response.status_code == 422
 
@@ -771,7 +771,7 @@ def test_create_work_item_with_unknown_type_returns_422(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": "11111111-1111-1111-1111-111111111111",
-            "title": "Epic",
+            "summary": "Epic",
             "project_id": project_id,
         },
     )
@@ -784,7 +784,7 @@ def test_create_task_with_parent_id_returns_422(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Parent",
+            "summary": "Parent",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -793,7 +793,7 @@ def test_create_task_with_parent_id_returns_422(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "parent_id": parent_id,
             "project_id": project_id,
         },
@@ -807,7 +807,7 @@ def test_create_subtask(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Parent",
+            "summary": "Parent",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -815,7 +815,7 @@ def test_create_subtask(client, project_id):
     response = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Child",
+            "summary": "Child",
             "type_id": type_id(client, project_id, "subtask"),
             "parent_id": parent_id,
             "project_id": project_id,
@@ -832,7 +832,7 @@ def test_create_subtask_without_parent_returns_422(client, project_id):
     response = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Child",
+            "summary": "Child",
             "type_id": type_id(client, project_id, "subtask"),
             "project_id": project_id,
         },
@@ -846,7 +846,7 @@ def test_create_task_with_parent_returns_422(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Parent",
+            "summary": "Parent",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -854,7 +854,7 @@ def test_create_task_with_parent_returns_422(client, project_id):
     response = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Task",
+            "summary": "Task",
             "type_id": type_id(client, project_id, "task"),
             "parent_id": parent_id,
             "project_id": project_id,
@@ -869,7 +869,7 @@ def test_create_subtask_with_unknown_parent_returns_422(client, project_id):
     response = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Child",
+            "summary": "Child",
             "type_id": type_id(client, project_id, "subtask"),
             "parent_id": fake_uuid,
             "project_id": project_id,
@@ -884,14 +884,14 @@ def test_create_subtask_under_subtask_returns_422(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Parent",
+            "summary": "Parent",
             "project_id": project_id,
         },
     ).json()["id"]
     subtask_id = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Child",
+            "summary": "Child",
             "type_id": type_id(client, project_id, "subtask"),
             "parent_id": parent_id,
             "project_id": project_id,
@@ -901,7 +901,7 @@ def test_create_subtask_under_subtask_returns_422(client, project_id):
     response = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Grandchild",
+            "summary": "Grandchild",
             "type_id": type_id(client, project_id, "subtask"),
             "parent_id": subtask_id,
             "project_id": project_id,
@@ -917,7 +917,7 @@ def test_create_subtask_in_other_project_returns_422(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Parent",
+            "summary": "Parent",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -925,7 +925,7 @@ def test_create_subtask_in_other_project_returns_422(client, project_id):
     response = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Child",
+            "summary": "Child",
             "type_id": type_id(client, project_id, "subtask"),
             "parent_id": parent_id,
             "project_id": other_id,
@@ -940,26 +940,26 @@ def test_list_subtasks_of_parent(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Parent",
+            "summary": "Parent",
             "project_id": project_id,
         },
     ).json()["id"]
     client.post(
         "/api/v1/work-items",
         json={
-            "title": "Child",
+            "summary": "Child",
             "type_id": type_id(client, project_id, "subtask"),
             "parent_id": parent_id,
             "project_id": project_id,
         },
     )
-    _create(client, project_id, title="Unrelated")
+    _create(client, project_id, summary="Unrelated")
 
     response = client.get(f"/api/v1/work-items?parent_id={parent_id}")
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
-    assert data["results"][0]["title"] == "Child"
+    assert data["results"][0]["summary"] == "Child"
 
 
 def test_delete_task_also_deletes_subtasks(client, project_id):
@@ -968,14 +968,14 @@ def test_delete_task_also_deletes_subtasks(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Parent",
+            "summary": "Parent",
             "project_id": project_id,
         },
     ).json()["id"]
     subtask_id = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Child",
+            "summary": "Child",
             "type_id": type_id(client, project_id, "subtask"),
             "parent_id": parent_id,
             "project_id": project_id,
@@ -992,14 +992,14 @@ def test_bulk_delete_ids(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Parent",
+            "summary": "Parent",
             "project_id": project_id,
         },
     ).json()["id"]
     subtask_id = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Child",
+            "summary": "Child",
             "type_id": type_id(client, project_id, "subtask"),
             "parent_id": parent_id,
             "project_id": project_id,
@@ -1016,19 +1016,19 @@ def test_bulk_delete_ids(client, project_id):
 
 def test_bulk_delete_all_matching(client, project_id):
     """all_matching with a filter deletes only the items the filter matches."""
-    for title in ["Login bug", "Other bug", "Feature"]:
-        _create(client, project_id, title=title)
+    for summary in ["Login bug", "Other bug", "Feature"]:
+        _create(client, project_id, summary=summary)
 
     response = client.post(
         "/api/v1/work-items/bulk-delete",
-        json={"all_matching": True, "filter": "title ~ 'bug'"},
+        json={"all_matching": True, "filter": "summary ~ 'bug'"},
     )
     assert response.status_code == 200
     assert response.json() == {"deleted": 2}
-    titles = [
-        item["title"] for item in client.get("/api/v1/work-items").json()["results"]
+    summaries = [
+        item["summary"] for item in client.get("/api/v1/work-items").json()["results"]
     ]
-    assert titles == ["Feature"]
+    assert summaries == ["Feature"]
 
 
 def test_bulk_delete_rejects_ambiguous_requests(client):
@@ -1044,7 +1044,7 @@ def test_bulk_delete_rejects_ambiguous_requests(client):
     assert (
         client.post(
             "/api/v1/work-items/bulk-delete",
-            json={"ids": [str(uuid4())], "filter": "title ~ 'a'"},
+            json={"ids": [str(uuid4())], "filter": "summary ~ 'a'"},
         ).status_code
         == 422
     )
@@ -1066,14 +1066,14 @@ def test_move_task_with_subtasks_returns_409(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Parent",
+            "summary": "Parent",
             "project_id": project_id,
         },
     ).json()["id"]
     client.post(
         "/api/v1/work-items",
         json={
-            "title": "Child",
+            "summary": "Child",
             "type_id": type_id(client, project_id, "subtask"),
             "parent_id": parent_id,
             "project_id": project_id,
@@ -1093,14 +1093,14 @@ def test_move_subtask_returns_409(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Parent",
+            "summary": "Parent",
             "project_id": project_id,
         },
     ).json()["id"]
     subtask_id = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Child",
+            "summary": "Child",
             "type_id": type_id(client, project_id, "subtask"),
             "parent_id": parent_id,
             "project_id": project_id,
@@ -1119,7 +1119,7 @@ def test_labels_are_trimmed_and_deduplicated(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Labelled",
+            "summary": "Labelled",
             "project_id": project_id,
             "labels": ["  derstandard:1 ", "news", "derstandard:1", "news "],
         },
@@ -1134,7 +1134,7 @@ def test_empty_label_is_rejected(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Bad",
+            "summary": "Bad",
             "project_id": project_id,
             "labels": ["news", "   "],
         },
@@ -1148,7 +1148,7 @@ def test_update_replaces_labels(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Editable",
+            "summary": "Editable",
             "project_id": project_id,
             "labels": ["a"],
         },
@@ -1160,7 +1160,7 @@ def test_update_replaces_labels(client, project_id):
     assert updated["labels"] == ["b", "c"]
 
     untouched = client.patch(
-        f"/api/v1/work-items/{item_id}", json={"title": "Renamed"}
+        f"/api/v1/work-items/{item_id}", json={"summary": "Renamed"}
     ).json()
     assert untouched["labels"] == ["b", "c"]
 
@@ -1171,7 +1171,7 @@ def test_rendered_description_renders_markdown(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Markdown",
+            "summary": "Markdown",
             "description": "**bold** and `code`",
             "project_id": project_id,
         },
@@ -1189,7 +1189,7 @@ def test_rendered_description_opens_links_in_new_tab(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Link",
+            "summary": "Link",
             "description": "[docs](https://example.com)",
             "project_id": project_id,
         },
@@ -1208,7 +1208,7 @@ def test_rendered_description_linkifies_bare_urls(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Bare",
+            "summary": "Bare",
             "description": "see https://example.com. and www.example.org",
             "project_id": project_id,
         },
@@ -1235,7 +1235,7 @@ def test_rendered_description_does_not_linkify_code_or_existing_links(
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Code",
+            "summary": "Code",
             "description": "`https://example.com` and [docs](https://example.com)",
             "project_id": project_id,
         },
@@ -1254,7 +1254,7 @@ def test_rendered_description_is_null_without_description(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "No description",
+            "summary": "No description",
             "project_id": project_id,
         },
     )
@@ -1267,7 +1267,7 @@ def test_rendered_description_strips_unsafe_html(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Unsafe",
+            "summary": "Unsafe",
             "description": "<script>alert(1)</script>\n\n[bad](javascript:alert(1))",
             "project_id": project_id,
         },
@@ -1283,7 +1283,7 @@ def test_rendered_description_is_read_only(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Read only",
+            "summary": "Read only",
             "project_id": project_id,
             "rendered_description": "<p>forged</p>",
         },
@@ -1301,7 +1301,7 @@ def test_old_string_status_and_type_are_rejected(client, project_id):
     """The old string fields are gone; unknown fields are not silently dropped."""
     response = client.post(
         "/api/v1/work-items",
-        json={"type": "task", "title": "Old", "project_id": project_id},
+        json={"type": "task", "summary": "Old", "project_id": project_id},
     )
     assert response.status_code == 422
 
@@ -1317,7 +1317,7 @@ def test_create_with_type_of_other_project_returns_422(client, project_id):
     response = client.post(
         "/api/v1/work-items",
         json={
-            "title": "X",
+            "summary": "X",
             "project_id": project_id,
             "type_id": type_id(client, other, "task"),
         },
@@ -1394,7 +1394,7 @@ def test_filter_by_status_name_category_and_type_level(client, project_id):
         "statusCategory == 'in_progress'",
     ):
         data = client.get("/api/v1/work-items", params={"filter": text}).json()
-        assert [i["title"] for i in data["results"]] == ["Started"], text
+        assert [i["summary"] for i in data["results"]] == ["Started"], text
     data = client.get(
         "/api/v1/work-items", params={"filter": "typeLevel == 'standard'"}
     ).json()
@@ -1443,7 +1443,7 @@ def test_names_are_present_on_every_read_and_write(client, project_id):
     replaced = client.put(
         f"/api/v1/work-items/{item_id}",
         json={
-            "title": "New",
+            "summary": "New",
             "project_id": project_id,
             "type_id": type_id(client, project_id, "task"),
         },
@@ -1469,7 +1469,7 @@ def test_subtask_names_show_subtask_level(client, project_id):
     child = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Child",
+            "summary": "Child",
             "project_id": project_id,
             "type_id": type_id(client, project_id, "subtask"),
             "parent_id": parent_id,

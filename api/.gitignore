@@ -8,3 +8,4 @@ wheels/
 .env
 *.egg-info
 kangaroo.db
+kangaroo.db.*.bak

@@ -27,7 +27,7 @@ def test_delete_project_with_work_items_raises(project_service, work_item_servic
     work_types = work_item_service._types.list_all(project_id=project.id)
     task_type = next(t for t in work_types if t.level == "standard")
     item = work_item_service.create(
-        WorkItemCreate(title="Task", project_id=project.id, type_id=task_type.id)
+        WorkItemCreate(summary="Task", project_id=project.id, type_id=task_type.id)
     )
     with pytest.raises(ConflictError, match="still has work items"):
         project_service.delete(project.id)

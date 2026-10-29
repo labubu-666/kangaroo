@@ -70,7 +70,9 @@ function SearchResults() {
                   className="flex flex-col gap-2 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-semibold text-primary">{item.title}</h3>
+                    <h3 className="font-semibold text-primary">
+                      {item.summary}
+                    </h3>
                     <TypeBadge type={item.type} />
                   </div>
                   <StatusBadge status={item.status} />

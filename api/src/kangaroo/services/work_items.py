@@ -76,7 +76,7 @@ class WorkItemService:
         return self._with_names(created)
 
     def duplicate(self, item_id: UUID) -> WorkItemDetail:
-        """Create a copy of a work item titled ``<title> (copy)``.
+        """Create a copy of a work item with ``<summary> (copy)`` as its summary.
 
         The copy keeps the original's project, type, status, parent and labels.
         It is never trashed, and the original's subtasks are not copied.
@@ -84,7 +84,7 @@ class WorkItemService:
         original = self._work_items.get_by_id(item_id)
         return self.create(
             WorkItemCreate(
-                title=f"{original.title} (copy)",
+                summary=f"{original.summary} (copy)",
                 description=original.description,
                 project_id=original.project_id,
                 type_id=original.type_id,

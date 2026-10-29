@@ -60,7 +60,7 @@ class WorkItemRow(Base):
     __tablename__ = "work_items"
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
-    title: Mapped[str] = mapped_column(String)
+    summary: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     project_id: Mapped[UUID] = mapped_column(
         Uuid, ForeignKey("projects.id", ondelete="RESTRICT"), nullable=False

@@ -159,7 +159,7 @@ def test_view_groups_matching_items_by_status(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "In foo",
+            "summary": "In foo",
             "project_id": project_id,
         },
     ).json()
@@ -167,7 +167,7 @@ def test_view_groups_matching_items_by_status(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "In bar",
+            "summary": "In bar",
             "project_id": other_id,
         },
     )
@@ -194,7 +194,7 @@ def test_view_groups_matching_items_by_status(client, project_id):
         "Done",
     ]
     assert data["columns"][0]["items"] == []
-    assert [item["title"] for item in data["columns"][2]["items"]] == ["In foo"]
+    assert [item["summary"] for item in data["columns"][2]["items"]] == ["In foo"]
 
 
 def test_board_filter_on_labels(client, project_id):
@@ -203,7 +203,7 @@ def test_board_filter_on_labels(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Article",
+            "summary": "Article",
             "project_id": project_id,
             "labels": ["derstandard", "derstandard:1"],
         },
@@ -212,7 +212,7 @@ def test_board_filter_on_labels(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Other",
+            "summary": "Other",
             "project_id": project_id,
         },
     )
@@ -226,8 +226,10 @@ def test_board_filter_on_labels(client, project_id):
     ).json()["id"]
 
     data = client.get(f"/api/v1/boards/{board_id}/view").json()
-    titles = [item["title"] for column in data["columns"] for item in column["items"]]
-    assert titles == ["Article"]
+    summaries = [
+        item["summary"] for column in data["columns"] for item in column["items"]
+    ]
+    assert summaries == ["Article"]
 
 
 def test_view_with_blank_filter_shows_everything(client, project_id):
@@ -235,7 +237,7 @@ def test_view_with_blank_filter_shows_everything(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Anywhere",
+            "summary": "Anywhere",
             "project_id": project_id,
         },
     )
@@ -243,7 +245,7 @@ def test_view_with_blank_filter_shows_everything(client, project_id):
         "/api/v1/boards", json={"name": "All", "project_id": project_id}
     ).json()["id"]
     columns = client.get(f"/api/v1/boards/{board_id}/view").json()["columns"]
-    assert [item["title"] for item in columns[0]["items"]] == ["Anywhere"]
+    assert [item["summary"] for item in columns[0]["items"]] == ["Anywhere"]
 
 
 def test_view_board_not_found(client):
@@ -326,7 +328,7 @@ def test_view_only_shows_items_of_board_project(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, gamma_id, "task"),
-            "title": "Gamma item",
+            "summary": "Gamma item",
             "project_id": gamma_id,
         },
     )
@@ -334,7 +336,7 @@ def test_view_only_shows_items_of_board_project(client, project_id):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Default item",
+            "summary": "Default item",
             "project_id": project_id,
         },
     )
@@ -343,7 +345,7 @@ def test_view_only_shows_items_of_board_project(client, project_id):
     ).json()["id"]
 
     columns = client.get(f"/api/v1/boards/{board_id}/view").json()["columns"]
-    assert [item["title"] for item in columns[0]["items"]] == ["Gamma item"]
+    assert [item["summary"] for item in columns[0]["items"]] == ["Gamma item"]
 
 
 def test_board_labels_default_to_empty(client, project_id):
@@ -458,7 +460,7 @@ def test_view_filter_by_status_name_and_category(client, project_id):
     first = client.post(
         "/api/v1/work-items",
         json={
-            "title": "Started",
+            "summary": "Started",
             "project_id": project_id,
             "type_id": type_id(client, project_id, "task"),
             "status_id": status_id(client, project_id, "in_progress"),
@@ -468,7 +470,7 @@ def test_view_filter_by_status_name_and_category(client, project_id):
     client.post(
         "/api/v1/work-items",
         json={
-            "title": "Waiting",
+            "summary": "Waiting",
             "project_id": project_id,
             "type_id": type_id(client, project_id, "task"),
         },
@@ -479,15 +481,15 @@ def test_view_filter_by_status_name_and_category(client, project_id):
             json={"name": "B", "project_id": project_id, "filter": text},
         ).json()["id"]
         columns = client.get(f"/api/v1/boards/{board_id}/view").json()["columns"]
-        titles = [i["title"] for c in columns for i in c["items"]]
-        assert titles == ["Started"], text
+        summaries = [i["summary"] for c in columns for i in c["items"]]
+        assert summaries == ["Started"], text
 
 
 def test_view_items_carry_status_and_type_names(client, project_id):
     client.post(
         "/api/v1/work-items",
         json={
-            "title": "Item",
+            "summary": "Item",
             "project_id": project_id,
             "type_id": type_id(client, project_id, "task"),
         },
@@ -509,7 +511,7 @@ def test_view_with_invalid_stored_filter_shows_empty_board(
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Hidden",
+            "summary": "Hidden",
             "project_id": project_id,
         },
     ).json()["id"]
@@ -521,7 +523,7 @@ def test_view_with_invalid_stored_filter_shows_empty_board(
         session.execute(
             update(BoardRow)
             .where(BoardRow.id == UUID(board_id))
-            .values(filter="title ==")
+            .values(filter="summary ==")
         )
 
     with caplog.at_level("WARNING", logger="kangaroo.services.boards"):

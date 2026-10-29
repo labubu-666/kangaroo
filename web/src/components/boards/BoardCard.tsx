@@ -28,7 +28,7 @@ export function BoardCard({ item }: { item: WorkItem }) {
       <div className="flex items-center gap-2">
         <TypeIcon type={item.type} />
         <p className="min-w-0 flex-1 truncate font-medium text-fg">
-          {item.title}
+          {item.summary}
         </p>
       </div>
       {item.labels.length > 0 && (
