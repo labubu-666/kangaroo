@@ -13,6 +13,7 @@ function workItem(id: string): RecentEntry {
     type: "work-item",
     id,
     title: `Item ${id}`,
+    parent: "Kangaroo",
     to: "/work-items/$id",
     params: { id },
   };

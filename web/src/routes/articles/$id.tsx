@@ -92,13 +92,15 @@ function ArticleDetail() {
   ]);
 
   useRecordRecent(
-    article && {
-      type: "article",
-      id: article.id,
-      title: article.title,
-      to: "/articles/$id",
-      params: { id: article.id },
-    },
+    article &&
+      knowledgeBase && {
+        type: "article",
+        id: article.id,
+        title: article.title,
+        parent: knowledgeBase.name,
+        to: "/articles/$id",
+        params: { id: article.id },
+      },
   );
 
   if (isLoading) return <Loading />;

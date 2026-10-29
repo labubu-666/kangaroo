@@ -91,7 +91,14 @@ export function RecentSection() {
                   className="flex min-w-0 items-center gap-2 rounded px-2 py-1.5 hover:bg-surface-strong"
                 >
                   <RecentIcon type={entry.type} />
-                  <span className="truncate">{entry.title}</span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate">{entry.title}</span>
+                    {"parent" in entry && entry.parent && (
+                      <span className="truncate text-xs text-fg-muted">
+                        {entry.parent}
+                      </span>
+                    )}
+                  </span>
                 </Link>
               </li>
             ))}

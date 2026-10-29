@@ -87,13 +87,15 @@ function BoardDetail() {
   ]);
 
   useRecordRecent(
-    board && {
-      type: "board",
-      id: board.id,
-      title: board.name,
-      to: "/projects/$id/boards/$boardId",
-      params: { id, boardId: board.id },
-    },
+    board &&
+      project && {
+        type: "board",
+        id: board.id,
+        title: board.name,
+        parent: project.name,
+        to: "/projects/$id/boards/$boardId",
+        params: { id, boardId: board.id },
+      },
   );
 
   const handleDragEnd = (event: DragEndEvent) => {

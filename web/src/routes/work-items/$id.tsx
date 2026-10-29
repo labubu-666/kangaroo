@@ -137,13 +137,15 @@ function WorkItemDetail() {
   });
 
   useRecordRecent(
-    item && {
-      type: "work-item",
-      id: item.id,
-      title: item.title,
-      to: "/work-items/$id",
-      params: { id: item.id },
-    },
+    item &&
+      project && {
+        type: "work-item",
+        id: item.id,
+        title: item.title,
+        parent: project.name,
+        to: "/work-items/$id",
+        params: { id: item.id },
+      },
   );
 
   const handleStatusChange = (newStatusId: string) => {
