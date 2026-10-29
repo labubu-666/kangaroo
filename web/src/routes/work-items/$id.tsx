@@ -246,60 +246,95 @@ function WorkItemDetail() {
                   </h1>
                 </InlineEdit>
               </div>
-              {!item.trashed && (
-                <div ref={menuRef} className="relative">
-                  <button
-                    type="button"
-                    aria-label="More actions"
-                    aria-haspopup="menu"
-                    aria-expanded={menuOpen}
-                    aria-controls={menuId}
-                    onClick={() => setMenuOpen((open) => !open)}
-                    className="flex h-10 items-center rounded border border-border-strong px-4 font-medium hover:bg-surface-muted"
+              <div ref={menuRef} className="relative">
+                <button
+                  type="button"
+                  aria-label="More actions"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-controls={menuId}
+                  onClick={() => setMenuOpen((open) => !open)}
+                  className="flex h-10 items-center rounded border border-border-strong px-4 font-medium hover:bg-surface-muted"
+                >
+                  ⋯
+                </button>
+                {menuOpen && (
+                  <div
+                    id={menuId}
+                    role="menu"
+                    aria-label="Work item actions"
+                    className="absolute right-0 z-10 mt-2 flex min-w-40 flex-col rounded border border-border bg-surface py-1 shadow-lg"
                   >
-                    ⋯
-                  </button>
-                  {menuOpen && (
-                    <div
-                      id={menuId}
-                      role="menu"
-                      aria-label="Work item actions"
-                      className="absolute right-0 z-10 mt-2 flex min-w-40 flex-col rounded border border-border bg-surface py-1 shadow-lg"
-                    >
-                      <button
-                        type="button"
-                        role="menuitem"
-                        disabled={duplicateMutation.isPending}
-                        onClick={() => {
-                          setMenuOpen(false);
-                          duplicateMutation.mutate();
-                        }}
-                        className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
-                      >
-                        Duplicate
-                      </button>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        disabled={trashMutation.isPending}
-                        onClick={() => {
-                          setMenuOpen(false);
-                          handleTrash();
-                        }}
-                        className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
-                      >
-                        Trash
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+                    {item.trashed ? (
+                      <>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          disabled={restoreMutation.isPending}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            restoreMutation.mutate();
+                          }}
+                          className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
+                        >
+                          Restore
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          disabled={deleteMutation.isPending}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            handleDelete();
+                          }}
+                          className="px-3 py-2 text-left font-medium text-danger hover:bg-surface-strong disabled:text-fg-disabled"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          disabled={duplicateMutation.isPending}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            duplicateMutation.mutate();
+                          }}
+                          className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
+                        >
+                          Duplicate
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          disabled={trashMutation.isPending}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            handleTrash();
+                          }}
+                          className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
+                        >
+                          Trash
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             {duplicateMutation.error && (
               <ErrorBanner>{duplicateMutation.error.message}</ErrorBanner>
             )}
             {trashMutation.error && (
               <ErrorBanner>{trashMutation.error.message}</ErrorBanner>
+            )}
+            {restoreMutation.error && (
+              <ErrorBanner>{restoreMutation.error.message}</ErrorBanner>
+            )}
+            {deleteMutation.error && (
+              <ErrorBanner>{deleteMutation.error.message}</ErrorBanner>
             )}
 
             <div className="rounded border border-border p-4 sm:p-6">
@@ -449,31 +484,9 @@ function WorkItemDetail() {
 
             <div className="space-y-2 border-t border-border pt-4">
               {item.trashed && (
-                <>
-                  <p className="text-sm text-fg-secondary">
-                    This item is in the trash.
-                  </p>
-                  {restoreMutation.error && (
-                    <ErrorBanner>{restoreMutation.error.message}</ErrorBanner>
-                  )}
-                  {deleteMutation.error && (
-                    <ErrorBanner>{deleteMutation.error.message}</ErrorBanner>
-                  )}
-                  <button
-                    onClick={() => restoreMutation.mutate()}
-                    disabled={restoreMutation.isPending}
-                    className="w-full rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
-                  >
-                    Restore
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleteMutation.isPending}
-                    className="w-full rounded bg-danger px-4 py-2 font-medium text-on-primary hover:bg-danger-hover disabled:bg-fg-disabled"
-                  >
-                    Delete permanently
-                  </button>
-                </>
+                <p className="text-sm text-fg-secondary">
+                  This item is in the trash.
+                </p>
               )}
             </div>
 
