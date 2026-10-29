@@ -167,11 +167,11 @@ function EditBoard() {
               {...register("filter")}
             />
             <p className="text-sm text-fg-muted">
-              Narrows the project's work items. Text fields: title, description,
-              status, type, parent_id, project.id, project.name. List field:
-              labels (use contains, in, ~ or is empty). Combine with and, or,
-              not and parentheses. Leave empty to show all work items in the
-              project. See{" "}
+              Narrows the project's work items. Text fields: summary,
+              description, status, type, parent_id, project.id, project.name.
+              List field: labels (use contains, in, ~ or is empty). Combine with
+              and, or, not and parentheses. Leave empty to show all work items
+              in the project. See{" "}
               <Link
                 to="/docs/$doc"
                 params={{ doc: "filter-language" }}

@@ -16,7 +16,7 @@ export interface TypeRef {
 
 export interface WorkItem {
   id: string;
-  title: string;
+  summary: string;
   description: string | null;
   rendered_description: string | null;
   project_id: string;
@@ -34,7 +34,7 @@ export interface WorkItem {
 export type PaginatedWorkItems = Paginated<WorkItem>;
 
 export interface WorkItemCreate {
-  title: string;
+  summary: string;
   description?: string;
   project_id: string;
   type_id: string;
@@ -44,7 +44,7 @@ export interface WorkItemCreate {
 }
 
 export interface WorkItemUpdate {
-  title?: string;
+  summary?: string;
   description?: string | null;
   labels?: string[];
   status_id?: string;

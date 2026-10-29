@@ -7,7 +7,7 @@ const paths = ["/", "/work-items/$id"];
 
 const task: WorkItem = {
   id: "3f2a9c1d-0000-4000-8000-000000000001",
-  title: "Fast trip search",
+  summary: "Fast trip search",
   description: null,
   rendered_description: null,
   project_id: "p1",
@@ -25,7 +25,7 @@ const task: WorkItem = {
 const subtask: WorkItem = {
   ...task,
   id: "7b8e4f2a-0000-4000-8000-000000000002",
-  title: "Write migration",
+  summary: "Write migration",
   type_id: "t-sub",
   type: { id: "t-sub", name: "Subtask", level: "subtask" },
   parent_id: "3f2a9c1d-0000-4000-8000-000000000001",

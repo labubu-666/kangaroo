@@ -80,21 +80,21 @@ def seed_project(projects, statuses, types, name: str = "Test") -> SeededProject
     )
 
 
-def new_task(seeded: SeededProject, title: str = "Task", **extra) -> WorkItemCreate:
+def new_task(seeded: SeededProject, summary: str = "Task", **extra) -> WorkItemCreate:
     """A task create request in the first To Do status, ready for a repository."""
     extra.setdefault("status_id", seeded.open_id)
     return WorkItemCreate(
-        title=title, project_id=seeded.project_id, type_id=seeded.task_id, **extra
+        summary=summary, project_id=seeded.project_id, type_id=seeded.task_id, **extra
     )
 
 
 def new_subtask(
-    seeded: SeededProject, parent_id: UUID, title: str = "Child", **extra
+    seeded: SeededProject, parent_id: UUID, summary: str = "Child", **extra
 ) -> WorkItemCreate:
     """A subtask create request in the first To Do status, ready for a repository."""
     extra.setdefault("status_id", seeded.open_id)
     return WorkItemCreate(
-        title=title,
+        summary=summary,
         project_id=seeded.project_id,
         type_id=seeded.subtask_id,
         parent_id=parent_id,

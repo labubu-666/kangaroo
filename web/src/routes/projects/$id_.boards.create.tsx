@@ -115,7 +115,7 @@ function CreateBoard() {
             {...register("filter")}
           />
           <p className="text-sm text-fg-muted">
-            Narrows the project's work items. Text fields: title, description,
+            Narrows the project's work items. Text fields: summary, description,
             status, type, parent_id, project.id, project.name. List field:
             labels. Text operators: ==, !=, ~ (contains text), in [...], not in
             [...]. List operators: contains 'a' (has it), contains [...] (has

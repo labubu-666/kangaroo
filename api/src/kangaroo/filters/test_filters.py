@@ -4,7 +4,7 @@ from kangaroo.errors import InvalidFilterError
 from kangaroo.filters import parse_filter
 
 RECORD = {
-    "title": "Fix login bug",
+    "summary": "Fix login bug",
     "description": None,
     "status": "Open",
     "status_id": "s-0",
@@ -40,8 +40,8 @@ def test_double_quotes_and_not_equal():
 
 
 def test_substring_is_case_insensitive():
-    assert matches("title ~ 'LOGIN'")
-    assert not matches("title ~ 'signup'")
+    assert matches("summary ~ 'LOGIN'")
+    assert not matches("summary ~ 'signup'")
 
 
 def test_null_field_does_not_match_substring():
@@ -61,8 +61,8 @@ def test_and_or_not_with_precedence():
     # "and" binds tighter than "or": false and true or true -> true
     assert matches("project.name == 'bar' and status == 'done' or type == 'task'")
     assert matches("not project.name == 'bar'")
-    assert matches("type == 'task' and (title ~ 'bug' or status == 'done')")
-    assert not matches("type == 'subtask' and (title ~ 'bug' or status == 'open')")
+    assert matches("type == 'task' and (summary ~ 'bug' or status == 'done')")
+    assert not matches("type == 'subtask' and (summary ~ 'bug' or status == 'open')")
 
 
 LABELED = {"labels": ["derstandard", "derstandard:3000000344207", "news"]}
@@ -106,8 +106,8 @@ def test_is_empty_for_lists_and_text():
     assert matches("labels is not empty", **LABELED)
     assert matches("description is empty")
     assert matches("description is empty", description="   ")
-    assert not matches("title is empty")
-    assert matches("title is not empty")
+    assert not matches("summary is empty")
+    assert matches("summary is not empty")
 
 
 def test_labels_combine_with_other_fields():
@@ -131,7 +131,7 @@ def test_list_fields_reject_equality():
 def test_contains_rejects_text_fields():
     """contains is only for list fields, so it is rejected on text fields."""
     with pytest.raises(InvalidFilterError, match="only works on list fields"):
-        parse_filter("title contains 'bug'")
+        parse_filter("summary contains 'bug'")
 
 
 def test_trashed_compares_true_and_false():
@@ -162,7 +162,7 @@ def test_trashed_compares_true_and_false():
         "project.name == 'foo' #",
         "labels contains",
         "labels is maybe empty",
-        "title is empty extra",
+        "summary is empty extra",
     ],
 )
 def test_invalid_filters_raise(text):

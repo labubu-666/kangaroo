@@ -10,10 +10,10 @@ const STAMP = {
 const STATUS = { id: "s-open", name: "Open", category: "todo" };
 const TYPE = { id: "t-task", name: "Task", level: "standard" };
 
-function item(id: string, title: string) {
+function item(id: string, summary: string) {
   return {
     id,
-    title,
+    summary,
     description: null,
     rendered_description: null,
     project_id: "p1",

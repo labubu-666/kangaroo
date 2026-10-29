@@ -110,12 +110,12 @@ def test_update_and_replace_work_item(projects, statuses, types, work_items, see
         item.id, WorkItemUpdate(status_id=seeded.in_progress_id)
     )
     assert updated.status_id == seeded.in_progress_id
-    assert updated.title == "Task"
+    assert updated.summary == "Task"
 
     replaced = work_items.replace(
         item.id,
         WorkItemReplace(
-            title="New",
+            summary="New",
             project_id=other.project_id,
             type_id=other.task_id,
             status_id=other.done_id,
@@ -277,7 +277,7 @@ def test_database_rejects_orphan_work_item(engine, seeded):
         session.add(
             WorkItemRow(
                 id=uuid4(),
-                title="Orphan",
+                summary="Orphan",
                 description=None,
                 project_id=uuid4(),
                 type_id=seeded.task_id,

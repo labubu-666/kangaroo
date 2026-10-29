@@ -96,7 +96,7 @@ export function WorkItemList({
               {selection && (
                 <input
                   type="checkbox"
-                  aria-label={`Select ${item.title}`}
+                  aria-label={`Select ${item.summary}`}
                   className="mt-4 shrink-0"
                   checked={selection.selected.has(item.id)}
                   onChange={() => toggle(item.id)}
@@ -110,7 +110,7 @@ export function WorkItemList({
                 <div className="flex items-center gap-2">
                   <TypeIcon type={item.type} />
                   <h3 className="min-w-0 flex-1 truncate font-semibold text-primary">
-                    {item.title}
+                    {item.summary}
                   </h3>
                   {item.trashed && (
                     <span className="shrink-0 rounded bg-surface-emphasis px-2 py-0.5 text-xs font-medium text-fg-secondary">

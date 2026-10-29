@@ -43,7 +43,7 @@ def list_work_items(
         offset: The number of items to skip from the beginning (default: 0).
         project_id: Optional project ID to filter work items by.
         parent_id: Optional parent work item ID to list the subtasks of.
-        search: Optional text to match case-insensitively in title or description.
+        search: Optional text to match case-insensitively in summary or description.
         filter: Optional filter in the board filter language, e.g.
             ``status == 'in_progress'`` or ``trashed == false``. Invalid filters
             return 422. Trashed items are included unless the filter excludes them.

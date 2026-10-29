@@ -43,7 +43,7 @@ export function SearchBar() {
     ? [
         ...data.workItems.results.map((item) => ({
           key: `work-${item.id}`,
-          label: item.title,
+          label: item.summary,
           group: "Work items",
           to: "/work-items/$id",
           params: { id: item.id },

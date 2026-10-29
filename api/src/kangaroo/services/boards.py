@@ -39,12 +39,12 @@ logger = logging.getLogger(__name__)
 def _board_record(board: Board, project_names: dict[UUID, str]) -> dict[str, Any]:
     """Flatten a board into the record that filter predicates read.
 
-    A board's name is its ``title``. Work-item-only fields are None, so a filter
+    A board's name is its ``summary``. Work-item-only fields are None, so a filter
     on them never matches a board.
     """
     return make_record(
         {
-            "title": board.name,
+            "summary": board.name,
             "description": board.description,
             "project.id": str(board.project_id),
             "project.name": project_names.get(board.project_id),

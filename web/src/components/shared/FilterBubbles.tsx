@@ -113,7 +113,7 @@ export function FilterBubbles({
           update(
             addPart(
               parts,
-              formatCondition({ field: "title", op: "~", values: [""] }),
+              formatCondition({ field: "summary", op: "~", values: [""] }),
             ),
           )
         }

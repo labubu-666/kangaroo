@@ -78,7 +78,7 @@ def clean_search(search: str | None) -> str | None:
 
 
 def parse_sort(sort: str | None, allowed: frozenset[str]) -> list[tuple[str, bool]]:
-    """Parse ``sort`` such as ``-modified_at,title`` into (field, descending) pairs.
+    """Parse ``sort`` such as ``-modified_at,summary`` into (field, descending) pairs.
 
     A field with no prefix or a ``+`` prefix sorts ascending, ``-`` descending.
     Raises InvalidSortError for a field that is not in ``allowed``.
@@ -111,7 +111,7 @@ def new_work_item_fields(item: WorkItemCreate) -> dict[str, Any]:
     now = utc_now()
     return {
         "id": uuid7(),
-        "title": item.title,
+        "summary": item.summary,
         "description": item.description,
         "project_id": item.project_id,
         "type_id": item.type_id,
@@ -405,7 +405,7 @@ class WorkItemRepository(
 ):
     entity = "Work item"
     filter_fields = frozenset(WorkItem.model_fields)
-    search_fields = ("title", "description")
+    search_fields = ("summary", "description")
     model_type = WorkItem
     row_type = WorkItemRow
 

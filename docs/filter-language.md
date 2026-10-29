@@ -25,7 +25,7 @@ labels contains 'derstandard' and statusCategory != 'done'
 
 | Field            | Type    | Notes                              |
 | ---------------- | ------- | ---------------------------------- |
-| `title`          | text    |                                    |
+| `summary`        | text    |                                    |
 | `description`    | text    | Empty when missing or blank        |
 | `status`         | text    | The status name, or its ID         |
 | `statusCategory` | text    | `todo`, `in_progress` or `done`    |
@@ -55,7 +55,7 @@ their types are called.
 | ----------------------------------- | ------------------------------------------ |
 | `status == 'Open'`                  | the value is exactly the same              |
 | `status != 'Open'`                  | the value is different                     |
-| `title ~ 'bug'`                     | the value contains the text, ignoring case |
+| `summary ~ 'bug'`                  | the value contains the text, ignoring case |
 | `status in ['Open', 'In Progress']` | the value is one of the listed values      |
 | `status not in ['Done']`            | the value is none of the listed values     |
 
@@ -116,7 +116,7 @@ Invalid filters are rejected with a 422 error that explains the problem:
 | Filter                 | Error                                    |
 | ---------------------- | ---------------------------------------- |
 | `labels == 'news'`     | 'labels' is a list field: use 'contains' or 'in' instead of '==' |
-| `title contains 'bug'` | 'contains' only works on list fields, not 'title' |
+| `summary contains 'bug'` | 'contains' only works on list fields, not 'summary' |
 | `unknown == 'x'`       | Unknown field 'unknown'                  |
 | `status == open`       | Expected a quoted string, got 'open'      |
 
@@ -160,7 +160,7 @@ project that share the name. Prefer `statusCategory` for cross-project lists.
 | Board shows                                         | Filter                                       |
 | --------------------------------------------------- | -------------------------------------------- |
 | Articles imported from derStandard                  | `labels contains 'derstandard'`              |
-| Open items with a bug in the title                  | `status == 'Open' and title ~ 'bug'`         |
+| Open items with a bug in the summary                 | `status == 'Open' and summary ~ 'bug'`        |
 | Items tagged with both `derstandard` and `politik`  | `labels contains ['derstandard', 'politik']` |
 | Items tagged with either `derstandard` or `politik` | `labels in ['derstandard', 'politik']`       |
 | Items with no label                                 | `labels is empty`                            |

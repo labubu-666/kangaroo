@@ -25,21 +25,21 @@ test.describe("withStatus", () => {
   test("keeps other conditions and their order", () => {
     expect(
       withStatus(
-        `status == 's1' and title ~ 'bug' and project.id == '${P}'`,
+        `status == 's1' and summary ~ 'bug' and project.id == '${P}'`,
         "s2",
       ),
-    ).toBe(`title ~ 'bug' and project.id == '${P}' and status == 's2'`);
+    ).toBe(`summary ~ 'bug' and project.id == '${P}' and status == 's2'`);
   });
 
   test("brackets a mixed or before adding the status", () => {
-    expect(withStatus(`project.id == '${P}' or title ~ 'x'`, "s1")).toBe(
-      `(project.id == '${P}' or title ~ 'x') and status == 's1'`,
+    expect(withStatus(`project.id == '${P}' or summary ~ 'x'`, "s1")).toBe(
+      `(project.id == '${P}' or summary ~ 'x') and status == 's1'`,
     );
   });
 
   test("never adds a status without a project in the filter", () => {
     expect(withStatus(undefined, "s1")).toBeUndefined();
-    expect(withStatus("title ~ 'x'", "s1")).toBe("title ~ 'x'");
+    expect(withStatus("summary ~ 'x'", "s1")).toBe("summary ~ 'x'");
   });
 
   test("reads back the status id that was written", () => {

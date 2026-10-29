@@ -15,15 +15,15 @@ def project_id(seeded):
     return seeded.project_id
 
 
-def test_search_matches_title_and_description(work_items, project_id, seeded):
-    """Search is a case-insensitive match on title or description."""
+def test_search_matches_summary_and_description(work_items, project_id, seeded):
+    """Search is a case-insensitive match on summary or description."""
     work_items.create(new_task(seeded, "Fix Login bug"))
     work_items.create(new_task(seeded, "Other", description="login page copy"))
     work_items.create(new_task(seeded, "Unrelated"))
 
     page = work_items.list_paginated(limit=10, offset=0, search="LOGIN")
     assert page.total == 2
-    assert sorted(item.title for item in page.results) == ["Fix Login bug", "Other"]
+    assert sorted(item.summary for item in page.results) == ["Fix Login bug", "Other"]
 
 
 def test_blank_search_matches_everything(work_items, project_id, seeded):
@@ -53,14 +53,14 @@ def test_modified_at_tracks_changes(work_items, project_id, seeded):
     item = work_items.create(new_task(seeded, "A"))
     assert item.modified_at == item.created_at
 
-    updated = work_items.update(item.id, WorkItemUpdate(title="B"))
+    updated = work_items.update(item.id, WorkItemUpdate(summary="B"))
     assert updated.created_at == item.created_at
     assert updated.modified_at > item.modified_at
 
     replaced = work_items.replace(
         item.id,
         WorkItemReplace(
-            title="C",
+            summary="C",
             project_id=project_id,
             type_id=seeded.task_id,
             status_id=seeded.open_id,
@@ -82,7 +82,7 @@ def test_labels_round_trip(work_items, project_id, seeded):
     replaced = work_items.replace(
         item.id,
         WorkItemReplace(
-            title="A",
+            summary="A",
             project_id=project_id,
             type_id=seeded.task_id,
             status_id=seeded.open_id,

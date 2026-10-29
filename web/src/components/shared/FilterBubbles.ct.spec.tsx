@@ -39,7 +39,7 @@ test.describe("FilterBubbles", () => {
   }) => {
     const component = await mount(
       <FilterBubbles
-        filter="title ~ 'bug' and project.name == 'kangaroo'"
+        filter="summary ~ 'bug' and project.name == 'kangaroo'"
         onChange={() => {}}
         projects={projects}
       />,
@@ -53,7 +53,7 @@ test.describe("FilterBubbles", () => {
   }) => {
     const component = await mount(
       <FilterBubbles
-        filter="title ~ 'a' or title ~ 'b'"
+        filter="summary ~ 'a' or summary ~ 'b'"
         onChange={() => {}}
         projects={projects}
       />,
@@ -68,7 +68,7 @@ test.describe("FilterBubbles", () => {
   test("keeps a mixed and/or filter as one text bubble", async ({ mount }) => {
     const component = await mount(
       <FilterBubbles
-        filter="title ~ 'a' or title ~ 'b' and title ~ 'c'"
+        filter="summary ~ 'a' or summary ~ 'b' and summary ~ 'c'"
         onChange={() => {}}
         projects={projects}
       />,
@@ -76,7 +76,7 @@ test.describe("FilterBubbles", () => {
 
     await expect(component.getByLabel("Field")).toHaveCount(0);
     await expect(component.getByLabel("Filter expression")).toHaveValue(
-      "title ~ 'a' or title ~ 'b' and title ~ 'c'",
+      "summary ~ 'a' or summary ~ 'b' and summary ~ 'c'",
     );
   });
 
@@ -84,7 +84,7 @@ test.describe("FilterBubbles", () => {
     const changes: string[] = [];
     const component = await mount(
       <FilterBubbles
-        filter="title ~ 'a' and title ~ 'b'"
+        filter="summary ~ 'a' and summary ~ 'b'"
         onChange={(filter) => changes.push(filter ?? "")}
         projects={projects}
       />,
@@ -92,14 +92,14 @@ test.describe("FilterBubbles", () => {
 
     await component.getByRole("button", { name: /Join and/ }).click();
 
-    expect(changes).toEqual(["title ~ 'a' or title ~ 'b'"]);
+    expect(changes).toEqual(["summary ~ 'a' or summary ~ 'b'"]);
   });
 
   test("moves a bubble to the right", async ({ mount }) => {
     const changes: string[] = [];
     const component = await mount(
       <FilterBubbles
-        filter="title ~ 'a' and title ~ 'b'"
+        filter="summary ~ 'a' and summary ~ 'b'"
         onChange={(filter) => changes.push(filter ?? "")}
         projects={projects}
       />,
@@ -110,7 +110,7 @@ test.describe("FilterBubbles", () => {
       .first()
       .click();
 
-    expect(changes).toEqual(["title ~ 'b' and title ~ 'a'"]);
+    expect(changes).toEqual(["summary ~ 'b' and summary ~ 'a'"]);
   });
 
   test("brackets the earlier bubbles when a join changes", async ({
@@ -119,7 +119,7 @@ test.describe("FilterBubbles", () => {
     const changes: string[] = [];
     const component = await mount(
       <FilterBubbles
-        filter="title ~ 'a' and title ~ 'b' and title ~ 'c'"
+        filter="summary ~ 'a' and summary ~ 'b' and summary ~ 'c'"
         onChange={(filter) => changes.push(filter ?? "")}
         projects={projects}
       />,
@@ -130,14 +130,16 @@ test.describe("FilterBubbles", () => {
       .last()
       .click();
 
-    expect(changes).toEqual(["(title ~ 'a' and title ~ 'b') or title ~ 'c'"]);
+    expect(changes).toEqual([
+      "(summary ~ 'a' and summary ~ 'b') or summary ~ 'c'",
+    ]);
   });
 
   test("changes the operator", async ({ mount }) => {
     const changes: string[] = [];
     const component = await mount(
       <FilterBubbles
-        filter="title ~ 'bug'"
+        filter="summary ~ 'bug'"
         onChange={(filter) => changes.push(filter ?? "")}
         projects={projects}
       />,
@@ -145,7 +147,7 @@ test.describe("FilterBubbles", () => {
 
     await component.getByLabel("Operator").selectOption("!=");
 
-    expect(changes).toEqual(["title != 'bug'"]);
+    expect(changes).toEqual(["summary != 'bug'"]);
   });
 
   test("changes a project from the dropdown", async ({ mount }) => {
@@ -240,7 +242,7 @@ test.describe("FilterBubbles", () => {
     const changes: string[] = [];
     const component = await mount(
       <FilterBubbles
-        filter="title ~ 'bug'"
+        filter="summary ~ 'bug'"
         onChange={(filter) => changes.push(filter ?? "")}
         projects={projects}
       />,
@@ -249,7 +251,7 @@ test.describe("FilterBubbles", () => {
     await component.getByLabel("Value").fill("login");
     await component.getByLabel("Value").press("Enter");
 
-    expect(changes).toEqual(["title ~ 'login'"]);
+    expect(changes).toEqual(["summary ~ 'login'"]);
   });
 
   test("shows a labels contains filter with the contains operator", async ({
@@ -260,7 +262,7 @@ test.describe("FilterBubbles", () => {
         filter="labels contains 'urgent'"
         onChange={() => {}}
         projects={projects}
-        fields={["title", "labels"]}
+        fields={["summary", "labels"]}
       />,
     );
 
@@ -273,7 +275,7 @@ test.describe("FilterBubbles", () => {
     const changes: string[] = [];
     const component = await mount(
       <FilterBubbles
-        filter="title ~ 'a' and title ~ 'b'"
+        filter="summary ~ 'a' and summary ~ 'b'"
         onChange={(filter) => changes.push(filter ?? "")}
         projects={projects}
       />,
@@ -284,7 +286,7 @@ test.describe("FilterBubbles", () => {
       .first()
       .click();
 
-    expect(changes).toEqual(["title ~ 'b'"]);
+    expect(changes).toEqual(["summary ~ 'b'"]);
   });
 
   test("adds a key:value bubble from the add box", async ({ mount }) => {

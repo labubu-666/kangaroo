@@ -72,7 +72,7 @@ def test_restore_round_trip_with_subtask(client):
         "/api/v1/work-items/",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Parent",
+            "summary": "Parent",
             "project_id": project_id,
         },
     ).json()
@@ -80,7 +80,7 @@ def test_restore_round_trip_with_subtask(client):
         "/api/v1/work-items/",
         json={
             "type_id": type_id(client, project_id, "subtask"),
-            "title": "Child",
+            "summary": "Child",
             "project_id": project_id,
             "parent_id": parent["id"],
         },
@@ -94,9 +94,9 @@ def test_restore_round_trip_with_subtask(client):
 
     assert project_names(client) == ["Kept"]
     items = client.get(f"/api/v1/work-items/?project_id={project_id}").json()
-    titles = sorted(item["title"] for item in items["results"])
-    assert titles == ["Child", "Parent"]
-    child = next(item for item in items["results"] if item["title"] == "Child")
+    summaries = sorted(item["summary"] for item in items["results"])
+    assert summaries == ["Child", "Parent"]
+    child = next(item for item in items["results"] if item["summary"] == "Child")
     assert child["parent_id"] == parent["id"]
 
 
@@ -162,7 +162,7 @@ def test_restore_rejects_broken_foreign_key_and_keeps_data(client):
         "trashed": False,
         "created_at": "2026-01-01T00:00:00",
         "modified_at": "2026-01-01T00:00:00",
-        "title": "Orphan",
+        "summary": "Orphan",
         "description": None,
         "project_id": str(uuid4()),
         "type_id": str(uuid4()),

@@ -192,7 +192,7 @@ def test_delete_project_with_work_items_forbidden(client):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     )
@@ -210,7 +210,7 @@ def test_delete_project_after_work_items_removed(client):
         "/api/v1/work-items",
         json={
             "type_id": type_id(client, project_id, "task"),
-            "title": "Task",
+            "summary": "Task",
             "project_id": project_id,
         },
     ).json()["id"]

@@ -22,7 +22,7 @@ export const Route = createFileRoute("/work-items/create")({
 });
 
 interface WorkItemForm {
-  title: string;
+  summary: string;
   description: string;
   projectId: string;
   typeId: string;
@@ -52,7 +52,7 @@ function CreateWorkItem() {
     watch,
   } = useForm<WorkItemForm>({
     defaultValues: {
-      title: "",
+      summary: "",
       description: "",
       projectId: initialProjectId ?? "",
       typeId: "",
@@ -109,8 +109,8 @@ function CreateWorkItem() {
   });
 
   const onSubmit = (data: WorkItemForm) => {
-    if (!data.title.trim()) {
-      setError("title", { message: "Title is required" });
+    if (!data.summary.trim()) {
+      setError("summary", { message: "Summary is required" });
       return;
     }
 
@@ -120,7 +120,7 @@ function CreateWorkItem() {
     }
 
     mutation.mutate({
-      title: data.title.trim(),
+      summary: data.summary.trim(),
       description: data.description.trim() || undefined,
       project_id: data.projectId,
       type_id: data.typeId,
@@ -145,19 +145,19 @@ function CreateWorkItem() {
         className="space-y-4 rounded border border-border p-4"
       >
         <div className="space-y-2">
-          <label htmlFor="title" className="block font-medium">
-            Title *
+          <label htmlFor="summary" className="block font-medium">
+            Summary *
           </label>
           <input
-            id="title"
+            id="summary"
             type="text"
             disabled={mutation.isPending}
-            placeholder="Enter work item title"
+            placeholder="Enter work item summary"
             className="w-full rounded border border-border-strong px-3 py-2"
-            {...register("title", { required: "Title is required" })}
+            {...register("summary", { required: "Summary is required" })}
           />
-          {errors.title && (
-            <p className="text-sm text-danger">{errors.title.message}</p>
+          {errors.summary && (
+            <p className="text-sm text-danger">{errors.summary.message}</p>
           )}
         </div>
 

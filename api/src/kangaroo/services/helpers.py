@@ -55,7 +55,7 @@ def project_names(projects: ProjectRepository) -> dict[UUID, str]:
 
 
 FILTER_KEYS = (
-    "title",
+    "summary",
     "description",
     "status",
     "status_id",
@@ -87,7 +87,7 @@ def filter_record(
     work_item_type = types.get(item.type_id)
     return make_record(
         {
-            "title": item.title,
+            "summary": item.summary,
             "description": item.description,
             "status": status.name if status else None,
             "status_id": str(item.status_id),

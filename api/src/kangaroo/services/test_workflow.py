@@ -111,7 +111,7 @@ def test_delete_in_use_status_without_replacement_is_refused(
     )
     work_items.create(
         WorkItemCreate(
-            title="Busy",
+            summary="Busy",
             project_id=project_id,
             type_id=next(
                 t.id
@@ -140,7 +140,7 @@ def test_delete_in_use_status_moves_items_to_replacement(
     )
     item = work_items.create(
         WorkItemCreate(
-            title="Busy",
+            summary="Busy",
             project_id=project_id,
             type_id=task_type,
             status_id=in_progress.id,
@@ -167,7 +167,7 @@ def test_replacement_status_must_be_in_same_project(
     )
     work_items.create(
         WorkItemCreate(
-            title="Busy",
+            summary="Busy",
             project_id=project_id,
             type_id=task_type,
             status_id=in_progress.id,
@@ -188,7 +188,7 @@ def test_delete_in_use_type_moves_items_to_same_level_replacement(
     )
     item = work_items.create(
         WorkItemCreate(
-            title="Busy",
+            summary="Busy",
             project_id=project_id,
             type_id=task_type.id,
             status_id=open_status.id,
@@ -212,7 +212,7 @@ def test_replacement_type_must_have_same_level(
     )
     work_items.create(
         WorkItemCreate(
-            title="Busy",
+            summary="Busy",
             project_id=project_id,
             type_id=task_type.id,
             status_id=open_status.id,
@@ -237,7 +237,7 @@ def test_moving_status_leaves_the_type_unchanged(
     task_type = next(t for t in types if t.level == "standard")
     item = work_items.create(
         WorkItemCreate(
-            title="Busy",
+            summary="Busy",
             project_id=project_id,
             type_id=task_type.id,
             status_id=in_progress.id,
@@ -265,7 +265,7 @@ def test_moving_type_leaves_the_status_unchanged(
     )
     item = work_items.create(
         WorkItemCreate(
-            title="Typed",
+            summary="Typed",
             project_id=project_id,
             type_id=old_type.id,
             status_id=open_status.id,
