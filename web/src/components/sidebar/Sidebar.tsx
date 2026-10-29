@@ -23,7 +23,7 @@ export function Sidebar({ children }: { children: ReactNode }) {
       <aside
         ref={asideRef}
         aria-label="Sidebar"
-        className={`flex-col gap-3 overflow-y-auto border-r border-border bg-surface p-3 md:static md:flex md:shrink-0 ${
+        className={`flex-col gap-3 overflow-y-auto border-r border-border bg-sidebar p-3 md:static md:flex md:shrink-0 ${
           mobileOpen
             ? "fixed inset-y-0 left-0 z-30 flex w-56"
             : "hidden md:flex"
