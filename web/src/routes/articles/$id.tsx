@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { deleteArticle, fetchArticle, updateArticle } from "../../lib/articles";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
+import { useDocumentTitle } from "../../lib/use-document-title";
 import { fetchKnowledgeBase } from "../../lib/knowledge-bases";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { InlineEdit } from "../../components/InlineEdit";
@@ -90,6 +91,7 @@ function ArticleDetail() {
     },
     { label: article?.title ?? "Loading..." },
   ]);
+  useDocumentTitle(article?.title);
 
   useRecordRecent(
     article &&

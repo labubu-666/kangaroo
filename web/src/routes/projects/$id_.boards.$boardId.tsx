@@ -9,6 +9,7 @@ import { updateWorkItem, type WorkItem } from "../../lib/work-items";
 import type { ProjectStatus } from "../../lib/workflow";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 import { useRecordRecent } from "../../lib/recent";
+import { useDocumentTitle } from "../../lib/use-document-title";
 import { BoardCard } from "../../components/boards/BoardCard";
 import { DoneStatusWarning } from "../../components/workflow/DoneStatusWarning";
 import { lacksDoneStatus } from "../../lib/done-status";
@@ -85,6 +86,7 @@ function BoardDetail() {
     },
     { label: board?.name ?? "Loading..." },
   ]);
+  useDocumentTitle(board?.name);
 
   useRecordRecent(
     board &&
