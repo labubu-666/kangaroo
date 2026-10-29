@@ -8,8 +8,8 @@ from kangaroo.utils import render_doc_markdown
 
 router = APIRouter(prefix="/docs", tags=["docs"])
 
-# Repository root docs/ folder (api/src/kangaroo/routes/docs.py -> repo root)
-DOCS_DIR = Path(__file__).parents[4] / "docs"
+# Repository root docs/ folder (api/src/kangaroo/routes/docs/router.py -> repo root)
+DOCS_DIR = Path(__file__).parents[5] / "docs"
 DOC_NAME = re.compile(r"[a-z0-9-]+")
 
 

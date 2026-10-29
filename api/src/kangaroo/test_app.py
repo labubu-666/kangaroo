@@ -12,8 +12,9 @@ from fastapi.testclient import TestClient
 import kangaroo.app
 import kangaroo.settings
 from kangaroo.app import SPAStaticFiles, app
-from kangaroo.routes import auth
 from kangaroo.routes.auth import require_user
+
+auth = importlib.import_module("kangaroo.routes.auth.router")
 
 
 def log_in(client, monkeypatch):
