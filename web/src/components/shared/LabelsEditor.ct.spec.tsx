@@ -27,6 +27,19 @@ test.describe("LabelsEditor", () => {
     await expect(component.getByRole("textbox")).toHaveValue("");
   });
 
+  test("adds a pending label when the input loses focus", async ({ mount }) => {
+    const changes: string[][] = [];
+    const component = await mount(
+      <LabelsEditor labels={[]} onChange={(labels) => changes.push(labels)} />,
+    );
+
+    await component.getByRole("textbox").fill("news");
+    await component.getByRole("textbox").blur();
+
+    expect(changes).toEqual([["news"]]);
+    await expect(component.getByRole("textbox")).toHaveValue("");
+  });
+
   test("ignores blank and duplicate labels", async ({ mount }) => {
     const changes: string[][] = [];
     const component = await mount(
