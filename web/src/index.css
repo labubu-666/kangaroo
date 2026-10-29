@@ -22,12 +22,14 @@
   --color-danger-hover: #b91c1c;
   --color-danger-subtle: #fef2f2;
   --color-on-primary: #ffffff;
+  --color-sidebar: #ffffff;
+  --color-canvas: #ffffff;
 }
 
 .dark {
   color-scheme: dark;
   --color-surface: #111827;
-  --color-surface-muted: #1f2937;
+  --color-surface-muted: #262626;
   --color-surface-strong: #374151;
   --color-surface-emphasis: #4b5563;
   --color-fg: #f3f4f6;
@@ -42,4 +44,10 @@
   --color-danger: #ef4444;
   --color-danger-hover: #dc2626;
   --color-danger-subtle: #450a0a;
+  --color-sidebar: #171717;
+  --color-canvas: #171717;
+}
+
+body {
+  background-color: var(--color-canvas);
 }
