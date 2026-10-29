@@ -20,6 +20,7 @@ const entries: RecentEntry[] = [
     type: "work-item",
     id: "w1",
     title: "Fix login",
+    parent: "Kangaroo",
     to: "/work-items/$id",
     params: { id: "w1" },
   },
@@ -27,6 +28,7 @@ const entries: RecentEntry[] = [
     type: "board",
     id: "b1",
     title: "Sprint board",
+    parent: "Kangaroo",
     to: "/projects/$id/boards/$boardId",
     params: { id: "p1", boardId: "b1" },
   },
@@ -41,6 +43,7 @@ const entries: RecentEntry[] = [
     type: "article",
     id: "a1",
     title: "Onboarding guide",
+    parent: "Team handbook",
     to: "/articles/$id",
     params: { id: "a1" },
   },
@@ -84,7 +87,7 @@ test.describe("Sidebar", () => {
       sidebar.getByRole("link", { name: "Sprint board" }),
     ).toHaveAttribute("href", "/projects/p1/boards/b1");
     await expect(
-      sidebar.getByRole("link", { name: "Kangaroo" }),
+      sidebar.getByRole("link", { name: "Kangaroo", exact: true }),
     ).toHaveAttribute("href", "/projects/p1");
     await expect(
       sidebar.getByRole("link", { name: "Summarise" }),
@@ -92,6 +95,35 @@ test.describe("Sidebar", () => {
     await expect(
       sidebar.getByRole("link", { name: "Onboarding guide" }),
     ).toHaveAttribute("href", "/articles/a1");
+  });
+
+  test("shows the parent project or knowledge base under the title", async ({
+    mount,
+    page,
+  }) => {
+    await page.evaluate(
+      (value) => localStorage.setItem("kangaroo-recent", JSON.stringify(value)),
+      entries,
+    );
+    await mount(
+      <SidebarProvider>
+        <TestRouter paths={paths}>
+          <Sidebar>
+            <RecentSection />
+          </Sidebar>
+        </TestRouter>
+      </SidebarProvider>,
+    );
+    const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+    await expect(
+      sidebar.getByRole("link", { name: "Fix login" }),
+    ).toContainText("Kangaroo");
+    await expect(
+      sidebar.getByRole("link", { name: "Onboarding guide" }),
+    ).toContainText("Team handbook");
+    await expect(
+      sidebar.getByRole("link", { name: "Summarise" }),
+    ).not.toContainText("Kangaroo");
   });
 
   test("shows the empty state", async ({ mount, page }) => {
@@ -254,7 +286,7 @@ test.describe("Sidebar", () => {
     await page.getByRole("button", { name: "Open sidebar" }).click();
     await expect(sidebar).toBeVisible();
 
-    await page.getByRole("link", { name: "Kangaroo" }).click();
+    await page.getByRole("link", { name: "Kangaroo", exact: true }).click();
     await expect(sidebar).toBeHidden();
   });
 });

@@ -8,21 +8,33 @@ export type RecentType =
   | "article";
 
 interface RecentBase {
-  type: RecentType;
   id: string;
   title: string;
 }
 
+// `parent` is the project or knowledge base the entry belongs to
 export type RecentEntry = RecentBase &
   (
-    | { to: "/projects/$id"; params: { id: string } }
+    | { type: "project"; to: "/projects/$id"; params: { id: string } }
     | {
+        type: "board";
+        parent: string;
         to: "/projects/$id/boards/$boardId";
         params: { id: string; boardId: string };
       }
-    | { to: "/work-items/$id"; params: { id: string } }
-    | { to: "/functions/$id"; params: { id: string } }
-    | { to: "/articles/$id"; params: { id: string } }
+    | {
+        type: "work-item";
+        parent: string;
+        to: "/work-items/$id";
+        params: { id: string };
+      }
+    | { type: "function"; to: "/functions/$id"; params: { id: string } }
+    | {
+        type: "article";
+        parent: string;
+        to: "/articles/$id";
+        params: { id: string };
+      }
   );
 
 const STORAGE_KEY = "kangaroo-recent";
