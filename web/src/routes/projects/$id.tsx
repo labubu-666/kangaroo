@@ -5,6 +5,7 @@ import { fetchProject, updateProject } from "../../lib/projects";
 import { useDismiss } from "../../lib/use-dismiss";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 import { useRecordRecent } from "../../lib/recent";
+import { useDocumentTitle } from "../../lib/use-document-title";
 
 import { BoardList } from "../../components/boards/BoardList";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
@@ -54,6 +55,7 @@ function ProjectDetail() {
     { label: "Projects", to: "/projects" },
     { label: project?.name ?? "Loading..." },
   ]);
+  useDocumentTitle(project?.name);
 
   useRecordRecent(
     project && {

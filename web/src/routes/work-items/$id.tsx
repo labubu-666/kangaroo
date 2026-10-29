@@ -16,6 +16,7 @@ import { removeRecent, useRecordRecent } from "../../lib/recent";
 import { useGoBackOr } from "../../lib/navigation";
 import { projectFilter } from "../../lib/filter-bubbles";
 import { useDismiss } from "../../lib/use-dismiss";
+import { useDocumentTitle } from "../../lib/use-document-title";
 
 import { CopyId } from "../../components/shared/CopyId";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
@@ -219,6 +220,7 @@ function WorkItemDetail() {
       : []),
     { label: item?.summary ?? "Loading..." },
   ]);
+  useDocumentTitle(item?.summary);
 
   return (
     <div className="space-y-6 p-4">
