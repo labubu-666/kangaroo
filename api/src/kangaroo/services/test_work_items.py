@@ -45,6 +45,53 @@ def test_create_work_item_with_given_status(work_item_service, seeded):
     assert item.status_id == seeded.in_progress_id
 
 
+def test_duplicate_copies_fields_with_copy_title(work_item_service, seeded):
+    original = work_item_service.create(
+        task(
+            seeded,
+            "Fix bug",
+            description="Details",
+            status_id=seeded.in_progress_id,
+            labels=["urgent"],
+        )
+    )
+    copy = work_item_service.duplicate(original.id)
+    assert copy.id != original.id
+    assert copy.title == "Fix bug (copy)"
+    assert copy.description == "Details"
+    assert copy.project_id == original.project_id
+    assert copy.type_id == original.type_id
+    assert copy.status_id == seeded.in_progress_id
+    assert copy.labels == ["urgent"]
+    assert copy.trashed is False
+
+
+def test_duplicate_trashed_item_gives_live_copy(work_item_service, seeded):
+    original = work_item_service.create(task(seeded))
+    work_item_service.update(original.id, WorkItemUpdate(trashed=True))
+    assert work_item_service.duplicate(original.id).trashed is False
+
+
+def test_duplicate_subtask_keeps_parent(work_item_service, seeded):
+    parent = work_item_service.create(task(seeded, "Parent"))
+    child = work_item_service.create(subtask(seeded, parent.id, "Child"))
+    copy = work_item_service.duplicate(child.id)
+    assert copy.parent_id == parent.id
+    assert copy.title == "Child (copy)"
+
+
+def test_duplicate_task_does_not_copy_subtasks(work_item_service, seeded):
+    parent = work_item_service.create(task(seeded, "Parent"))
+    work_item_service.create(subtask(seeded, parent.id))
+    copy = work_item_service.duplicate(parent.id)
+    assert work_item_service.list_paginated(10, 0, parent_id=copy.id).total == 0
+
+
+def test_duplicate_missing_item_raises(work_item_service):
+    with pytest.raises(NotFoundError):
+        work_item_service.duplicate(uuid4())
+
+
 def test_create_with_type_of_other_project_raises(work_item_service, seeded, other):
     with pytest.raises(InvalidReferenceError, match="type is not in the project"):
         work_item_service.create(

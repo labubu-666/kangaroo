@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useId, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchWorkItem,
   fetchWorkItems,
   updateWorkItem,
   deleteWorkItem,
+  duplicateWorkItem,
   WORK_ITEM_LIMIT,
 } from "../../lib/work-items";
 import { fetchStatuses } from "../../lib/workflow";
@@ -13,6 +15,7 @@ import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext"
 import { removeRecent, useRecordRecent } from "../../lib/recent";
 import { useGoBackOr } from "../../lib/navigation";
 import { projectFilter } from "../../lib/filter-bubbles";
+import { useDismiss } from "../../lib/use-dismiss";
 
 import { CopyId } from "../../components/shared/CopyId";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
@@ -29,6 +32,11 @@ function WorkItemDetail() {
   const navigate = Route.useNavigate();
   const goBackOr = useGoBackOr();
   const queryClient = useQueryClient();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuId = useId();
+  const menuRef = useDismiss<HTMLDivElement>(menuOpen, () =>
+    setMenuOpen(false),
+  );
 
   const {
     data: item,
@@ -112,6 +120,14 @@ function WorkItemDetail() {
           search: { filter: projectFilter(item?.project_id) },
         }),
       );
+    },
+  });
+
+  const duplicateMutation = useMutation({
+    mutationFn: () => duplicateWorkItem(id),
+    onSuccess: (copy) => {
+      queryClient.invalidateQueries({ queryKey: ["work-items"] });
+      navigate({ to: "/work-items/$id", params: { id: copy.id } });
     },
   });
 
@@ -206,18 +222,76 @@ function WorkItemDetail() {
       ) : item ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="space-y-6 md:col-span-2">
-            <InlineEdit
-              value={item.title}
-              onSave={saveTitle}
-              ariaLabel="title"
-              placeholder="Enter work item title"
-              requiredMessage="Title is required"
-              textClassName="text-2xl font-bold sm:text-3xl"
-            >
-              <h1 className="cursor-pointer break-words text-2xl font-bold sm:text-3xl">
-                {item.title}
-              </h1>
-            </InlineEdit>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <InlineEdit
+                  value={item.title}
+                  onSave={saveTitle}
+                  ariaLabel="title"
+                  placeholder="Enter work item title"
+                  requiredMessage="Title is required"
+                  textClassName="text-2xl font-bold sm:text-3xl"
+                >
+                  <h1 className="cursor-pointer break-words text-2xl font-bold sm:text-3xl">
+                    {item.title}
+                  </h1>
+                </InlineEdit>
+              </div>
+              {!item.trashed && (
+                <div ref={menuRef} className="relative">
+                  <button
+                    type="button"
+                    aria-label="More actions"
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen}
+                    aria-controls={menuId}
+                    onClick={() => setMenuOpen((open) => !open)}
+                    className="flex h-10 items-center rounded border border-border-strong px-4 font-medium hover:bg-surface-muted"
+                  >
+                    ⋯
+                  </button>
+                  {menuOpen && (
+                    <div
+                      id={menuId}
+                      role="menu"
+                      aria-label="Work item actions"
+                      className="absolute right-0 z-10 mt-2 flex min-w-40 flex-col rounded border border-border bg-surface py-1 shadow-lg"
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={duplicateMutation.isPending}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          duplicateMutation.mutate();
+                        }}
+                        className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
+                      >
+                        Duplicate
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={trashMutation.isPending}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          handleTrash();
+                        }}
+                        className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
+                      >
+                        Trash
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {duplicateMutation.error && (
+              <ErrorBanner>{duplicateMutation.error.message}</ErrorBanner>
+            )}
+            {trashMutation.error && (
+              <ErrorBanner>{trashMutation.error.message}</ErrorBanner>
+            )}
 
             <div className="rounded border border-border p-4 sm:p-6">
               <InlineEdit
@@ -341,7 +415,7 @@ function WorkItemDetail() {
             </div>
 
             <div className="space-y-2 border-t border-border pt-4">
-              {item.trashed ? (
+              {item.trashed && (
                 <>
                   <p className="text-sm text-fg-secondary">
                     This item is in the trash.
@@ -365,19 +439,6 @@ function WorkItemDetail() {
                     className="w-full rounded bg-danger px-4 py-2 font-medium text-on-primary hover:bg-danger-hover disabled:bg-fg-disabled"
                   >
                     Delete permanently
-                  </button>
-                </>
-              ) : (
-                <>
-                  {trashMutation.error && (
-                    <ErrorBanner>{trashMutation.error.message}</ErrorBanner>
-                  )}
-                  <button
-                    onClick={handleTrash}
-                    disabled={trashMutation.isPending}
-                    className="w-full rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted disabled:bg-surface-strong disabled:text-fg-disabled"
-                  >
-                    Trash
                   </button>
                 </>
               )}

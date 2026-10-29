@@ -93,6 +93,16 @@ def delete_work_item(item_id: UUID, service: WorkItemServiceDep) -> None:
     service.delete(item_id)
 
 
+@router.post(
+    "/{item_id}/duplicate",
+    status_code=status.HTTP_201_CREATED,
+    response_model=WorkItemDetail,
+)
+def duplicate_work_item(item_id: UUID, service: WorkItemServiceDep) -> WorkItemDetail:
+    """Create a copy of a work item. Its subtasks are not copied."""
+    return service.duplicate(item_id)
+
+
 @router.post("/bulk-delete", response_model=WorkItemBulkDeleted)
 def bulk_delete_work_items(
     request: WorkItemBulkDelete,
