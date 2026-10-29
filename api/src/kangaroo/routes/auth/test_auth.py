@@ -1,3 +1,5 @@
+import importlib
+
 import httpx
 import pytest
 from authlib.integrations.starlette_client import OAuthError
@@ -6,9 +8,10 @@ from fastapi.testclient import TestClient
 from itsdangerous import URLSafeTimedSerializer
 
 from kangaroo.app import app
-from kangaroo.routes import auth
 from kangaroo.routes.auth import require_user
 from kangaroo.settings import settings
+
+auth = importlib.import_module("kangaroo.routes.auth.router")
 
 
 def fake_dex_login(monkeypatch, email="test@example.com"):

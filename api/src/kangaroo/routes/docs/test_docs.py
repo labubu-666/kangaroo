@@ -1,7 +1,10 @@
+import importlib
+
 from fastapi.testclient import TestClient
 
 from kangaroo.app import app
-from kangaroo.routes import docs
+
+docs = importlib.import_module("kangaroo.routes.docs.router")
 
 
 def test_get_doc_renders_markdown(monkeypatch, tmp_path):
