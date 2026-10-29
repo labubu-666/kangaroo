@@ -20,7 +20,7 @@ def test_default_oidc_secret_used_when_unset(monkeypatch):
     """The built-in OIDC client secret is used when none is passed."""
     monkeypatch.setenv("SESSION_SECRET_KEY", "test-only")
     settings = Settings(_env_file=None, env="production")
-    assert settings.oidc_client_secret == "a-safe-password"
+    assert settings.oidc_client_secret.get_secret_value() == "a-safe-password"
 
 
 def test_custom_oidc_secret_is_used(monkeypatch):
@@ -29,7 +29,7 @@ def test_custom_oidc_secret_is_used(monkeypatch):
     settings = Settings(
         _env_file=None, env="production", oidc_client_secret="a-real-secret"
     )
-    assert settings.oidc_client_secret == "a-real-secret"
+    assert settings.oidc_client_secret.get_secret_value() == "a-real-secret"
 
 
 def test_local_runner_is_default(monkeypatch):

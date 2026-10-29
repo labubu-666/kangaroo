@@ -1,24 +1,44 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { BACKUP_URL, restoreBackup } from "../../lib/backup";
+import { fetchSettings } from "../../lib/settings";
 
-type AdminTab = "backup" | "manage-work-items";
+type AdminTab = "backup" | "manage-work-items" | "settings";
 
 export const Route = createFileRoute("/admin/")({
   component: Admin,
   validateSearch: (search: Record<string, unknown>): { tab?: AdminTab } => ({
-    tab: search.tab === "manage-work-items" ? "manage-work-items" : "backup",
+    tab:
+      search.tab === "manage-work-items" || search.tab === "settings"
+        ? search.tab
+        : "backup",
   }),
 });
 
 const TABS: { value: AdminTab; label: string }[] = [
   { value: "backup", label: "Backup and restore" },
   { value: "manage-work-items", label: "Manage work items" },
+  { value: "settings", label: "Settings" },
 ];
+
+function SettingsTab() {
+  const { data, error, isLoading } = useQuery({
+    queryKey: ["settings"],
+    queryFn: fetchSettings,
+  });
+
+  if (isLoading) return <p>Loading settings...</p>;
+  if (error) return <ErrorBanner>{error.message}</ErrorBanner>;
+  return (
+    <pre className="overflow-x-auto rounded border border-border bg-surface p-4 text-sm text-fg">
+      {JSON.stringify(data, null, 2)}
+    </pre>
+  );
+}
 
 function Admin() {
   useBreadcrumbs([{ label: "Admin" }]);
@@ -92,6 +112,8 @@ function Admin() {
             </Link>
           </li>
         </ul>
+      ) : tab === "settings" ? (
+        <SettingsTab />
       ) : (
         <section className="space-y-2">
           <p>

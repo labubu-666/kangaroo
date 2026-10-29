@@ -11,6 +11,7 @@ from kangaroo.routes.knowledge_bases import router as knowledge_bases_router
 from kangaroo.routes.project_templates import router as project_templates_router
 from kangaroo.routes.projects import router as projects_router
 from kangaroo.routes.reports import router as reports_router
+from kangaroo.routes.settings import router as settings_router
 from kangaroo.routes.user import router as user_router
 from kangaroo.routes.work_items import router as work_items_router
 from kangaroo.routes.workflow import (
@@ -35,5 +36,6 @@ api_v1_router.include_router(knowledge_bases_router)
 api_v1_router.include_router(invocations_router)
 api_v1_router.include_router(user_router)
 api_v1_router.include_router(backup_router)
+api_v1_router.include_router(settings_router)
 
 __all__ = ["api_v1_router"]

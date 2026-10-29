@@ -16,7 +16,7 @@ DEFAULT_NEXT = "/web/"
 IMPERSONATION_TOKEN_MAX_AGE = MAX_RUN_TIMEOUT_SECONDS + 10
 IMPERSONATION_TOKEN_SALT = "kangaroo-impersonation-token"
 _impersonation_serializer = URLSafeTimedSerializer(
-    settings.session_secret_key, salt=IMPERSONATION_TOKEN_SALT
+    settings.session_secret_key.get_secret_value(), salt=IMPERSONATION_TOKEN_SALT
 )
 
 
@@ -53,7 +53,7 @@ oauth = OAuth()
 oauth.register(
     name="dex",
     client_id=settings.oidc_client_id,
-    client_secret=settings.oidc_client_secret,
+    client_secret=settings.oidc_client_secret.get_secret_value(),
     server_metadata_url=settings.oidc_metadata_url,
     client_kwargs={"scope": "openid profile email"},
 )
