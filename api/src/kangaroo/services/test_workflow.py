@@ -116,7 +116,7 @@ def test_delete_in_use_status_without_replacement_is_refused(
             type_id=next(
                 t.id
                 for t in workflow._types.list_all(project_id=project_id)
-                if t.level == "standard"
+                if t.name == "Task"
             ),
             status_id=in_progress.id,
         )
@@ -136,7 +136,7 @@ def test_delete_in_use_status_moves_items_to_replacement(
     task_type = next(
         t.id
         for t in workflow._types.list_all(project_id=project_id)
-        if t.level == "standard"
+        if t.name == "Task"
     )
     item = work_items.create(
         WorkItemCreate(
@@ -163,7 +163,7 @@ def test_replacement_status_must_be_in_same_project(
         StatusCreate(project_id=other.id, name="Foreign", category="todo")
     )
     task_type = next(
-        t.id for t in types.list_all(project_id=project_id) if t.level == "standard"
+        t.id for t in types.list_all(project_id=project_id) if t.name == "Task"
     )
     work_items.create(
         WorkItemCreate(
@@ -177,11 +177,11 @@ def test_replacement_status_must_be_in_same_project(
         workflow.delete_status(in_progress.id, replacement_id=foreign.id)
 
 
-def test_delete_in_use_type_moves_items_to_same_level_replacement(
+def test_delete_in_use_type_moves_items_to_replacement(
     workflow, types, statuses, project_id, work_items
 ):
     task_type = next(
-        t for t in types.list_all(project_id=project_id) if t.level == "standard"
+        t for t in types.list_all(project_id=project_id) if t.name == "Task"
     )
     open_status = next(
         s for s in statuses.list_all(project_id=project_id) if s.position == 0
@@ -195,34 +195,10 @@ def test_delete_in_use_type_moves_items_to_same_level_replacement(
         )
     )
     bug = workflow.create_work_item_type(
-        WorkItemTypeCreate(project_id=project_id, name="Bug", level="standard")
+        WorkItemTypeCreate(project_id=project_id, name="Bug")
     )
     workflow.delete_work_item_type(task_type.id, replacement_id=bug.id)
     assert work_items.get_by_id(item.id).type_id == bug.id
-
-
-def test_replacement_type_must_have_same_level(
-    workflow, types, statuses, project_id, work_items
-):
-    task_type = next(
-        t for t in types.list_all(project_id=project_id) if t.level == "standard"
-    )
-    open_status = next(
-        s for s in statuses.list_all(project_id=project_id) if s.position == 0
-    )
-    work_items.create(
-        WorkItemCreate(
-            summary="Busy",
-            project_id=project_id,
-            type_id=task_type.id,
-            status_id=open_status.id,
-        )
-    )
-    subtask_type = next(
-        t for t in types.list_all(project_id=project_id) if t.level == "subtask"
-    )
-    with pytest.raises(InvalidReferenceError, match="same level"):
-        workflow.delete_work_item_type(task_type.id, replacement_id=subtask_type.id)
 
 
 def test_moving_status_leaves_the_type_unchanged(
@@ -234,7 +210,7 @@ def test_moving_status_leaves_the_type_unchanged(
     )
     done = next(s for s in statuses.list_all(project_id=project_id) if s.position == 2)
     types = workflow._types.list_all(project_id=project_id)
-    task_type = next(t for t in types if t.level == "standard")
+    task_type = next(t for t in types if t.name == "Task")
     item = work_items.create(
         WorkItemCreate(
             summary="Busy",
@@ -254,11 +230,9 @@ def test_moving_type_leaves_the_status_unchanged(
 ):
     """Replacing a type must not touch the item's status."""
     types = workflow._types.list_all(project_id=project_id)
-    old_type = next(t for t in types if t.level == "standard")
+    old_type = next(t for t in types if t.name == "Task")
     new_type = workflow._types.create(
-        WorkItemTypeCreate(
-            project_id=project_id, name="Story", level="standard", position=5
-        )
+        WorkItemTypeCreate(project_id=project_id, name="Story", position=5)
     )
     open_status = next(
         s for s in statuses.list_all(project_id=project_id) if s.position == 0

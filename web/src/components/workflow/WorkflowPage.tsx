@@ -266,11 +266,7 @@ export function WorkflowPage({ projectId: id }: { projectId: string }) {
                   .filter((s) => s.id !== pending.item.id)
                   .map((s) => ({ id: s.id, name: s.name }))
               : types
-                  .filter(
-                    (t) =>
-                      t.id !== pending.item.id &&
-                      t.level === (pending.item as WorkItemType).level,
-                  )
+                  .filter((t) => t.id !== pending.item.id)
                   .map((t) => ({ id: t.id, name: t.name }))
           }
           busy={deleteItem.isPending}

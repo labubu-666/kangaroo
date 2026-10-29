@@ -34,6 +34,7 @@ function WorkItemDetail() {
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
+  const parentInputId = useId();
   const menuRef = useDismiss<HTMLDivElement>(menuOpen, () =>
     setMenuOpen(false),
   );
@@ -70,24 +71,30 @@ function WorkItemDetail() {
     enabled: !!item?.project_id,
   });
 
-  const parentId =
-    item?.type.level === "subtask" ? (item.parent_id ?? undefined) : undefined;
+  const parentId = item?.parent_id ?? undefined;
   const { data: parent } = useQuery({
     queryKey: ["work-items", parentId],
     queryFn: () => fetchWorkItem(parentId ?? ""),
     enabled: !!parentId,
   });
 
-  const isTask = item?.type.level === "standard";
-  const { data: subtasks } = useQuery({
-    queryKey: ["work-items", "subtasks", id],
+  const { data: children } = useQuery({
+    queryKey: ["work-items", "children", id],
     queryFn: () => fetchWorkItems(WORK_ITEM_LIMIT, 0, { parentId: id }),
-    enabled: isTask,
+    enabled: !!item,
   });
 
   const projectMutation = useMutation({
     mutationFn: (projectId: string) =>
       updateWorkItem(id, { project_id: projectId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["work-items"] });
+    },
+  });
+
+  const parentMutation = useMutation({
+    mutationFn: (newParentId: string | null) =>
+      updateWorkItem(id, { parent_id: newParentId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["work-items"] });
     },
@@ -314,40 +321,38 @@ function WorkItemDetail() {
               </InlineEdit>
             </div>
 
-            {isTask && (
-              <div className="space-y-2 rounded border border-border p-4 sm:p-6">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="font-semibold text-fg-secondary">Subtasks</h2>
-                  <Link
-                    to="/work-items/create"
-                    search={{ parentId: item.id, projectId: item.project_id }}
-                    className="rounded bg-primary px-3 py-1 text-sm font-medium text-on-primary hover:bg-primary-hover"
-                  >
-                    Add subtask
-                  </Link>
-                </div>
-                {(subtasks?.results ?? []).length === 0 ? (
-                  <p className="text-sm text-fg-muted">No subtasks yet</p>
-                ) : (
-                  <ul className="list-disc space-y-1 pl-5">
-                    {(subtasks?.results ?? []).map((subtask) => (
-                      <li key={subtask.id}>
-                        <Link
-                          to="/work-items/$id"
-                          params={{ id: subtask.id }}
-                          className="text-primary hover:underline"
-                        >
-                          {subtask.summary}
-                        </Link>{" "}
-                        <span className="text-xs text-fg-muted">
-                          ({subtask.status.name})
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+            <div className="space-y-2 rounded border border-border p-4 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-semibold text-fg-secondary">Children</h2>
+                <Link
+                  to="/work-items/create"
+                  search={{ parentId: item.id, projectId: item.project_id }}
+                  className="rounded bg-primary px-3 py-1 text-sm font-medium text-on-primary hover:bg-primary-hover"
+                >
+                  Add child
+                </Link>
               </div>
-            )}
+              {(children?.results ?? []).length === 0 ? (
+                <p className="text-sm text-fg-muted">No children yet</p>
+              ) : (
+                <ul className="list-disc space-y-1 pl-5">
+                  {(children?.results ?? []).map((child) => (
+                    <li key={child.id}>
+                      <Link
+                        to="/work-items/$id"
+                        params={{ id: child.id }}
+                        className="text-primary hover:underline"
+                      >
+                        {child.summary}
+                      </Link>{" "}
+                      <span className="text-xs text-fg-muted">
+                        ({child.status.name})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           <aside className="space-y-5 rounded border border-border p-4 sm:p-6 md:col-span-1">
@@ -374,6 +379,32 @@ function WorkItemDetail() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor={parentInputId}
+                className="block text-sm font-medium text-fg-secondary"
+              >
+                Parent ID
+              </label>
+              <input
+                id={parentInputId}
+                key={item.parent_id ?? "none"}
+                defaultValue={item.parent_id ?? ""}
+                placeholder="None"
+                disabled={parentMutation.isPending}
+                onBlur={(e) => {
+                  const value = e.target.value.trim();
+                  if (value !== (item.parent_id ?? "")) {
+                    parentMutation.mutate(value || null);
+                  }
+                }}
+                className="mt-1 w-full rounded border border-border-strong px-3 py-2"
+              />
+              {parentMutation.error && (
+                <ErrorBanner>{parentMutation.error.message}</ErrorBanner>
+              )}
             </div>
 
             <div>

@@ -14,7 +14,6 @@ export const WORK_ITEM_FIELDS = [
   "status",
   "statusCategory",
   "type",
-  "typeLevel",
   "parent_id",
   "project.id",
   "project.name",

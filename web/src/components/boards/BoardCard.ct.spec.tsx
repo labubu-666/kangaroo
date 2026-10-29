@@ -19,16 +19,7 @@ const task: WorkItem = {
   modified_at: "2026-01-01T00:00:00Z",
   labels: [],
   trashed: false,
-  type: { id: "t-task", name: "Task", level: "standard" },
-};
-
-const subtask: WorkItem = {
-  ...task,
-  id: "7b8e4f2a-0000-4000-8000-000000000002",
-  summary: "Write migration",
-  type_id: "t-sub",
-  type: { id: "t-sub", name: "Subtask", level: "subtask" },
-  parent_id: "3f2a9c1d-0000-4000-8000-000000000001",
+  type: { id: "t-task", name: "Task" },
 };
 
 const currentUser = {
@@ -94,17 +85,6 @@ test.describe("BoardCard", () => {
       </TestRouter>,
     );
     await expect(component.locator("ul")).toHaveCount(0);
-  });
-
-  test("labels a subtask with the subtask type", async ({ mount }) => {
-    const component = await mount(
-      <TestRouter paths={paths}>
-        <BoardCard item={subtask} />
-      </TestRouter>,
-    );
-    await expect(
-      component.getByRole("img", { name: "Subtask", exact: true }),
-    ).toBeAttached();
   });
 
   test("shows the logged-in user's Gravatar in the footer", async ({

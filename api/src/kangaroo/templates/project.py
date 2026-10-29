@@ -5,13 +5,12 @@ Nothing stored refers back to a template after the copy.
 
 from dataclasses import dataclass
 
-from kangaroo.schemas import StatusCategory, TypeLevel
+from kangaroo.schemas import StatusCategory
 
 
 @dataclass(frozen=True)
 class TemplateType:
     name: str
-    level: TypeLevel
     position: int
 
 
@@ -34,10 +33,7 @@ class ProjectTemplate:
 
 TO_DO_LIST = ProjectTemplate(
     name="To Do List",
-    types=(
-        TemplateType(name="Task", level="standard", position=0),
-        TemplateType(name="Subtask", level="subtask", position=1),
-    ),
+    types=(TemplateType(name="Task", position=0),),
     statuses=(
         TemplateStatus(name="Open", category="todo", position=0),
         TemplateStatus(name="In Progress", category="in_progress", position=1),

@@ -15,7 +15,6 @@ from pydantic import (
 from kangaroo.utils import render_markdown
 
 StatusCategory = Literal["todo", "in_progress", "done"]
-TypeLevel = Literal["standard", "subtask"]
 
 
 def clean_labels(labels: list[str]) -> list[str]:
@@ -43,9 +42,7 @@ class Timestamped(BaseModel):
 class WorkItemCreate(BaseModel):
     """A work item creation request.
 
-    The type decides whether the item is a subtask: a type with level ``subtask``
-    needs a ``parent_id`` and any other type must not have one. Without a
-    ``status_id`` the item starts in the project's first To Do status.
+    Without a ``status_id`` the item starts in the project's first To Do status.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -72,6 +69,7 @@ class WorkItemUpdate(BaseModel):
     project_id: UUID | None = None
     status_id: UUID | None = None
     type_id: UUID | None = None
+    parent_id: UUID | None = None
     labels: Labels = Field(default_factory=list)
     trashed: bool | None = None
 
@@ -117,6 +115,7 @@ class WorkItemReplace(BaseModel):
     project_id: UUID
     type_id: UUID
     status_id: UUID | None = None
+    parent_id: UUID | None = None
     labels: Labels = Field(default_factory=list)
     trashed: bool = False
 
@@ -154,12 +153,11 @@ class ProjectStatus(Timestamped):
 
 
 class WorkItemType(Timestamped):
-    """A work item type a project defines. Its level is fixed."""
+    """A work item type a project defines."""
 
     id: UUID
     project_id: UUID
     name: str
-    level: TypeLevel
     position: int
 
 
@@ -176,7 +174,6 @@ class TypeRef(BaseModel):
 
     id: UUID
     name: str
-    level: TypeLevel
 
 
 class WorkItemDetail(WorkItem):
@@ -227,17 +224,14 @@ class WorkItemTypeCreate(BaseModel):
 
     project_id: UUID
     name: str
-    level: TypeLevel
     position: int | None = None
 
 
 class WorkItemTypeUpdate(BaseModel):
     name: str | None = None
-    level: TypeLevel | None = None
     position: int | None = None
 
     _reject_null_name = field_validator("name")(reject_null)
-    _reject_null_level = field_validator("level")(reject_null)
     _reject_null_position = field_validator("position")(reject_null)
 
 
@@ -245,7 +239,6 @@ class WorkItemTypeReplace(BaseModel):
     """Full replacement. Without a position the type keeps its current one."""
 
     name: str
-    level: TypeLevel
     position: int | None = None
 
 

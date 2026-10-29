@@ -9,7 +9,6 @@ import {
   type ProjectStatus,
   type StatusCategory,
   type StatusTransition,
-  type TypeLevel,
   type WorkItemType,
 } from "../../lib/workflow";
 import { ReorderButtons } from "./ReorderButtons";
@@ -18,11 +17,6 @@ export const CATEGORY_LABELS: Record<StatusCategory, string> = {
   todo: "To do",
   in_progress: "In progress",
   done: "Done",
-};
-
-const LEVEL_LABELS: Record<TypeLevel, string> = {
-  standard: "Standard",
-  subtask: "Subtask",
 };
 
 const FIELD =
@@ -241,7 +235,6 @@ export function TypeSection({
   onDelete: (type: WorkItemType) => void;
 }) {
   const [name, setName] = useState("");
-  const [level, setLevel] = useState<TypeLevel>("standard");
   const [error, setError] = useState<string | null>(null);
 
   const add = () => {
@@ -250,7 +243,7 @@ export function TypeSection({
       return;
     }
     setError(null);
-    onRun(() => createWorkItemType(projectId, { name: name.trim(), level }));
+    onRun(() => createWorkItemType(projectId, { name: name.trim() }));
     setName("");
   };
 
@@ -267,10 +260,6 @@ export function TypeSection({
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-semibold">Work item types</h2>
-      <p className="text-sm text-fg-secondary">
-        The level decides parent and subtask rules. A type's level can't change
-        while work items use it.
-      </p>
       <ul className="divide-y divide-border rounded border border-border">
         {types.map((type, index) => (
           <li
@@ -279,9 +268,6 @@ export function TypeSection({
           >
             <span className="font-medium">{type.name}</span>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-fg-secondary">
-                {LEVEL_LABELS[type.level]}
-              </span>
               <ReorderButtons
                 index={index}
                 count={types.length}
@@ -313,21 +299,6 @@ export function TypeSection({
             onChange={(e) => setName(e.target.value)}
             className={FIELD}
           />
-        </div>
-        <div>
-          <label htmlFor="new-type-level" className="block text-sm font-medium">
-            Level
-          </label>
-          <select
-            id="new-type-level"
-            value={level}
-            disabled={busy}
-            onChange={(e) => setLevel(e.target.value as TypeLevel)}
-            className={FIELD}
-          >
-            <option value="standard">Standard</option>
-            <option value="subtask">Subtask</option>
-          </select>
         </div>
         <button type="button" disabled={busy} onClick={add} className={PRIMARY}>
           Add type

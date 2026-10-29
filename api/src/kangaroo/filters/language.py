@@ -9,8 +9,8 @@ Examples:
     labels contains 'derstandard' and labels is not empty
     trashed == false
 
-Text fields: summary, description, status, statusCategory, type, typeLevel,
-parent_id, project.id, project.name
+Text fields: summary, description, status, statusCategory, type, parent_id,
+project.id, project.name
 List fields: labels
 True/false field: trashed (compared with true or false, unquoted)
 
@@ -29,7 +29,6 @@ TEXT_FIELDS = frozenset(
         "status",
         "statusCategory",
         "type",
-        "typeLevel",
         "parent_id",
         "project.id",
         "project.name",

@@ -21,10 +21,7 @@ def create_work_item(
     item: WorkItemCreate,
     service: WorkItemServiceDep,
 ) -> WorkItemDetail:
-    """Create a new work item in the given project.
-
-    A subtask must reference a task in the same project via parent_id.
-    """
+    """Create a new work item in the given project, optionally under a parent."""
     return service.create(item)
 
 
@@ -42,7 +39,7 @@ def list_work_items(
         limit: The maximum number of items to return (default: 10, max: 100).
         offset: The number of items to skip from the beginning (default: 0).
         project_id: Optional project ID to filter work items by.
-        parent_id: Optional parent work item ID to list the subtasks of.
+        parent_id: Optional parent work item ID to list the children of.
         search: Optional text to match case-insensitively in summary or description.
         filter: Optional filter in the board filter language, e.g.
             ``status == 'in_progress'`` or ``trashed == false``. Invalid filters
@@ -89,7 +86,7 @@ def update_work_item(
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_work_item(item_id: UUID, service: WorkItemServiceDep) -> None:
-    """Delete a work item and its subtasks."""
+    """Delete a work item and its children."""
     service.delete(item_id)
 
 
@@ -99,7 +96,7 @@ def delete_work_item(item_id: UUID, service: WorkItemServiceDep) -> None:
     response_model=WorkItemDetail,
 )
 def duplicate_work_item(item_id: UUID, service: WorkItemServiceDep) -> WorkItemDetail:
-    """Create a copy of a work item. Its subtasks are not copied."""
+    """Create a copy of a work item. Its children are not copied."""
     return service.duplicate(item_id)
 
 
@@ -110,6 +107,6 @@ def bulk_delete_work_items(
 ) -> WorkItemBulkDeleted:
     """Delete the given work items, or every item the filter matches.
 
-    Subtasks are deleted with their task. An invalid filter returns 422.
+    Children are deleted with their parent. An invalid filter returns 422.
     """
     return WorkItemBulkDeleted(deleted=service.bulk_delete(request))

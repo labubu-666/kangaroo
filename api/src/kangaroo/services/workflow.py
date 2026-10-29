@@ -167,7 +167,7 @@ class WorkflowService:
         """Delete a work item type.
 
         If work items use the type, ``replacement_id`` must name another type of the
-        same project and level. Those items move to it first. Without one the delete
+        same project. Those items move to it first. Without one the delete
         is refused with a 409 that says how many items would be affected.
         """
         work_item_type = self._types.get_by_id(item_id)
@@ -184,8 +184,6 @@ class WorkflowService:
                 raise InvalidReferenceError(
                     "The replacement must be in the same project"
                 )
-            if replacement.level != work_item_type.level:
-                raise InvalidReferenceError("The replacement must have the same level")
             self._move_items("type_id", item_id, replacement_id)
         self._types.delete(item_id)
 

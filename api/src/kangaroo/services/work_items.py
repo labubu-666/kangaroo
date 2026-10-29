@@ -38,9 +38,8 @@ class WorkItemService:
     """Business rules for work items.
 
     Referenced projects, statuses, types and parents must exist and fit
-    together, and the structure (tasks, subtasks) must stay consistent when
-    items are changed. Whether an item is a subtask comes from the level of its
-    type, not from the type's name.
+    together. A parent can be in any project, but an item can never be its own
+    ancestor.
     """
 
     def __init__(
@@ -60,16 +59,9 @@ class WorkItemService:
     def create(self, item: WorkItemCreate) -> WorkItemDetail:
         """Create a work item, checking its project, type, status and parent."""
         ensure_project_exists(self._projects, item.project_id)
-        work_item_type = get_in_project(
-            self._types, item.type_id, item.project_id, "Work item type"
-        )
+        get_in_project(self._types, item.type_id, item.project_id, "Work item type")
         status_id = self._project_status_or_default(item.project_id, item.status_id)
-        if work_item_type.level == "subtask":
-            if item.parent_id is None:
-                raise InvalidReferenceError("A subtask needs a parent_id")
-            self._ensure_valid_parent(item.project_id, item.parent_id)
-        elif item.parent_id is not None:
-            raise InvalidReferenceError("Only a subtask can have a parent_id")
+        self._ensure_parent(item.parent_id)
         created = self._work_items.create(
             item.model_copy(update={"status_id": status_id})
         )
@@ -79,7 +71,7 @@ class WorkItemService:
         """Create a copy of a work item with ``<summary> (copy)`` as its summary.
 
         The copy keeps the original's project, type, status, parent and labels.
-        It is never trashed, and the original's subtasks are not copied.
+        It is never trashed, and the original's children are not copied.
         """
         original = self._work_items.get_by_id(item_id)
         return self.create(
@@ -149,7 +141,7 @@ class WorkItemService:
         """Update a work item (partial update).
 
         Moving to another project without a status or type picks the new
-        project's first To Do status and first type of the same level.
+        project's first To Do status and first type.
         """
         current = self._work_items.get_by_id(item_id)
         fields = update.model_fields_set
@@ -159,19 +151,20 @@ class WorkItemService:
             project_id = update.project_id or current.project_id
         moved = project_id != current.project_id
         if moved:
-            self._ensure_project_can_change(current)
             update = update.model_copy(
                 update={
                     "status_id": self._project_status_or_default(
                         project_id, update.status_id
                     ),
                     "type_id": update.type_id
-                    or self._project_type_or_default(project_id, current),
+                    or self._project_type_or_default(project_id),
                 }
             )
         type_id = update.type_id
         if type_id is not None:
-            self._ensure_type_change(current, project_id, type_id)
+            get_in_project(self._types, type_id, project_id, "Work item type")
+        if "parent_id" in fields:
+            self._ensure_parent(update.parent_id, item_id)
         status_id = update.status_id
         if status_id is not None:
             self._ensure_status_change(current, project_id, status_id, moved)
@@ -185,9 +178,10 @@ class WorkItemService:
         current = self._work_items.get_by_id(item_id)
         ensure_project_exists(self._projects, replace.project_id)
         moved = replace.project_id != current.project_id
-        if moved:
-            self._ensure_project_can_change(current)
-        self._ensure_type_change(current, replace.project_id, replace.type_id)
+        get_in_project(
+            self._types, replace.type_id, replace.project_id, "Work item type"
+        )
+        self._ensure_parent(replace.parent_id, item_id)
         status_id = self._project_status_or_default(
             replace.project_id, replace.status_id
         )
@@ -198,14 +192,14 @@ class WorkItemService:
         return self._with_names(replaced)
 
     def delete(self, item_id: UUID) -> None:
-        """Delete a work item together with its subtasks."""
+        """Delete a work item together with its children."""
         self._delete_tree(item_id)
 
     def bulk_delete(self, request: WorkItemBulkDelete) -> int:
         """Delete the listed work items, or every item the filter matches.
 
-        Returns how many items were deleted, subtasks included. Subtasks removed
-        along with a selected task are not counted twice.
+        Returns how many items were deleted, children included. Children removed
+        along with a selected parent are not counted twice.
         """
         if request.all_matching:
             targets = self._matching_ids(request.filter)
@@ -220,10 +214,10 @@ class WorkItemService:
         return len(removed)
 
     def _delete_tree(self, item_id: UUID) -> list[UUID]:
-        """Delete an item after its subtasks, so the parent link never blocks it."""
+        """Delete an item after its children, so the parent link never blocks it."""
         deleted: list[UUID] = []
-        for subtask in self._work_items.list_all(parent_id=item_id):
-            deleted += self._delete_tree(subtask.id)
+        for child in self._work_items.list_all(parent_id=item_id):
+            deleted += self._delete_tree(child.id)
         self._work_items.delete(item_id)
         return [*deleted, item_id]
 
@@ -266,41 +260,30 @@ class WorkItemService:
             raise InvalidReferenceError("The project has no To Do status")
         return todo.id
 
-    def _project_type_or_default(self, project_id: UUID, current: WorkItem) -> UUID:
-        """Pick the project's first type with the same level as the item's type."""
-        level = self._types.get_by_id(current.type_id).level
-        for work_item_type in in_position_order(
-            self._types.list_all(project_id=project_id)
-        ):
-            if work_item_type.level == level:
-                return work_item_type.id
-        raise InvalidReferenceError(f"The project has no {level} type")
+    def _project_type_or_default(self, project_id: UUID) -> UUID:
+        """Pick the project's first type."""
+        types = in_position_order(self._types.list_all(project_id=project_id))
+        if not types:
+            raise InvalidReferenceError("The project has no work item type")
+        return types[0].id
 
-    def _ensure_valid_parent(self, project_id: UUID, parent_id: UUID) -> None:
-        """A subtask's parent must be a standard-level item in the same project."""
-        try:
-            parent = self._work_items.get_by_id(parent_id)
-        except NotFoundError:
-            raise InvalidReferenceError("Parent work item not found") from None
-        parent_type = self._types.get_by_id(parent.type_id)
-        if parent_type.level != "standard":
-            raise InvalidReferenceError("Parent work item must be a task")
-        if parent.project_id != project_id:
-            raise InvalidReferenceError(
-                "Subtask must be in the same project as its parent"
-            )
-
-    def _ensure_type_change(
-        self, current: WorkItem, project_id: UUID, type_id: UUID
+    def _ensure_parent(
+        self, parent_id: UUID | None, item_id: UUID | None = None
     ) -> None:
-        """The new type must be in the project and keep the item's level.
+        """Check that the parent exists and that the item is not its own ancestor.
 
-        The parent/subtask links depend on the level, so it cannot change.
+        Walking up from the parent reaches the item only when the item is one of
+        its ancestors, which would make a cycle. ``None`` means no parent.
         """
-        new_type = get_in_project(self._types, type_id, project_id, "Work item type")
-        old_type = self._types.get_by_id(current.type_id)
-        if new_type.level != old_type.level:
-            raise ConflictError("A work item cannot change type level")
+        current_id = parent_id
+        while current_id is not None:
+            if current_id == item_id:
+                raise InvalidReferenceError("A work item cannot be its own ancestor")
+            try:
+                current = self._work_items.get_by_id(current_id)
+            except NotFoundError:
+                raise InvalidReferenceError("Parent work item not found") from None
+            current_id = current.parent_id
 
     def _ensure_status_change(
         self, current: WorkItem, project_id: UUID, status_id: UUID, moved: bool
@@ -320,14 +303,3 @@ class WorkItemService:
             for transition in allowed
         ):
             raise ConflictError("The workflow does not allow this status change")
-
-    def _ensure_project_can_change(self, item: WorkItem) -> None:
-        """Only tasks without subtasks can move between projects."""
-        item_type = self._types.get_by_id(item.type_id)
-        if (
-            item_type.level == "subtask"
-            or self._work_items.count(parent_id=item.id) > 0
-        ):
-            raise ConflictError(
-                "Tasks with subtasks and subtasks cannot change project"
-            )
