@@ -47,6 +47,30 @@ def fake_nuclio():
     server.server_close()
 
 
+@pytest.fixture
+def fake_nuclio_html():
+    """Serve an HTML page on every path, like a different service on the runner's port."""
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            payload = b"<!DOCTYPE html><html><body>Adminer</body></html>"
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def log_message(self, format, *args):
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    yield f"http://127.0.0.1:{server.server_port}"
+    server.shutdown()
+    server.server_close()
+
+
 def test_local_runner_runs_script():
     """A script that prints succeeds and its output is in the logs."""
     result = LocalRunner().run(RunRequest(code="print(1 + 1)"))
@@ -127,6 +151,14 @@ def test_nuclio_runner_unreachable_raises():
     """A runner that cannot be reached raises RunnerUnavailableError."""
     with pytest.raises(RunnerUnavailableError):
         NuclioRunner("http://127.0.0.1:1").run(RunRequest(code="print(1)"))
+
+
+def test_nuclio_runner_non_json_response_raises(fake_nuclio_html):
+    """A response that is not JSON, such as another service's HTML page, raises RunnerUnavailableError."""
+    url = fake_nuclio_html
+    with pytest.raises(RunnerUnavailableError, match="invalid response") as exc:
+        NuclioRunner(url).run(RunRequest(code="print(1)"))
+    assert url in str(exc.value)
 
 
 def test_create_runner_local():

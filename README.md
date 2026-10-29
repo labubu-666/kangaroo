@@ -1,6 +1,6 @@
 # kangaroo
 
-## Nuclio
+# Index
 
-See [Nuclio](internal-docs/nuclio.md) for how to run the Nuclio dashboard.
+- [Infrastructure](./internal-docs/infrastructure/index.md)
 
