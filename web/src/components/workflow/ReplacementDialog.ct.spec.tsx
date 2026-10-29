@@ -80,13 +80,13 @@ test.describe("ReplacementDialog", () => {
         count={2}
         options={options}
         busy={false}
-        error="The replacement must have the same level"
+        error="The replacement must be another type"
         onConfirm={() => {}}
         onCancel={() => {}}
       />,
     );
     await expect(component).toContainText(
-      "The replacement must have the same level",
+      "The replacement must be another type",
     );
   });
 });

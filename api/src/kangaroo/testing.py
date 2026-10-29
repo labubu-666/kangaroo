@@ -17,7 +17,6 @@ from kangaroo.templates import TO_DO_LIST
 
 NAMES = {
     "task": "Task",
-    "subtask": "Subtask",
     "open": "Open",
     "in_progress": "In Progress",
     "done": "Done",
@@ -25,7 +24,7 @@ NAMES = {
 
 
 def type_id(client, project_id, key: str) -> str:
-    """The ID of a project's work item type: ``task`` or ``subtask``."""
+    """The ID of a project's work item type: ``task``."""
     response = client.get(f"/api/v1/work-item-types/?project_id={project_id}")
     return next(t["id"] for t in response.json() if t["name"] == NAMES[key])
 
@@ -42,7 +41,6 @@ class SeededProject:
 
     project_id: UUID
     task_id: UUID
-    subtask_id: UUID
     open_id: UUID
     in_progress_id: UUID
     done_id: UUID
@@ -53,9 +51,7 @@ def seed_project(projects, statuses, types, name: str = "Test") -> SeededProject
     project = projects.create(ProjectCreate(name=name))
     type_ids = {
         t.name: types.create(
-            WorkItemTypeCreate(
-                project_id=project.id, name=t.name, level=t.level, position=t.position
-            )
+            WorkItemTypeCreate(project_id=project.id, name=t.name, position=t.position)
         ).id
         for t in TO_DO_LIST.types
     }
@@ -73,7 +69,6 @@ def seed_project(projects, statuses, types, name: str = "Test") -> SeededProject
     return SeededProject(
         project_id=project.id,
         task_id=type_ids["Task"],
-        subtask_id=type_ids["Subtask"],
         open_id=status_ids["Open"],
         in_progress_id=status_ids["In Progress"],
         done_id=status_ids["Done"],
@@ -88,15 +83,15 @@ def new_task(seeded: SeededProject, summary: str = "Task", **extra) -> WorkItemC
     )
 
 
-def new_subtask(
+def new_child(
     seeded: SeededProject, parent_id: UUID, summary: str = "Child", **extra
 ) -> WorkItemCreate:
-    """A subtask create request in the first To Do status, ready for a repository."""
+    """A child work item create request in the first To Do status, for a repository."""
     extra.setdefault("status_id", seeded.open_id)
     return WorkItemCreate(
         summary=summary,
         project_id=seeded.project_id,
-        type_id=seeded.subtask_id,
+        type_id=seeded.task_id,
         parent_id=parent_id,
         **extra,
     )

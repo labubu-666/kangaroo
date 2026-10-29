@@ -1,7 +1,6 @@
 import { apiFetch, apiJson, jsonBody } from "./api";
 
 export type StatusCategory = "todo" | "in_progress" | "done";
-export type TypeLevel = "standard" | "subtask";
 
 export interface ProjectStatus {
   id: string;
@@ -17,7 +16,6 @@ export interface WorkItemType {
   id: string;
   project_id: string;
   name: string;
-  level: TypeLevel;
   position: number;
   created_at: string;
   modified_at: string;
@@ -47,7 +45,6 @@ export interface StatusInput {
 
 export interface WorkItemTypeInput {
   name: string;
-  level: TypeLevel;
   position?: number;
 }
 

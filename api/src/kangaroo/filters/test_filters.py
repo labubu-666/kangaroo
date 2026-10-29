@@ -11,7 +11,6 @@ RECORD = {
     "statusCategory": "todo",
     "type": "Task",
     "type_id": "t-0",
-    "typeLevel": "standard",
     "parent_id": None,
     "project.id": "p1",
     "project.name": "foo",
@@ -62,7 +61,7 @@ def test_and_or_not_with_precedence():
     assert matches("project.name == 'bar' and status == 'done' or type == 'task'")
     assert matches("not project.name == 'bar'")
     assert matches("type == 'task' and (summary ~ 'bug' or status == 'done')")
-    assert not matches("type == 'subtask' and (summary ~ 'bug' or status == 'open')")
+    assert not matches("type == 'bug' and (summary ~ 'bug' or status == 'open')")
 
 
 LABELED = {"labels": ["derstandard", "derstandard:3000000344207", "news"]}
@@ -113,7 +112,7 @@ def test_is_empty_for_lists_and_text():
 def test_labels_combine_with_other_fields():
     """List conditions combine with text conditions and grouping."""
     assert matches(
-        "labels contains 'derstandard' and (status == 'open' or type == 'subtask')",
+        "labels contains 'derstandard' and (status == 'open' or type == 'bug')",
         **LABELED,
     )
     assert not matches("labels contains 'derstandard' and status == 'done'", **LABELED)
@@ -176,7 +175,6 @@ NAMED = {
     "statusCategory": "in_progress",
     "type": "Bug Report",
     "type_id": "t-1",
-    "typeLevel": "standard",
 }
 
 
@@ -208,11 +206,9 @@ def test_status_in_and_not_in_use_names_and_ids():
     assert not matches("status not in ['in_progress']", **NAMED)
 
 
-def test_status_category_and_type_level_are_exact_fields():
+def test_status_category_is_an_exact_field():
     assert matches("statusCategory == 'in_progress'", **NAMED)
     assert not matches("statusCategory == 'done'", **NAMED)
-    assert matches("typeLevel == 'standard'", **NAMED)
-    assert matches("typeLevel != 'subtask'", **NAMED)
     assert matches("statusCategory in ['todo', 'in_progress']", **NAMED)
 
 

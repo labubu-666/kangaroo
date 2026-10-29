@@ -34,7 +34,7 @@ from kangaroo.schemas import (
     WorkItemReplace,
     WorkItemUpdate,
 )
-from kangaroo.testing import new_subtask, new_task, seed_project
+from kangaroo.testing import new_child, new_task, seed_project
 
 
 @pytest.fixture
@@ -250,23 +250,22 @@ def test_delete_project(projects):
         projects.get_by_id(project.id)
 
 
-def test_create_subtask_and_list_by_parent(work_items, project_id, seeded):
-    """Subtasks are stored with their parent and can be listed by it."""
+def test_create_child_and_list_by_parent(work_items, project_id, seeded):
+    """Work items are stored with their parent and can be listed by it."""
     parent = work_items.create(new_task(seeded, "Parent"))
-    child = work_items.create(new_subtask(seeded, parent.id, "Child"))
+    child = work_items.create(new_child(seeded, parent.id, "Child"))
     work_items.create(new_task(seeded, "Unrelated"))
 
-    assert child.type_id == seeded.subtask_id
     assert child.parent_id == parent.id
     page = work_items.list_paginated(limit=10, offset=0, parent_id=parent.id)
     assert page.total == 1
     assert page.results[0].id == child.id
 
 
-def test_database_rejects_deleting_task_with_subtasks(work_items, project_id, seeded):
-    """The foreign key blocks deleting a task that still has subtasks."""
+def test_database_rejects_deleting_parent_with_children(work_items, project_id, seeded):
+    """The foreign key blocks deleting a work item that still has children."""
     parent = work_items.create(new_task(seeded, "Parent"))
-    work_items.create(new_subtask(seeded, parent.id, "Child"))
+    work_items.create(new_child(seeded, parent.id, "Child"))
     with pytest.raises(IntegrityError):
         work_items.delete(parent.id)
 
@@ -376,7 +375,6 @@ def test_deleting_project_removes_its_statuses_and_types(engine, projects):
                     id=uuid4(),
                     project_id=project.id,
                     name="Task",
-                    level="standard",
                     position=0,
                     created_at=now,
                     modified_at=now,

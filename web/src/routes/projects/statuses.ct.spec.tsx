@@ -38,7 +38,6 @@ const TYPES = [
     id: "t-task",
     project_id: PROJECT,
     name: "Task",
-    level: "standard",
     position: 0,
     ...STAMP,
   },

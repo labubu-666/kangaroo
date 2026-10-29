@@ -65,7 +65,7 @@ def test_download_is_a_zip_with_every_table(client):
     assert "work_items.jsonl" in names
 
 
-def test_restore_round_trip_with_subtask(client):
+def test_restore_round_trip_with_child(client):
     """A backup restores the same projects and work items, including parent links."""
     project_id = client.post("/api/v1/projects/", json={"name": "Kept"}).json()["id"]
     parent = client.post(
@@ -79,7 +79,7 @@ def test_restore_round_trip_with_subtask(client):
     client.post(
         "/api/v1/work-items/",
         json={
-            "type_id": type_id(client, project_id, "subtask"),
+            "type_id": type_id(client, project_id, "task"),
             "summary": "Child",
             "project_id": project_id,
             "parent_id": parent["id"],

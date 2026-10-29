@@ -62,7 +62,6 @@ FILTER_KEYS = (
     "statusCategory",
     "type",
     "type_id",
-    "typeLevel",
     "parent_id",
     "project.id",
     "project.name",
@@ -94,7 +93,6 @@ def filter_record(
             "statusCategory": status.category if status else None,
             "type": work_item_type.name if work_item_type else None,
             "type_id": str(item.type_id),
-            "typeLevel": work_item_type.level if work_item_type else None,
             "parent_id": str(item.parent_id) if item.parent_id else None,
             "project.id": str(item.project_id),
             "project.name": project_names.get(item.project_id),
@@ -123,9 +121,7 @@ def detail(
     return WorkItemDetail(
         **item.model_dump(exclude={"rendered_description"}),
         status=StatusRef(id=status.id, name=status.name, category=status.category),
-        type=TypeRef(
-            id=work_item_type.id, name=work_item_type.name, level=work_item_type.level
-        ),
+        type=TypeRef(id=work_item_type.id, name=work_item_type.name),
     )
 
 

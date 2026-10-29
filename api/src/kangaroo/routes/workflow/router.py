@@ -133,7 +133,7 @@ def delete_work_item_type(
     """Delete a work item type.
 
     If work items use the type, pass ``replacement_id`` (another type of the same
-    project and level) and they move to it. Without it the delete returns 409.
+    project) and they move to it. Without it the delete returns 409.
     """
     service.delete_work_item_type(item_id, replacement_id)
 

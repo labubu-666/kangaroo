@@ -34,10 +34,7 @@ def test_create_project_copies_default_template(client, project_id):
         ("Done", "done", 2),
     ]
     types = client.get(f"/api/v1/work-item-types/?project_id={project_id}").json()
-    assert [(t["name"], t["level"], t["position"]) for t in types] == [
-        ("Task", "standard", 0),
-        ("Subtask", "subtask", 1),
-    ]
+    assert [(t["name"], t["position"]) for t in types] == [("Task", 0)]
 
 
 def test_create_project_with_named_template(client):

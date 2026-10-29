@@ -44,7 +44,7 @@ function AdminWorkItems() {
     const count = selected.size;
     if (
       !confirm(
-        `Delete ${count} selected work item(s)? Their subtasks are deleted too. This cannot be undone.`,
+        `Delete ${count} selected work item(s)? Their child items are deleted too. This cannot be undone.`,
       )
     )
       return;
@@ -54,7 +54,7 @@ function AdminWorkItems() {
   const deleteAllMatching = () => {
     if (
       !confirm(
-        `Delete all ${matchingTotal} work item(s) matching this filter? Their subtasks are deleted too. This cannot be undone.`,
+        `Delete all ${matchingTotal} work item(s) matching this filter? Their child items are deleted too. This cannot be undone.`,
       )
     )
       return;

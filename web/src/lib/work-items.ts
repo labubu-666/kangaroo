@@ -1,5 +1,5 @@
 import { apiFetch, apiJson, jsonBody, type Paginated } from "./api";
-import type { StatusCategory, TypeLevel } from "./workflow";
+import type { StatusCategory } from "./workflow";
 
 // A work item's status and type, as the API embeds them
 export interface StatusRef {
@@ -11,7 +11,6 @@ export interface StatusRef {
 export interface TypeRef {
   id: string;
   name: string;
-  level: TypeLevel;
 }
 
 export interface WorkItem {
@@ -50,6 +49,7 @@ export interface WorkItemUpdate {
   status_id?: string;
   type_id?: string;
   project_id?: string;
+  parent_id?: string | null;
   trashed?: boolean;
 }
 export const WORK_ITEM_LIMIT = 10;

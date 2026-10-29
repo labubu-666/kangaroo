@@ -8,10 +8,7 @@ def test_default_template_is_to_do_list():
 
 def test_to_do_list_matches_current_setup():
     """The template reproduces today's fixed statuses and types."""
-    assert [(t.name, t.level, t.position) for t in TO_DO_LIST.types] == [
-        ("Task", "standard", 0),
-        ("Subtask", "subtask", 1),
-    ]
+    assert [(t.name, t.position) for t in TO_DO_LIST.types] == [("Task", 0)]
     assert [(s.name, s.category, s.position) for s in TO_DO_LIST.statuses] == [
         ("Open", "todo", 0),
         ("In Progress", "in_progress", 1),

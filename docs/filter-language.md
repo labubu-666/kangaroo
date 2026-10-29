@@ -30,8 +30,7 @@ labels contains 'derstandard' and statusCategory != 'done'
 | `status`         | text    | The status name, or its ID         |
 | `statusCategory` | text    | `todo`, `in_progress` or `done`    |
 | `type`           | text    | The type name, or its ID           |
-| `typeLevel`      | text    | `standard` or `subtask`            |
-| `parent_id`      | text    | The parent's ID. Empty for tasks   |
+| `parent_id`      | text    | The parent's ID. Empty without a parent |
 | `project.id`     | text    |                                    |
 | `project.name`   | text    |                                    |
 | `labels`         | list    | The labels on the work item        |
@@ -46,8 +45,8 @@ status in a category, whatever the status is called.
 A name that matches no status is not an error. The filter simply matches no
 items. Use `statusCategory` or an ID when the name might differ between projects.
 
-`typeLevel` tells standard items (`standard`) from subtasks (`subtask`), whatever
-their types are called.
+`parent_id` is the ID of the item's parent. Use it to find the children of an
+item, or the items without a parent.
 
 ## Operators on text fields
 
@@ -105,7 +104,7 @@ labels is not empty
   `a or (b and c)`.
 
 ```
-labels contains 'derstandard' and (status == 'Open' or typeLevel == 'subtask')
+labels contains 'derstandard' and (status == 'Open' or parent_id == '01a1…')
 not labels contains 'sport'
 ```
 
@@ -166,7 +165,8 @@ project that share the name. Prefer `statusCategory` for cross-project lists.
 | Items with no label                                 | `labels is empty`                            |
 | Items still to start, in any project                | `statusCategory == 'todo'`                   |
 | Items in progress in one project                    | `project.id == '01a1…' and statusCategory == 'in_progress'` |
-| Subtasks only                                       | `typeLevel == 'subtask'`                     |
+| Children of one item                                 | `parent_id == '01a1…'`                       |
+| Items without a parent                              | `parent_id is empty`                         |
 | Items in one project's "In Progress" status         | `project.id == '01a1…' and status == 'In Progress'` |
 
 The operators work on every field in the table above.

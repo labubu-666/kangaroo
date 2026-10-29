@@ -60,7 +60,6 @@ class ProjectService:
                 WorkItemTypeCreate(
                     project_id=project.id,
                     name=template_type.name,
-                    level=template_type.level,
                     position=template_type.position,
                 )
             )

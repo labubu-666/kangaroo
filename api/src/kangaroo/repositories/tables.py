@@ -98,7 +98,6 @@ class WorkItemTypeRow(Base):
         Uuid, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String)
-    level: Mapped[str] = mapped_column(String)
     position: Mapped[int] = mapped_column(Integer)
 
 

@@ -778,181 +778,43 @@ def test_create_work_item_with_unknown_type_returns_422(client, project_id):
     assert response.status_code == 422
 
 
-def test_create_task_with_parent_id_returns_422(client, project_id):
-    """A task rejects parent_id instead of silently dropping it."""
-    parent_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "summary": "Parent",
-            "project_id": project_id,
-        },
-    ).json()["id"]
-
-    response = client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "summary": "Task",
-            "parent_id": parent_id,
-            "project_id": project_id,
-        },
-    )
-    assert response.status_code == 422
-
-
-def test_create_subtask(client, project_id):
-    """POST /api/v1/work-items creates a subtask under a task."""
-    parent_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "summary": "Parent",
-            "project_id": project_id,
-        },
-    ).json()["id"]
-
-    response = client.post(
-        "/api/v1/work-items",
-        json={
-            "summary": "Child",
-            "type_id": type_id(client, project_id, "subtask"),
-            "parent_id": parent_id,
-            "project_id": project_id,
-        },
-    )
+def test_create_work_item_with_parent(client, project_id):
+    """Any work item can be created under a parent."""
+    parent_id = _create(client, project_id, "Parent").json()["id"]
+    response = _create(client, project_id, "Child", parent_id=parent_id)
     assert response.status_code == 201
-    data = response.json()
-    assert data["type_id"] == type_id(client, project_id, "subtask")
-    assert data["parent_id"] == parent_id
+    assert response.json()["parent_id"] == parent_id
 
 
-def test_create_subtask_without_parent_returns_422(client, project_id):
-    """A subtask must reference a parent."""
-    response = client.post(
-        "/api/v1/work-items",
-        json={
-            "summary": "Child",
-            "type_id": type_id(client, project_id, "subtask"),
-            "project_id": project_id,
-        },
+def test_create_work_item_with_unknown_parent_returns_422(client, project_id):
+    """The parent must exist."""
+    response = _create(
+        client, project_id, "Child", parent_id="11111111-1111-1111-1111-111111111111"
     )
     assert response.status_code == 422
 
 
-def test_create_task_with_parent_returns_422(client, project_id):
-    """Only subtasks may reference a parent."""
-    parent_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "summary": "Parent",
-            "project_id": project_id,
-        },
-    ).json()["id"]
-
-    response = client.post(
-        "/api/v1/work-items",
-        json={
-            "summary": "Task",
-            "type_id": type_id(client, project_id, "task"),
-            "parent_id": parent_id,
-            "project_id": project_id,
-        },
-    )
-    assert response.status_code == 422
-
-
-def test_create_subtask_with_unknown_parent_returns_422(client, project_id):
-    """A subtask's parent must exist."""
-    fake_uuid = "11111111-1111-1111-1111-111111111111"
-    response = client.post(
-        "/api/v1/work-items",
-        json={
-            "summary": "Child",
-            "type_id": type_id(client, project_id, "subtask"),
-            "parent_id": fake_uuid,
-            "project_id": project_id,
-        },
-    )
-    assert response.status_code == 422
-
-
-def test_create_subtask_under_subtask_returns_422(client, project_id):
-    """Subtasks cannot be nested under other subtasks."""
-    parent_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "summary": "Parent",
-            "project_id": project_id,
-        },
-    ).json()["id"]
-    subtask_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "summary": "Child",
-            "type_id": type_id(client, project_id, "subtask"),
-            "parent_id": parent_id,
-            "project_id": project_id,
-        },
-    ).json()["id"]
-
-    response = client.post(
-        "/api/v1/work-items",
-        json={
-            "summary": "Grandchild",
-            "type_id": type_id(client, project_id, "subtask"),
-            "parent_id": subtask_id,
-            "project_id": project_id,
-        },
-    )
-    assert response.status_code == 422
-
-
-def test_create_subtask_in_other_project_returns_422(client, project_id):
-    """A subtask must be in the same project as its parent."""
+def test_parent_can_be_in_another_project(client, project_id):
+    """A work item may have a parent in a different project."""
     other_id = client.post("/api/v1/projects", json={"name": "Alpha"}).json()["id"]
-    parent_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "summary": "Parent",
-            "project_id": project_id,
-        },
-    ).json()["id"]
-
+    parent_id = _create(client, project_id, "Parent").json()["id"]
     response = client.post(
         "/api/v1/work-items",
         json={
             "summary": "Child",
-            "type_id": type_id(client, project_id, "subtask"),
+            "type_id": type_id(client, other_id, "task"),
             "parent_id": parent_id,
             "project_id": other_id,
         },
     )
-    assert response.status_code == 422
+    assert response.status_code == 201
+    assert response.json()["parent_id"] == parent_id
 
 
-def test_list_subtasks_of_parent(client, project_id):
-    """GET /api/v1/work-items?parent_id= returns only that task's subtasks."""
-    parent_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "summary": "Parent",
-            "project_id": project_id,
-        },
-    ).json()["id"]
-    client.post(
-        "/api/v1/work-items",
-        json={
-            "summary": "Child",
-            "type_id": type_id(client, project_id, "subtask"),
-            "parent_id": parent_id,
-            "project_id": project_id,
-        },
-    )
+def test_list_children_of_parent(client, project_id):
+    """GET /api/v1/work-items?parent_id= returns only that item's children."""
+    parent_id = _create(client, project_id, "Parent").json()["id"]
+    _create(client, project_id, "Child", parent_id=parent_id)
     _create(client, project_id, summary="Unrelated")
 
     response = client.get(f"/api/v1/work-items?parent_id={parent_id}")
@@ -962,32 +824,45 @@ def test_list_subtasks_of_parent(client, project_id):
     assert data["results"][0]["summary"] == "Child"
 
 
-def test_delete_task_also_deletes_subtasks(client, project_id):
-    """Deleting a task deletes its subtasks too."""
-    parent_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "summary": "Parent",
-            "project_id": project_id,
-        },
-    ).json()["id"]
-    subtask_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "summary": "Child",
-            "type_id": type_id(client, project_id, "subtask"),
-            "parent_id": parent_id,
-            "project_id": project_id,
-        },
-    ).json()["id"]
+def test_set_and_clear_parent_with_patch(client, project_id):
+    parent_id = _create(client, project_id, "Parent").json()["id"]
+    item_id = _create(client, project_id, "Item").json()["id"]
+
+    attached = client.patch(
+        f"/api/v1/work-items/{item_id}", json={"parent_id": parent_id}
+    )
+    assert attached.status_code == 200
+    assert attached.json()["parent_id"] == parent_id
+
+    detached = client.patch(f"/api/v1/work-items/{item_id}", json={"parent_id": None})
+    assert detached.status_code == 200
+    assert detached.json()["parent_id"] is None
+
+
+def test_item_cannot_become_its_own_ancestor(client, project_id):
+    """Setting a parent that is a descendant returns 422 and changes nothing."""
+    top_id = _create(client, project_id, "Top").json()["id"]
+    middle_id = _create(client, project_id, "Middle", parent_id=top_id).json()["id"]
+    bottom_id = _create(client, project_id, "Bottom", parent_id=middle_id).json()["id"]
+
+    response = client.patch(
+        f"/api/v1/work-items/{top_id}", json={"parent_id": bottom_id}
+    )
+    assert response.status_code == 422
+    assert client.get(f"/api/v1/work-items/{top_id}").json()["parent_id"] is None
+
+
+def test_delete_parent_also_deletes_children(client, project_id):
+    """Deleting a work item deletes its children too."""
+    parent_id = _create(client, project_id, "Parent").json()["id"]
+    child_id = _create(client, project_id, "Child", parent_id=parent_id).json()["id"]
 
     assert client.delete(f"/api/v1/work-items/{parent_id}").status_code == 204
-    assert client.get(f"/api/v1/work-items/{subtask_id}").status_code == 404
+    assert client.get(f"/api/v1/work-items/{child_id}").status_code == 404
 
 
 def test_bulk_delete_ids(client, project_id):
-    """POST /api/v1/work-items/bulk-delete removes the listed items and their subtasks."""
+    """POST /api/v1/work-items/bulk-delete removes the listed items and their children."""
     parent_id = client.post(
         "/api/v1/work-items",
         json={
@@ -996,18 +871,18 @@ def test_bulk_delete_ids(client, project_id):
             "project_id": project_id,
         },
     ).json()["id"]
-    subtask_id = client.post(
+    child_id = client.post(
         "/api/v1/work-items",
         json={
             "summary": "Child",
-            "type_id": type_id(client, project_id, "subtask"),
+            "type_id": type_id(client, project_id, "task"),
             "parent_id": parent_id,
             "project_id": project_id,
         },
     ).json()["id"]
 
     response = client.post(
-        "/api/v1/work-items/bulk-delete", json={"ids": [parent_id, subtask_id]}
+        "/api/v1/work-items/bulk-delete", json={"ids": [parent_id, child_id]}
     )
     assert response.status_code == 200
     assert response.json() == {"deleted": 2}
@@ -1057,60 +932,6 @@ def test_bulk_delete_invalid_filter_returns_422(client):
         json={"all_matching": True, "filter": "status == open"},
     )
     assert response.status_code == 422
-
-
-def test_move_task_with_subtasks_returns_409(client, project_id):
-    """A task with subtasks cannot be moved to another project."""
-    other_id = client.post("/api/v1/projects", json={"name": "Beta"}).json()["id"]
-    parent_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "summary": "Parent",
-            "project_id": project_id,
-        },
-    ).json()["id"]
-    client.post(
-        "/api/v1/work-items",
-        json={
-            "summary": "Child",
-            "type_id": type_id(client, project_id, "subtask"),
-            "parent_id": parent_id,
-            "project_id": project_id,
-        },
-    )
-
-    response = client.patch(
-        f"/api/v1/work-items/{parent_id}", json={"project_id": other_id}
-    )
-    assert response.status_code == 409
-
-
-def test_move_subtask_returns_409(client, project_id):
-    """A subtask cannot be moved to another project."""
-    other_id = client.post("/api/v1/projects", json={"name": "Beta"}).json()["id"]
-    parent_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "type_id": type_id(client, project_id, "task"),
-            "summary": "Parent",
-            "project_id": project_id,
-        },
-    ).json()["id"]
-    subtask_id = client.post(
-        "/api/v1/work-items",
-        json={
-            "summary": "Child",
-            "type_id": type_id(client, project_id, "subtask"),
-            "parent_id": parent_id,
-            "project_id": project_id,
-        },
-    ).json()["id"]
-
-    response = client.patch(
-        f"/api/v1/work-items/{subtask_id}", json={"project_id": other_id}
-    )
-    assert response.status_code == 409
 
 
 def test_labels_are_trimmed_and_deduplicated(client, project_id):
@@ -1370,16 +1191,7 @@ def test_move_to_other_project_defaults_status_and_type(client, project_id):
     assert moved.json()["project_id"] == other
 
 
-def test_work_item_type_level_cannot_change_on_item(client, project_id):
-    item_id = _create(client, project_id).json()["id"]
-    response = client.patch(
-        f"/api/v1/work-items/{item_id}",
-        json={"type_id": type_id(client, project_id, "subtask")},
-    )
-    assert response.status_code == 409
-
-
-def test_filter_by_status_name_category_and_type_level(client, project_id):
+def test_filter_by_status_name_and_category(client, project_id):
     _create(client, project_id, "Waiting")
     _create(
         client,
@@ -1395,10 +1207,6 @@ def test_filter_by_status_name_category_and_type_level(client, project_id):
     ):
         data = client.get("/api/v1/work-items", params={"filter": text}).json()
         assert [i["summary"] for i in data["results"]] == ["Started"], text
-    data = client.get(
-        "/api/v1/work-items", params={"filter": "typeLevel == 'standard'"}
-    ).json()
-    assert data["total"] == 2
 
 
 def test_work_item_includes_status_and_type_names(client, project_id):
@@ -1412,7 +1220,6 @@ def test_work_item_includes_status_and_type_names(client, project_id):
     assert data["type"] == {
         "id": type_id(client, project_id, "task"),
         "name": "Task",
-        "level": "standard",
     }
     assert data["status_id"] == data["status"]["id"]
     assert data["type_id"] == data["type"]["id"]
@@ -1462,18 +1269,3 @@ def test_renamed_status_shows_new_name_on_work_items(client, project_id):
         client.get(f"/api/v1/work-items/{item_id}").json()["status"]["name"]
         == "Backlog"
     )
-
-
-def test_subtask_names_show_subtask_level(client, project_id):
-    parent_id = _create(client, project_id, "Parent").json()["id"]
-    child = client.post(
-        "/api/v1/work-items",
-        json={
-            "summary": "Child",
-            "project_id": project_id,
-            "type_id": type_id(client, project_id, "subtask"),
-            "parent_id": parent_id,
-        },
-    ).json()
-    assert child["type"]["level"] == "subtask"
-    assert child["parent_id"] == parent_id

@@ -25,7 +25,7 @@ def test_delete_project_with_boards_raises(project_service, boards):
 def test_delete_project_with_work_items_raises(project_service, work_item_service):
     project = project_service.create(ProjectCreate(name="Alpha"))
     work_types = work_item_service._types.list_all(project_id=project.id)
-    task_type = next(t for t in work_types if t.level == "standard")
+    task_type = next(t for t in work_types if t.name == "Task")
     item = work_item_service.create(
         WorkItemCreate(summary="Task", project_id=project.id, type_id=task_type.id)
     )

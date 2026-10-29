@@ -66,16 +66,12 @@ function CreateWorkItem() {
     queryFn: () => fetchWorkItemTypes(projectId),
     enabled: !!projectId,
   });
-  // A subtask is made under a parent, so only standard types are offered on a task
-  const offeredTypes = (types ?? []).filter((t) =>
-    parentId ? t.level === "subtask" : t.level === "standard",
-  );
-  const firstOfferedType = offeredTypes[0]?.id;
+  const firstType = types?.[0]?.id;
   useEffect(() => {
-    if (firstOfferedType && !getValues("typeId")) {
-      setValue("typeId", firstOfferedType);
+    if (firstType && !getValues("typeId")) {
+      setValue("typeId", firstType);
     }
-  }, [firstOfferedType, getValues, setValue]);
+  }, [firstType, getValues, setValue]);
 
   const { data: projects } = useProjectOptions();
   const hasProjects = (projects?.results ?? []).length > 0;
@@ -133,7 +129,7 @@ function CreateWorkItem() {
     <div className="space-y-4 p-4">
       <div className="flex items-center gap-4">
         <h1 className="text-2xl font-bold">
-          {parentId ? "Create subtask" : "Create work item"}
+          {parentId ? "Create child item" : "Create work item"}
         </h1>
       </div>
 
@@ -205,11 +201,11 @@ function CreateWorkItem() {
           </label>
           <select
             id="type"
-            disabled={mutation.isPending || offeredTypes.length === 0}
+            disabled={mutation.isPending || (types ?? []).length === 0}
             className="w-full rounded border border-border-strong px-3 py-2"
             {...register("typeId", { required: "Type is required" })}
           >
-            {offeredTypes.map((type) => (
+            {(types ?? []).map((type) => (
               <option key={type.id} value={type.id}>
                 {type.name}
               </option>
