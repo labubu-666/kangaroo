@@ -1,6 +1,4 @@
-import json
-import urllib.error
-import urllib.request
+import requests
 
 from kangaroo.runners.base import BaseRunner
 from kangaroo.schemas import RunRequest, RunResult
@@ -21,17 +19,23 @@ class NuclioRunner(BaseRunner):
         self._url = url
 
     def run(self, request: RunRequest) -> RunResult:
-        body = json.dumps(request.model_dump()).encode()
-        req = urllib.request.Request(
-            self._url,
-            data=body,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
         # Allow the function its own timeout plus a margin for the HTTP round trip.
         http_timeout = request.timeout_seconds + 10
         try:
-            with urllib.request.urlopen(req, timeout=http_timeout) as resp:
-                return RunResult.model_validate(json.loads(resp.read().decode()))
-        except (urllib.error.URLError, TimeoutError, ValueError) as exc:
-            raise RunnerUnavailableError(f"Nuclio runner unavailable: {exc}") from exc
+            resp = requests.post(
+                self._url, json=request.model_dump(), timeout=http_timeout
+            )
+            resp.raise_for_status()
+        except requests.RequestException as exc:
+            raise RunnerUnavailableError(
+                f"Nuclio runner at {self._url} is unreachable: {exc}"
+            ) from exc
+        try:
+            return RunResult.model_validate(resp.json())
+        except ValueError as exc:
+            # Usually NUCLIO_RUNNER_URL points at a different service.
+            content_type = resp.headers.get("Content-Type", "unknown")
+            raise RunnerUnavailableError(
+                f"Nuclio runner at {self._url} returned an invalid response "
+                f"({content_type}): {resp.text[:200]!r}"
+            ) from exc
