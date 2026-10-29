@@ -56,6 +56,8 @@ export function LabelsEditor({
         placeholder="Add a label"
         disabled={disabled}
         onChange={(e) => setDraft(e.target.value)}
+        // Blur too, so a label typed before clicking Create is not lost
+        onBlur={addLabel}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
