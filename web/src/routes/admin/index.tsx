@@ -6,12 +6,23 @@ import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext"
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { BACKUP_URL, restoreBackup } from "../../lib/backup";
 
+type AdminTab = "backup" | "manage-work-items";
+
 export const Route = createFileRoute("/admin/")({
   component: Admin,
+  validateSearch: (search: Record<string, unknown>): { tab?: AdminTab } => ({
+    tab: search.tab === "manage-work-items" ? "manage-work-items" : "backup",
+  }),
 });
+
+const TABS: { value: AdminTab; label: string }[] = [
+  { value: "backup", label: "Backup and restore" },
+  { value: "manage-work-items", label: "Manage work items" },
+];
 
 function Admin() {
   useBreadcrumbs([{ label: "Admin" }]);
+  const { tab = "backup" } = Route.useSearch();
   const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -41,44 +52,27 @@ function Admin() {
     <div className="space-y-4 p-4 sm:p-8">
       <h1 className="text-2xl font-bold">Admin</h1>
 
-      <section className="space-y-2">
-        <h2 className="text-xl font-semibold">Backup and restore</h2>
-        <p>
-          <a
-            href={BACKUP_URL}
-            download
-            className="text-primary hover:underline"
+      <div role="tablist" className="flex gap-4 border-b border-border">
+        {TABS.map((t) => (
+          <Link
+            key={t.value}
+            role="tab"
+            aria-selected={tab === t.value}
+            to="/admin"
+            search={{ tab: t.value }}
+            replace
+            className={`-mb-px border-b-2 px-1 pb-2 font-semibold ${
+              tab === t.value
+                ? "border-primary text-primary"
+                : "border-transparent text-fg-muted hover:text-fg"
+            }`}
           >
-            Download backup
-          </a>
-        </p>
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            ref={fileInput}
-            type="file"
-            accept=".zip,application/zip"
-            aria-label="Backup file"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            disabled={restoreMutation.isPending}
-          />
-          <button
-            onClick={restore}
-            disabled={!file || restoreMutation.isPending}
-            className="rounded bg-danger px-4 py-2 font-medium text-on-primary hover:bg-danger-hover disabled:bg-fg-disabled"
-          >
-            {restoreMutation.isPending ? "Restoring..." : "Restore from file"}
-          </button>
-        </div>
-        {restoreMutation.isSuccess && (
-          <p className="text-green-700 dark:text-green-400">Backup restored.</p>
-        )}
-        {restoreMutation.isError && (
-          <ErrorBanner>{restoreMutation.error.message}</ErrorBanner>
-        )}
-      </section>
+            {t.label}
+          </Link>
+        ))}
+      </div>
 
-      <section className="space-y-2">
-        <h2 className="text-xl font-semibold">Work items</h2>
+      {tab === "manage-work-items" ? (
         <ul className="list-disc space-y-2 pl-5">
           <li>
             <Link
@@ -98,7 +92,44 @@ function Admin() {
             </Link>
           </li>
         </ul>
-      </section>
+      ) : (
+        <section className="space-y-2">
+          <p>
+            <a
+              href={BACKUP_URL}
+              download
+              className="text-primary hover:underline"
+            >
+              Download backup
+            </a>
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".zip,application/zip"
+              aria-label="Backup file"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              disabled={restoreMutation.isPending}
+            />
+            <button
+              onClick={restore}
+              disabled={!file || restoreMutation.isPending}
+              className="rounded bg-danger px-4 py-2 font-medium text-on-primary hover:bg-danger-hover disabled:bg-fg-disabled"
+            >
+              {restoreMutation.isPending ? "Restoring..." : "Restore from file"}
+            </button>
+          </div>
+          {restoreMutation.isSuccess && (
+            <p className="text-green-700 dark:text-green-400">
+              Backup restored.
+            </p>
+          )}
+          {restoreMutation.isError && (
+            <ErrorBanner>{restoreMutation.error.message}</ErrorBanner>
+          )}
+        </section>
+      )}
     </div>
   );
 }
