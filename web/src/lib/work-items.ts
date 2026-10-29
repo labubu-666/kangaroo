@@ -119,6 +119,14 @@ export async function deleteWorkItem(id: string): Promise<void> {
   });
 }
 
+export function duplicateWorkItem(id: string): Promise<WorkItem> {
+  return apiJson(
+    `/api/v1/work-items/${id}/duplicate`,
+    "Failed to duplicate work item",
+    { method: "POST" },
+  );
+}
+
 export type BulkDeleteRequest =
   | { ids: string[] }
   | { all_matching: true; filter?: string };

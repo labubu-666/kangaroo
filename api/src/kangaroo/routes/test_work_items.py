@@ -54,6 +54,24 @@ def test_create_work_item(client, project_id):
     assert "created_at" in data
 
 
+def test_duplicate_work_item(client, project_id):
+    """POST /api/v1/work-items/{id}/duplicate creates a copy titled "(copy)"."""
+    original = _create(client, project_id, "Fix bug", labels=["urgent"]).json()
+    response = client.post(f"/api/v1/work-items/{original['id']}/duplicate")
+    assert response.status_code == 201
+    data = response.json()
+    assert data["id"] != original["id"]
+    assert data["title"] == "Fix bug (copy)"
+    assert data["labels"] == ["urgent"]
+    assert data["status_id"] == original["status_id"]
+
+
+def test_duplicate_missing_work_item_returns_404(client):
+    """Duplicating an unknown work item returns 404."""
+    response = client.post(f"/api/v1/work-items/{uuid4()}/duplicate")
+    assert response.status_code == 404
+
+
 def test_create_work_item_minimal(client, project_id):
     """POST /api/v1/work-items creates a work item with title only."""
     response = client.post(
