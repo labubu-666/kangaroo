@@ -35,7 +35,7 @@
     "@playwright/experimental-ct-react": "1.62.1",
     "@playwright/test": "1.64.1",
     "@tanstack/react-router-devtools": "1.167.2",
-    "@tanstack/router-plugin": "1.168.42",
+    "@tanstack/router-plugin": "1.168.48",
     "@types/node": "24.13.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
