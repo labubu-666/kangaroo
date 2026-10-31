@@ -26,6 +26,29 @@ test.describe("InlineEdit", () => {
     ).toBeVisible();
   });
 
+  test("opens a CodeMirror editor when language is markdown", async ({
+    mount,
+    page,
+  }) => {
+    await mount(
+      <TestRouter>
+        <InlineEdit
+          value="# Title"
+          onSave={async () => {}}
+          ariaLabel="description"
+          language="markdown"
+        >
+          <p>Title</p>
+        </InlineEdit>
+      </TestRouter>,
+    );
+
+    await page.getByRole("button", { name: "Edit description" }).click();
+
+    await expect(page.locator(".cm-editor")).toBeVisible();
+    await expect(page.locator(".cm-content")).toContainText("# Title");
+  });
+
   test("clicking a link inside the content does not open the editor", async ({
     mount,
     page,
