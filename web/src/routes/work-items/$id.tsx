@@ -230,100 +230,100 @@ function WorkItemDetail() {
         <Loading />
       ) : item ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <div className="space-y-6 md:col-span-2">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <InlineEdit
-                  value={item.summary}
-                  onSave={saveSummary}
-                  ariaLabel="summary"
-                  placeholder="Enter work item summary"
-                  requiredMessage="Summary is required"
-                  textClassName="text-2xl font-bold sm:text-3xl"
-                >
-                  <h1 className="cursor-pointer break-words text-2xl font-bold sm:text-3xl">
-                    {item.summary}
-                  </h1>
-                </InlineEdit>
-              </div>
-              <div ref={menuRef} className="relative">
-                <button
-                  type="button"
-                  aria-label="More actions"
-                  aria-haspopup="menu"
-                  aria-expanded={menuOpen}
-                  aria-controls={menuId}
-                  onClick={() => setMenuOpen((open) => !open)}
-                  className="flex h-10 items-center rounded border border-border-strong px-4 font-medium hover:bg-surface-muted"
-                >
-                  ⋯
-                </button>
-                {menuOpen && (
-                  <div
-                    id={menuId}
-                    role="menu"
-                    aria-label="Work item actions"
-                    className="absolute right-0 z-10 mt-2 flex min-w-40 flex-col rounded border border-border bg-surface py-1 shadow-lg"
-                  >
-                    {item.trashed ? (
-                      <>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          disabled={restoreMutation.isPending}
-                          onClick={() => {
-                            setMenuOpen(false);
-                            restoreMutation.mutate();
-                          }}
-                          className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
-                        >
-                          Restore
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          disabled={deleteMutation.isPending}
-                          onClick={() => {
-                            setMenuOpen(false);
-                            handleDelete();
-                          }}
-                          className="px-3 py-2 text-left font-medium text-danger hover:bg-surface-strong disabled:text-fg-disabled"
-                        >
-                          Delete
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          disabled={duplicateMutation.isPending}
-                          onClick={() => {
-                            setMenuOpen(false);
-                            duplicateMutation.mutate();
-                          }}
-                          className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
-                        >
-                          Duplicate
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          disabled={trashMutation.isPending}
-                          onClick={() => {
-                            setMenuOpen(false);
-                            handleTrash();
-                          }}
-                          className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
-                        >
-                          Trash
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
+          <div className="flex flex-wrap items-start justify-between gap-4 md:col-span-3">
+            <div className="min-w-0 flex-1">
+              <InlineEdit
+                value={item.summary}
+                onSave={saveSummary}
+                ariaLabel="summary"
+                placeholder="Enter work item summary"
+                requiredMessage="Summary is required"
+                textClassName="text-2xl font-bold sm:text-3xl"
+              >
+                <h1 className="cursor-pointer break-words text-2xl font-bold sm:text-3xl">
+                  {item.summary}
+                </h1>
+              </InlineEdit>
             </div>
+            <div ref={menuRef} className="relative">
+              <button
+                type="button"
+                aria-label="More actions"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-controls={menuId}
+                onClick={() => setMenuOpen((open) => !open)}
+                className="flex h-10 items-center rounded border border-border-strong px-4 font-medium hover:bg-surface-muted"
+              >
+                ⋯
+              </button>
+              {menuOpen && (
+                <div
+                  id={menuId}
+                  role="menu"
+                  aria-label="Work item actions"
+                  className="absolute right-0 z-10 mt-2 flex min-w-40 flex-col rounded border border-border bg-surface py-1 shadow-lg"
+                >
+                  {item.trashed ? (
+                    <>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={restoreMutation.isPending}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          restoreMutation.mutate();
+                        }}
+                        className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
+                      >
+                        Restore
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={deleteMutation.isPending}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          handleDelete();
+                        }}
+                        className="px-3 py-2 text-left font-medium text-danger hover:bg-surface-strong disabled:text-fg-disabled"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={duplicateMutation.isPending}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          duplicateMutation.mutate();
+                        }}
+                        className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
+                      >
+                        Duplicate
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={trashMutation.isPending}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          handleTrash();
+                        }}
+                        className="px-3 py-2 text-left font-medium hover:bg-surface-strong disabled:text-fg-disabled"
+                      >
+                        Trash
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="space-y-6 md:col-span-2">
             {duplicateMutation.error && (
               <ErrorBanner>{duplicateMutation.error.message}</ErrorBanner>
             )}
@@ -343,7 +343,7 @@ function WorkItemDetail() {
                 onSave={saveDescription}
                 ariaLabel="description"
                 placeholder="Enter work item description (optional)"
-                multiline
+                language="markdown"
               >
                 {item.description ? (
                   <div
