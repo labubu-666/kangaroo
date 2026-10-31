@@ -13,6 +13,8 @@ const ICON_PATHS: Record<RecentType, string> = {
   board: "M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v13h-4z",
   function: "M16 18l6-6-6-6M8 6l-6 6 6 6",
   article: "M6 2h9l5 5v15H6zM14 2v6h6M9 13h6M9 17h6",
+  "knowledge-base":
+    "M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z",
   "work-item":
     "M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11",
 };

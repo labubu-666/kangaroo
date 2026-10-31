@@ -18,6 +18,7 @@ import { InlineEdit } from "../../components/InlineEdit";
 import { Loading } from "../../components/shared/Loading";
 import { Pagination } from "../../components/shared/Pagination";
 import { useDismiss } from "../../lib/use-dismiss";
+import { removeRecent, useRecordRecent } from "../../lib/recent";
 
 type KnowledgeBaseTab = "articles" | "summary";
 
@@ -90,6 +91,7 @@ function KnowledgeBaseDetail() {
     mutationFn: () => deleteKnowledgeBase(id),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ["knowledge-bases", id] });
+      removeRecent("knowledge-base", id);
       queryClient.invalidateQueries({ queryKey: ["knowledge-bases"] });
       navigate({ to: "/knowledge-bases" });
     },
@@ -111,6 +113,16 @@ function KnowledgeBaseDetail() {
     { label: "Knowledge bases", to: "/knowledge-bases" },
     { label: knowledgeBase?.name ?? "Loading..." },
   ]);
+
+  useRecordRecent(
+    knowledgeBase && {
+      type: "knowledge-base",
+      id: knowledgeBase.id,
+      title: knowledgeBase.name,
+      to: "/knowledge-bases/$id",
+      params: { id: knowledgeBase.id },
+    },
+  );
 
   if (isLoading) return <Loading />;
   if (error || !knowledgeBase) {

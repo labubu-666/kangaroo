@@ -5,7 +5,8 @@ export type RecentType =
   | "board"
   | "work-item"
   | "function"
-  | "article";
+  | "article"
+  | "knowledge-base";
 
 interface RecentBase {
   id: string;
@@ -33,6 +34,11 @@ export type RecentEntry = RecentBase &
         type: "article";
         parent: string;
         to: "/articles/$id";
+        params: { id: string };
+      }
+    | {
+        type: "knowledge-base";
+        to: "/knowledge-bases/$id";
         params: { id: string };
       }
   );
