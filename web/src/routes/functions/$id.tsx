@@ -10,6 +10,7 @@ import {
 } from "../../lib/functions";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 import { CodeEditor } from "../../components/functions/CodeEditor";
+import { RunButton } from "../../components/functions/RunButton";
 import { InlineEdit } from "../../components/InlineEdit";
 import { ConfirmChange } from "../../components/workflow/ConfirmChange";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
@@ -157,20 +158,12 @@ function FunctionDetail() {
               )}
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <button
+              <RunButton
                 onClick={() => runMutation.mutate()}
                 disabled={runMutation.isPending}
-                className="flex h-10 items-center gap-2 rounded bg-green-600 px-4 font-medium text-on-primary hover:bg-green-700 disabled:bg-fg-disabled"
               >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className="h-4 w-4 fill-current"
-                >
-                  <path d="M8 5v14l11-7z" />
-                </svg>
                 {runMutation.isPending ? "Running..." : "Run"}
-              </button>
+              </RunButton>
               <div ref={menuRef} className="relative">
                 <button
                   type="button"

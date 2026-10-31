@@ -21,7 +21,7 @@ export interface WorkItemType {
   modified_at: string;
 }
 
-// A project's statuses, in position order
+// In position order
 export function fetchStatuses(projectId: string): Promise<ProjectStatus[]> {
   return apiJson(
     `/api/v1/statuses/?project_id=${projectId}`,
@@ -29,7 +29,7 @@ export function fetchStatuses(projectId: string): Promise<ProjectStatus[]> {
   );
 }
 
-// A project's work item types, in position order
+// In position order
 export function fetchWorkItemTypes(projectId: string): Promise<WorkItemType[]> {
   return apiJson(
     `/api/v1/work-item-types/?project_id=${projectId}`,

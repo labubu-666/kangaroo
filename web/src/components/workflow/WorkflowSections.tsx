@@ -26,7 +26,6 @@ const PRIMARY =
 const DANGER =
   "rounded border border-red-300 dark:border-red-800 px-3 py-1 text-sm text-danger-hover hover:bg-danger-subtle disabled:text-fg-disabled";
 
-// Swaps positions with the neighbour, so the list order follows the new numbers
 function swapPositions<T extends { id: string; position: number }>(
   items: T[],
   index: number,

@@ -23,7 +23,7 @@ const STATUS_CARDS = [
   {
     key: "in_progress",
     label: "In progress",
-    className: "border-blue-200 dark:border-blue-900 bg-primary-subtle",
+    className: "border-primary/30 bg-primary-subtle",
     to: "/work-items",
     search: { filter: "statusCategory == 'in_progress'" },
   },

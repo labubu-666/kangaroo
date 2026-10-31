@@ -1,6 +1,5 @@
 import { CopyFilter } from "../shared/CopyFilter";
 
-// Shows a board's filter as code with a copy button
 export function FilterPreview({ filter }: { filter: string }) {
   return (
     <div className="relative">

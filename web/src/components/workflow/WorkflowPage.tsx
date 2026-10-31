@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
-// A delete the API refused until a replacement is chosen
 type Pending =
   | { kind: "status"; item: ProjectStatus; count: number }
   | { kind: "type"; item: WorkItemType; count: number };
@@ -37,7 +36,6 @@ export function WorkflowPage({ projectId: id }: { projectId: string }) {
   const [pending, setPending] = useState<Pending | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  // A status change waiting for the user to confirm its side effects
   const [confirming, setConfirming] = useState<{
     status: ProjectStatus;
     kind: "rename" | "category";
@@ -84,7 +82,6 @@ export function WorkflowPage({ projectId: id }: { projectId: string }) {
     queryClient.invalidateQueries({ queryKey: ["work-item-types"] });
   };
 
-  // Runs a change (create, rename, reorder, transition) and refreshes the page
   const runAction = (action: () => Promise<unknown>) => {
     setMessage(null);
     action()
@@ -92,8 +89,6 @@ export function WorkflowPage({ projectId: id }: { projectId: string }) {
       .catch((err: Error) => setMessage(err.message));
   };
 
-  // Deletes a status or type. The API refuses a status or type that work items
-  // use, and the reply says how many. That opens the replacement dialog.
   const deleteItem = useMutation({
     mutationFn: ({
       kind,
