@@ -65,7 +65,6 @@ function WorkItemDetail() {
     enabled: !!item?.project_id,
   });
 
-  // The status choices are the item's own project's statuses
   const { data: statuses } = useQuery({
     queryKey: ["statuses", item?.project_id],
     queryFn: () => fetchStatuses(item?.project_id ?? ""),

@@ -37,7 +37,6 @@ export function ProjectPicker({
   const label = selected?.name ?? value;
 
   const matches = matchProjects(projects, search);
-  // With no search, show only the first few projects
   const shown = search.trim()
     ? matches
     : matches.slice(0, PROJECT_PICKER_LIMIT);

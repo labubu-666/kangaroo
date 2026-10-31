@@ -134,6 +134,18 @@ export function parseCondition(
   return null;
 }
 
+// The project ID when the filter is exactly one `project.id == '…'` condition
+export function projectIdFromFilter(
+  filter: string,
+  fields: readonly string[] = BOARD_FIELDS,
+): string | undefined {
+  const condition = parseCondition(filter, fields);
+  if (condition?.field === "project.id" && condition.op === "==") {
+    return condition.values[0];
+  }
+  return undefined;
+}
+
 // Quotes a value with whichever quote character it does not contain.
 // The filter language has no escapes, so a value with both kinds cannot be
 // written; the API then rejects the filter with a 422.

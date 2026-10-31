@@ -7,7 +7,7 @@ import { StatusPicker } from "../../components/work-items/StatusPicker";
 import { WorkItemList } from "../../components/work-items/WorkItemList";
 import {
   WORK_ITEM_FIELDS,
-  parseCondition,
+  projectIdFromFilter,
   statusIdFromFilter,
   withStatus,
 } from "../../lib/filter-bubbles";
@@ -65,13 +65,4 @@ function WorkItemsList() {
       <WorkItemList key={filter ?? ""} filter={filter} />
     </div>
   );
-}
-
-// The project ID when the filter is exactly one `project.id == '…'` condition
-function projectIdFromFilter(filter: string): string | undefined {
-  const condition = parseCondition(filter, WORK_ITEM_FIELDS);
-  if (condition?.field === "project.id" && condition.op === "==") {
-    return condition.values[0];
-  }
-  return undefined;
 }

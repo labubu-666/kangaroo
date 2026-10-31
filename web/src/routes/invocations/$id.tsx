@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchFunction, runFunction } from "../../lib/functions";
 import { fetchInvocation } from "../../lib/invocations";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
+import { RunButton } from "../../components/functions/RunButton";
 import { RunOutput } from "../../components/functions/RunOutput";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { Loading } from "../../components/shared/Loading";
@@ -69,20 +70,12 @@ function InvocationDetail() {
                 </Link>
               )}
             </div>
-            <button
+            <RunButton
               onClick={() => rerunMutation.mutate()}
               disabled={rerunMutation.isPending || !functionId}
-              className="flex h-10 items-center gap-2 rounded bg-green-600 px-4 font-medium text-on-primary hover:bg-green-700 disabled:bg-fg-disabled"
             >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                className="h-4 w-4 fill-current"
-              >
-                <path d="M8 5v14l11-7z" />
-              </svg>
               {rerunMutation.isPending ? "Running..." : "Re-run"}
-            </button>
+            </RunButton>
           </div>
 
           {rerunMutation.error && (

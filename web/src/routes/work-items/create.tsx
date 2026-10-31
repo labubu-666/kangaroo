@@ -59,7 +59,6 @@ function CreateWorkItem() {
     },
   });
 
-  // The type and status choices come from the selected project
   const projectId = watch("projectId");
   const { data: types } = useQuery({
     queryKey: ["work-item-types", projectId],

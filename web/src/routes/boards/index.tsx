@@ -5,7 +5,7 @@ import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext"
 import { BoardList } from "../../components/boards/BoardList";
 import { FilterBubbles } from "../../components/shared/FilterBubbles";
 import { FilterPreview } from "../../components/boards/FilterPreview";
-import { parseCondition } from "../../lib/filter-bubbles";
+import { projectIdFromFilter } from "../../lib/filter-bubbles";
 
 export const Route = createFileRoute("/boards/")({
   component: BoardsList,
@@ -57,13 +57,4 @@ function BoardsList() {
       <BoardList key={filter ?? ""} filter={filter} />
     </div>
   );
-}
-
-// The project ID when the filter is exactly one `project.id == '…'` condition
-function projectIdFromFilter(filter: string): string | undefined {
-  const condition = parseCondition(filter);
-  if (condition?.field === "project.id" && condition.op === "==") {
-    return condition.values[0];
-  }
-  return undefined;
 }

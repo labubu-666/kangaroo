@@ -187,7 +187,7 @@ function ConditionBubble({
   const projectPicker = isProjectField(field) && (op === "==" || op === "!=");
 
   return (
-    <div className="flex flex-wrap items-center gap-1 rounded border border-blue-200 dark:border-blue-900 bg-primary-subtle px-2 py-1">
+    <div className="flex flex-wrap items-center gap-1 rounded border border-primary/30 bg-primary-subtle px-2 py-1">
       <select
         aria-label="Field"
         value={field}

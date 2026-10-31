@@ -239,7 +239,7 @@ function BoardColumnView({
       ref={ref}
       className={`flex min-h-64 min-w-0 flex-col gap-3 rounded border p-3 transition-colors ${
         isDropTarget
-          ? "border-blue-400 dark:border-blue-500 bg-primary-subtle"
+          ? "border-primary bg-primary-subtle"
           : "border-border bg-surface-muted"
       }`}
     >
@@ -257,7 +257,6 @@ function BoardColumnView({
   );
 }
 
-// Returns a copy of the view with the item moved into the column for `status`
 function moveItem(
   view: BoardView,
   itemId: string,

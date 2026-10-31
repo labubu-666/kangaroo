@@ -47,7 +47,6 @@ export async function apiJson<T>(
   return res.json();
 }
 
-// Init for a request with a JSON body
 export function jsonBody(
   method: "POST" | "PUT" | "PATCH",
   data: unknown,
