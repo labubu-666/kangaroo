@@ -1,14 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useId, useState } from "react";
 import { DragDropProvider, useDroppable } from "@dnd-kit/react";
 import type { DragEndEvent } from "@dnd-kit/react";
 import type { BoardView } from "../../lib/boards";
-import { fetchBoard, fetchBoardView } from "../../lib/boards";
+import { deleteBoard, fetchBoard, fetchBoardView } from "../../lib/boards";
 import { fetchProject } from "../../lib/projects";
 import { updateWorkItem, type WorkItem } from "../../lib/work-items";
 import type { ProjectStatus } from "../../lib/workflow";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
-import { useRecordRecent } from "../../lib/recent";
+import { removeRecent, useRecordRecent } from "../../lib/recent";
+import { useDismiss } from "../../lib/use-dismiss";
 import { useDocumentTitle } from "../../lib/use-document-title";
 import { BoardCard } from "../../components/boards/BoardCard";
 import { DoneStatusWarning } from "../../components/workflow/DoneStatusWarning";
@@ -24,8 +26,14 @@ export const Route = createFileRoute("/projects/$id_/boards/$boardId")({
 
 function BoardDetail() {
   const { id, boardId } = Route.useParams();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const viewKey = ["boards", boardId, "view"];
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuId = useId();
+  const menuRef = useDismiss<HTMLDivElement>(menuOpen, () =>
+    setMenuOpen(false),
+  );
 
   const {
     data: board,
@@ -71,6 +79,23 @@ function BoardDetail() {
       queryClient.invalidateQueries({ queryKey: ["work-items"] });
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteBoard(boardId),
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["boards", boardId] });
+      removeRecent("board", boardId);
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      navigate({ to: "/projects/$id", params: { id } });
+    },
+  });
+
+  const handleDelete = () => {
+    setMenuOpen(false);
+    if (confirm("Are you sure you want to delete this board?")) {
+      deleteMutation.mutate();
+    }
+  };
 
   useBreadcrumbs([
     { label: "Projects", to: "/projects" },
@@ -127,6 +152,10 @@ function BoardDetail() {
         <ErrorBanner>{moveMutation.error.message}</ErrorBanner>
       )}
 
+      {deleteMutation.error && (
+        <ErrorBanner>{deleteMutation.error.message}</ErrorBanner>
+      )}
+
       {isLoading ? (
         <Loading />
       ) : board ? (
@@ -135,13 +164,46 @@ function BoardDetail() {
             <h1 className="min-w-0 break-words text-2xl font-bold sm:text-3xl">
               {board.name}
             </h1>
-            <Link
-              to="/projects/$id/boards/$boardId/edit"
-              params={{ id, boardId: board.id }}
-              className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
-            >
-              Edit
-            </Link>
+            <div ref={menuRef} className="relative">
+              <button
+                type="button"
+                aria-label="More actions"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-controls={menuId}
+                onClick={() => setMenuOpen((open) => !open)}
+                className="flex h-10 items-center rounded border border-border-strong px-4 font-medium hover:bg-surface-muted"
+              >
+                ⋯
+              </button>
+              {menuOpen && (
+                <div
+                  id={menuId}
+                  role="menu"
+                  aria-label="Board actions"
+                  className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-border bg-surface py-1 shadow-lg"
+                >
+                  <Link
+                    to="/projects/$id/boards/$boardId/edit"
+                    params={{ id, boardId: board.id }}
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                    className="px-3 py-2 font-medium hover:bg-surface-strong"
+                  >
+                    Edit
+                  </Link>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
+                    className="px-3 py-2 text-left font-medium text-danger hover:bg-surface-strong disabled:text-fg-disabled"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {board.filter && <FilterPreview filter={board.filter} />}
