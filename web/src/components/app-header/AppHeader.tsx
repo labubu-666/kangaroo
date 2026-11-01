@@ -71,6 +71,15 @@ export function AppHeader() {
                 Admin
               </Link>
               <Link
+                to="/api-keys"
+                role="menuitem"
+                onClick={() => setMenuOpen(false)}
+                className="px-3 py-2 font-medium hover:bg-surface-strong"
+                activeProps={{ className: "text-primary" }}
+              >
+                API keys
+              </Link>
+              <Link
                 to="/about"
                 role="menuitem"
                 onClick={() => setMenuOpen(false)}

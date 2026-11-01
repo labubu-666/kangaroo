@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from kangaroo.errors import InvalidSortError, NotFoundError
 from kangaroo.repositories.tables import (
+    ApiKeyRow,
     ArticleRow,
     Base,
     BoardRow,
@@ -469,3 +470,77 @@ class InvocationRepository(
 
     def _default_order(self) -> list[Any]:
         return [InvocationRow.id.desc()]
+
+
+class ApiKeyRepository:
+    """Storage for API keys. Keys are looked up by hash, so the secret is never stored.
+
+    Keys are not paginated or searched, so this does not use the generic Repository.
+    """
+
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def create(
+        self,
+        *,
+        name: str,
+        key_hash: str,
+        owner: str,
+        owner_email: str | None,
+        owner_name: str | None,
+        expires_at: datetime | None,
+    ) -> ApiKeyRow:
+        now = utc_now()
+        row = ApiKeyRow(
+            id=uuid7(),
+            name=name,
+            key_hash=key_hash,
+            owner=owner,
+            owner_email=owner_email,
+            owner_name=owner_name,
+            expires_at=expires_at,
+            created_at=now,
+            modified_at=now,
+        )
+        self._session.add(row)
+        self._session.flush()
+        return row
+
+    def list_active(self, owner: str) -> list[ApiKeyRow]:
+        """Return the owner's keys that have not been revoked, oldest first."""
+        stmt = (
+            select(ApiKeyRow)
+            .where(ApiKeyRow.owner == owner, ApiKeyRow.revoked_at.is_(None))
+            .order_by(ApiKeyRow.created_at, ApiKeyRow.id)
+        )
+        return list(self._session.scalars(stmt))
+
+    def revoke(self, item_id: UUID, owner: str) -> bool:
+        """Revoke a key the owner holds. Returns False if it is missing or not theirs."""
+        row = self._session.get(ApiKeyRow, item_id)
+        if row is None or row.owner != owner or row.revoked_at is not None:
+            return False
+        now = utc_now()
+        row.revoked_at = now
+        row.modified_at = now
+        self._session.flush()
+        return True
+
+    def authenticate(self, key_hash: str) -> ApiKeyRow | None:
+        """Return the key with this hash if it is usable, and record the use.
+
+        Returns None for an unknown, revoked or expired key.
+        """
+        stmt = select(ApiKeyRow).where(ApiKeyRow.key_hash == key_hash)
+        row = self._session.scalars(stmt).first()
+        now = utc_now()
+        if (
+            row is None
+            or row.revoked_at is not None
+            or (row.expires_at is not None and row.expires_at <= now)
+        ):
+            return None
+        row.last_used_at = now
+        self._session.flush()
+        return row

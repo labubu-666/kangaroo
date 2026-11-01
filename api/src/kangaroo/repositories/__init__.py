@@ -1,5 +1,6 @@
 from kangaroo.repositories.engine import create_engine_for
 from kangaroo.repositories.repositories import (
+    ApiKeyRepository,
     ArticleRepository,
     BoardRepository,
     FunctionRepository,
@@ -14,6 +15,7 @@ from kangaroo.repositories.repositories import (
 )
 
 __all__ = [
+    "ApiKeyRepository",
     "ArticleRepository",
     "BoardRepository",
     "FunctionRepository",

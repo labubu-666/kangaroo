@@ -8,6 +8,7 @@ from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
 from kangaroo.repositories import (
+    ApiKeyRepository,
     ArticleRepository,
     BoardRepository,
     FunctionRepository,
@@ -22,6 +23,7 @@ from kangaroo.repositories import (
 )
 from kangaroo.runners import BaseRunner, create_runner
 from kangaroo.services import (
+    ApiKeyService,
     ArticleService,
     BackupService,
     BoardService,
@@ -161,6 +163,12 @@ def get_knowledge_base_service(
     )
 
 
+def get_api_key_service(
+    session: Annotated[Session, Depends(get_session)],
+) -> ApiKeyService:
+    return ApiKeyService(ApiKeyRepository(session))
+
+
 def get_backup_service(
     session: Annotated[Session, Depends(get_session)],
 ) -> BackupService:
@@ -192,3 +200,4 @@ WorkflowServiceDep = Annotated[WorkflowService, Depends(get_workflow_service)]
 BoardServiceDep = Annotated[BoardService, Depends(get_board_service)]
 ReportServiceDep = Annotated[ReportService, Depends(get_report_service)]
 BackupServiceDep = Annotated[BackupService, Depends(get_backup_service)]
+ApiKeyServiceDep = Annotated[ApiKeyService, Depends(get_api_key_service)]
