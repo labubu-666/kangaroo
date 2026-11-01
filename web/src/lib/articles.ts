@@ -44,15 +44,15 @@ export const ARTICLE_SORTS = [
 export function fetchArticles(
   limit: number,
   offset: number,
-  knowledgeBaseId: string,
+  knowledgeBaseId: string | undefined,
   search?: string,
   sort?: string,
 ): Promise<PaginatedArticles> {
   const params = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
-    knowledge_base_id: knowledgeBaseId,
   });
+  if (knowledgeBaseId) params.set("knowledge_base_id", knowledgeBaseId);
   if (search) params.set("search", search);
   if (sort) params.set("sort", sort);
   return apiJson(`/api/v1/articles/?${params}`, "Failed to fetch articles");
