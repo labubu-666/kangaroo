@@ -8,6 +8,7 @@ const paths = [
   "/work-items/$id",
   "/projects/$id",
   "/projects/$id/boards/$boardId",
+  "/articles/$id",
 ];
 
 const workItems = {
@@ -54,7 +55,9 @@ const boards = {
   total: 0,
 };
 
-// Answers the three list endpoints the search bar queries
+const emptyPage = { results: [], limit: 3, offset: 0, total: 0 };
+
+// Answers the five list endpoints the search bar queries
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/v1/work-items/**", (route) =>
     route.fulfill({ json: workItems }),
@@ -64,6 +67,12 @@ test.beforeEach(async ({ page }) => {
   );
   await page.route("**/api/v1/boards/**", (route) =>
     route.fulfill({ json: boards }),
+  );
+  await page.route("**/api/v1/knowledge-bases/**", (route) =>
+    route.fulfill({ json: emptyPage }),
+  );
+  await page.route("**/api/v1/articles/**", (route) =>
+    route.fulfill({ json: emptyPage }),
   );
 });
 
@@ -207,6 +216,67 @@ test.describe("SearchBar", () => {
     );
   });
 
+  test("shows knowledge bases and articles in their own groups", async ({
+    mount,
+    page,
+  }) => {
+    await page.route("**/api/v1/knowledge-bases/**", (route) =>
+      route.fulfill({
+        json: {
+          results: [
+            {
+              id: "kb1-0000-4000-8000-000000000004",
+              name: "Login docs",
+              description: null,
+              labels: [],
+              created_at: "2026-01-01T00:00:00Z",
+              modified_at: "2026-01-01T00:00:00Z",
+            },
+          ],
+          limit: 3,
+          offset: 0,
+          total: 1,
+        },
+      }),
+    );
+    await page.route("**/api/v1/articles/**", (route) =>
+      route.fulfill({
+        json: {
+          results: [
+            {
+              id: "a1-0000-4000-8000-000000000005",
+              knowledge_base_id: "kb1-0000-4000-8000-000000000004",
+              title: "Login help",
+              body: null,
+              labels: [],
+              created_at: "2026-01-01T00:00:00Z",
+              modified_at: "2026-01-01T00:00:00Z",
+              viewed_at: null,
+            },
+          ],
+          limit: 3,
+          offset: 0,
+          total: 1,
+        },
+      }),
+    );
+    const component = await mount(
+      <TestRouter paths={paths} showLocation>
+        <SearchBar />
+      </TestRouter>,
+    );
+    await component.getByRole("combobox", { name: "Search" }).fill("login");
+    const list = page.getByRole("listbox", { name: "Search suggestions" });
+    await expect(list).toContainText("Login docs");
+    await expect(list).toContainText("Knowledge bases");
+    await expect(list).toContainText("Login help");
+    await expect(list).toContainText("Articles");
+    await list.getByText("Login help").click();
+    await expect(component.getByTestId("location")).toHaveText(
+      "/articles/a1-0000-4000-8000-000000000005",
+    );
+  });
+
   test("shows boards in a Boards group and links to the board", async ({
     mount,
     page,
@@ -258,6 +328,12 @@ test.describe("SearchBar", () => {
       route.fulfill({
         json: { results: [], limit: 3, offset: 0, total: 0 },
       }),
+    );
+    await page.route("**/api/v1/knowledge-bases/**", (route) =>
+      route.fulfill({ json: emptyPage }),
+    );
+    await page.route("**/api/v1/articles/**", (route) =>
+      route.fulfill({ json: emptyPage }),
     );
     const component = await mount(
       <TestRouter paths={paths}>

@@ -62,6 +62,20 @@ export function SearchBar() {
           to: "/projects/$id/boards/$boardId",
           params: { id: board.project_id, boardId: board.id },
         })),
+        ...data.knowledgeBases.results.map((knowledgeBase) => ({
+          key: `knowledge-base-${knowledgeBase.id}`,
+          label: knowledgeBase.name,
+          group: "Knowledge bases",
+          to: "/knowledge-bases/$id",
+          params: { id: knowledgeBase.id },
+        })),
+        ...data.articles.results.map((article) => ({
+          key: `article-${article.id}`,
+          label: article.title,
+          group: "Articles",
+          to: "/articles/$id",
+          params: { id: article.id },
+        })),
       ]
     : [];
 
@@ -121,7 +135,7 @@ export function SearchBar() {
           aria-activedescendant={
             showList && active >= 0 ? `${listId}-${active}` : undefined
           }
-          placeholder="Search work items, projects and boards"
+          placeholder="Search kangaroo"
           value={text}
           onChange={(e) => {
             setText(e.target.value);

@@ -46,8 +46,8 @@ function SearchResults() {
 
       {!term ? (
         <div className="text-center text-fg-muted">
-          Type something in the search bar to find work items, projects and
-          boards.
+          Type something in the search bar to find work items, projects, boards,
+          knowledge bases and articles.
         </div>
       ) : error ? (
         <ErrorBanner>Error loading search results</ErrorBanner>
@@ -127,6 +127,57 @@ function SearchResults() {
                       {board.description}
                     </p>
                   )}
+                </Link>
+              ))
+            )}
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold">
+              Knowledge bases ({data.knowledgeBases.total})
+            </h2>
+            {data.knowledgeBases.results.length === 0 ? (
+              <p className="text-sm text-fg-muted">
+                No matching knowledge bases
+              </p>
+            ) : (
+              data.knowledgeBases.results.map((knowledgeBase) => (
+                <Link
+                  key={knowledgeBase.id}
+                  to="/knowledge-bases/$id"
+                  params={{ id: knowledgeBase.id }}
+                  className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
+                >
+                  <h3 className="font-semibold text-primary">
+                    {knowledgeBase.name}
+                  </h3>
+                  {knowledgeBase.description && (
+                    <p className="text-sm text-fg-secondary">
+                      {knowledgeBase.description}
+                    </p>
+                  )}
+                </Link>
+              ))
+            )}
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold">
+              Articles ({data.articles.total})
+            </h2>
+            {data.articles.results.length === 0 ? (
+              <p className="text-sm text-fg-muted">No matching articles</p>
+            ) : (
+              data.articles.results.map((article) => (
+                <Link
+                  key={article.id}
+                  to="/articles/$id"
+                  params={{ id: article.id }}
+                  className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
+                >
+                  <h3 className="font-semibold text-primary">
+                    {article.title}
+                  </h3>
                 </Link>
               ))
             )}
