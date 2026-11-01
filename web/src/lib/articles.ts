@@ -4,7 +4,7 @@ export interface Article {
   id: string;
   knowledge_base_id: string;
   title: string;
-  body: string;
+  body: string | null;
   labels: string[];
   created_at: string;
   modified_at: string;
@@ -12,7 +12,7 @@ export interface Article {
 }
 
 export interface ArticleDetail extends Article {
-  html: string;
+  html: string | null;
 }
 
 export type PaginatedArticles = Paginated<Article>;
@@ -20,13 +20,13 @@ export type PaginatedArticles = Paginated<Article>;
 export interface ArticleInput {
   knowledge_base_id: string;
   title: string;
-  body: string;
+  body: string | null;
   labels: string[];
 }
 
 export interface ArticleUpdate {
   title?: string;
-  body?: string;
+  body?: string | null;
   labels?: string[];
 }
 

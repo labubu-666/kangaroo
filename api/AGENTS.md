@@ -16,3 +16,5 @@
 - The project exclusively uses `pytest`.
 - Prefer `monkeypatch` to `unittest.mock.patch`.
 - Run tests using `uv run pytest -vvv`.
+# Server
+- No need to restart the server after changes `uv run kangaroo serve --host 0.0.0.0 --reload`, it auto reloads

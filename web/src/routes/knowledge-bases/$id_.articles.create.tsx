@@ -34,7 +34,7 @@ function CreateArticle() {
       createArticle({
         knowledge_base_id: id,
         title: values.title.trim(),
-        body: values.body,
+        body: values.body.trim() || null,
         labels: values.labels,
       }),
     onSuccess: (created) => {

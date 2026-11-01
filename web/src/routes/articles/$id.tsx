@@ -48,7 +48,7 @@ function ArticleDetail() {
   };
 
   const saveBody = async (body: string) => {
-    await updateArticle(id, { body });
+    await updateArticle(id, { body: body.trim() || null });
     queryClient.invalidateQueries({ queryKey: ["articles"] });
   };
 
@@ -168,15 +168,14 @@ function ArticleDetail() {
         <div className="flex min-h-0 min-w-0 flex-1 flex-col rounded border border-border p-4 sm:p-6 md:col-span-2">
           {/* The HTML is sanitized by the API before it reaches the page. */}
           <InlineEdit
-            value={article.body}
+            value={article.body ?? ""}
             onSave={saveBody}
             ariaLabel="body"
-            placeholder="Write the article in Markdown"
-            requiredMessage="Body is required"
+            placeholder="Write the article in Markdown (optional)"
             language="markdown"
             fill
           >
-            {article.body ? (
+            {article.html ? (
               <article
                 className="prose prose-headings:mt-6 prose-headings:mb-2 dark:prose-invert max-w-none"
                 dangerouslySetInnerHTML={{ __html: article.html }}

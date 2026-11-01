@@ -392,7 +392,7 @@ class ArticleCreate(BaseModel):
 
     knowledge_base_id: UUID
     title: str
-    body: str
+    body: str | None = None
     labels: Labels = Field(default_factory=list)
 
 
@@ -404,7 +404,6 @@ class ArticleUpdate(BaseModel):
 
     _reject_null_knowledge_base_id = field_validator("knowledge_base_id")(reject_null)
     _reject_null_title = field_validator("title")(reject_null)
-    _reject_null_body = field_validator("body")(reject_null)
 
 
 class ArticleReplace(ArticleCreate):
@@ -417,9 +416,9 @@ class Article(ArticleCreate, Timestamped):
 
 
 class ArticleDetail(Article):
-    """An article with its body rendered to sanitized HTML."""
+    """An article with its body rendered to sanitized HTML, or null without a body."""
 
-    html: str
+    html: str | None
 
 
 RunStatus = Literal["SUCCESS", "ERROR"]
