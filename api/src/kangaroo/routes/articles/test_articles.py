@@ -41,6 +41,36 @@ def test_create_article(client, knowledge_base_id):
     assert "created_at" in data
 
 
+def test_create_article_without_body(client, knowledge_base_id):
+    """POST /api/v1/articles without a body stores a null body."""
+    response = client.post(
+        "/api/v1/articles",
+        json={"knowledge_base_id": knowledge_base_id, "title": "Empty"},
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["body"] is None
+
+
+def test_get_article_without_body_has_null_html(client, knowledge_base_id):
+    """GET /api/v1/articles/{id} returns null html when the article has no body."""
+    created = client.post(
+        "/api/v1/articles",
+        json={"knowledge_base_id": knowledge_base_id, "title": "Empty"},
+    ).json()
+    data = client.get(f"/api/v1/articles/{created['id']}").json()
+    assert data["body"] is None
+    assert data["html"] is None
+
+
+def test_update_article_clears_body(client, knowledge_base_id):
+    """PATCH with a null body clears it, as the work item description does."""
+    created = create(client, knowledge_base_id).json()
+    response = client.patch(f"/api/v1/articles/{created['id']}", json={"body": None})
+    assert response.status_code == 200
+    assert response.json()["body"] is None
+
+
 def test_create_article_missing_title(client, knowledge_base_id):
     """POST /api/v1/articles without a title returns validation error."""
     response = client.post(

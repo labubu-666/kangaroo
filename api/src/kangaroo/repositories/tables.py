@@ -168,7 +168,7 @@ class ArticleRow(Base):
         Uuid, ForeignKey("knowledge_bases.id", ondelete="RESTRICT"), nullable=False
     )
     title: Mapped[str] = mapped_column(String)
-    body: Mapped[str] = mapped_column(String)
+    body: Mapped[str | None] = mapped_column(String, nullable=True)
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
     viewed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
 

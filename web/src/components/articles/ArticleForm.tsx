@@ -28,13 +28,11 @@ export function ArticleForm({
 }) {
   const [values, setValues] = useState<ArticleFormValues>(initial);
   const [titleError, setTitleError] = useState<string | null>(null);
-  const [bodyError, setBodyError] = useState<string | null>(null);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setTitleError(values.title.trim() ? null : "Title is required");
-    setBodyError(values.body.trim() ? null : "Body is required");
-    if (!values.title.trim() || !values.body.trim()) return;
+    if (!values.title.trim()) return;
     onSubmit(values);
   };
 
@@ -64,7 +62,7 @@ export function ArticleForm({
         </div>
 
         <div className="space-y-2">
-          <span className="block font-medium">Body *</span>
+          <span className="block font-medium">Body</span>
           <CodeEditor
             value={values.body}
             ariaLabel="Body"
@@ -73,7 +71,6 @@ export function ArticleForm({
             placeholder="Write the article in Markdown"
             onChange={(body) => setValues({ ...values, body })}
           />
-          {bodyError && <p className="text-sm text-danger">{bodyError}</p>}
         </div>
 
         <LabelsEditor

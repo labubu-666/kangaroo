@@ -29,7 +29,8 @@ class ArticleService:
     def get(self, item_id: UUID) -> ArticleDetail:
         self._articles.mark_viewed(item_id)
         article = self._articles.get_by_id(item_id)
-        return ArticleDetail(**article.model_dump(), html=render_markdown(article.body))
+        html = render_markdown(article.body) if article.body else None
+        return ArticleDetail(**article.model_dump(), html=html)
 
     def list_paginated(
         self,

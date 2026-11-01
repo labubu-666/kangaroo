@@ -36,7 +36,7 @@ test.describe("ArticleForm", () => {
     await expect(component.getByText("howto", { exact: true })).toBeVisible();
   });
 
-  test("requires a title and body before submitting", async ({ mount }) => {
+  test("requires a title before submitting", async ({ mount }) => {
     let submitted = false;
     const component = await mount(
       <TestRouter paths={paths}>
@@ -55,8 +55,29 @@ test.describe("ArticleForm", () => {
     );
     await component.getByRole("button", { name: "Create" }).click();
     await expect(component.getByText("Title is required")).toBeVisible();
-    await expect(component.getByText("Body is required")).toBeVisible();
     expect(submitted).toBe(false);
+  });
+
+  test("submits with an empty body", async ({ mount }) => {
+    let submitted = false;
+    const component = await mount(
+      <TestRouter paths={paths}>
+        <ArticleForm
+          initial={empty}
+          submitLabel="Create"
+          pendingLabel="Creating..."
+          disabled={false}
+          error={null}
+          onCancel={() => {}}
+          onSubmit={() => {
+            submitted = true;
+          }}
+        />
+      </TestRouter>,
+    );
+    await component.getByPlaceholder("Enter article title").fill("Draft");
+    await component.getByRole("button", { name: "Create" }).click();
+    expect(submitted).toBe(true);
   });
 
   test("Cancel calls onCancel instead of navigating", async ({ mount }) => {
