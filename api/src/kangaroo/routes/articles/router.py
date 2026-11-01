@@ -7,6 +7,7 @@ from kangaroo.schemas import (
     Article,
     ArticleCreate,
     ArticleDetail,
+    ArticleListItem,
     ArticleReplace,
     ArticleUpdate,
     PaginatedResponse,
@@ -21,12 +22,12 @@ def create_article(item: ArticleCreate, service: ArticleServiceDep) -> Article:
     return service.create(item)
 
 
-@router.get("/", response_model=PaginatedResponse[Article])
+@router.get("/", response_model=PaginatedResponse[ArticleListItem])
 def list_articles(
     params: ListParamsDep,
     service: ArticleServiceDep,
     knowledge_base_id: UUID | None = None,
-) -> PaginatedResponse[Article]:
+) -> PaginatedResponse[ArticleListItem]:
     """List articles with pagination.
 
     Args:

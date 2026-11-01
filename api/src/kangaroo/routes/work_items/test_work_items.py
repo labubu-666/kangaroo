@@ -1269,3 +1269,70 @@ def test_renamed_status_shows_new_name_on_work_items(client, project_id):
         client.get(f"/api/v1/work-items/{item_id}").json()["status"]["name"]
         == "Backlog"
     )
+
+
+def test_search_matches_plain_description_not_markdown_syntax(client, project_id):
+    """Search matches the rendered text, so Markdown markup is not searchable."""
+    _create(client, project_id, summary="Plain", description="**bold** word")
+    _create(
+        client, project_id, summary="Link", description="[docs](https://wiki.example)"
+    )
+
+    bold = client.get("/api/v1/work-items?search=bold").json()
+    assert [item["summary"] for item in bold["results"]] == ["Plain"]
+    markup = client.get("/api/v1/work-items?search=**bold**").json()
+    assert markup["total"] == 0
+    url = client.get("/api/v1/work-items?search=wiki.example").json()
+    assert url["total"] == 0
+
+
+def test_search_result_has_snippet_with_match_count(client, project_id):
+    """A description match comes back with a snippet and the number of matches."""
+    _create(client, project_id, summary="Task", description="Login fails. Login again.")
+
+    results = client.get("/api/v1/work-items?search=login").json()["results"]
+
+    assert results[0]["snippet"] == {
+        "text": "Login fails. Login again.",
+        "match_count": 2,
+    }
+
+
+def test_title_only_match_has_no_snippet(client, project_id):
+    """A match only in the summary has no snippet."""
+    _create(client, project_id, summary="Login bug", description="unrelated")
+
+    results = client.get("/api/v1/work-items?search=login").json()["results"]
+
+    assert results[0]["snippet"] is None
+
+
+def test_plain_description_is_not_in_responses(client, project_id):
+    """The stored plain text is used for search and never returned."""
+    item = _create(client, project_id, description="**x**").json()
+
+    assert "plain_description" not in item
+    assert (
+        "plain_description" not in client.get(f"/api/v1/work-items/{item['id']}").json()
+    )
+
+
+def test_plain_description_follows_updates(client, project_id):
+    """Updating or clearing the description updates what search matches."""
+    item = _create(client, project_id, description="old text").json()
+
+    client.patch(f"/api/v1/work-items/{item['id']}", json={"description": "new text"})
+    assert client.get("/api/v1/work-items?search=new").json()["total"] == 1
+    assert client.get("/api/v1/work-items?search=old").json()["total"] == 0
+
+    client.patch(f"/api/v1/work-items/{item['id']}", json={"description": None})
+    assert client.get("/api/v1/work-items?search=new").json()["total"] == 0
+
+
+def test_snippet_is_only_in_work_item_list(client, project_id):
+    """The snippet appears in list results only, never on a single work item."""
+    item = _create(client, project_id, description="Login fails").json()
+
+    assert "snippet" not in client.get(f"/api/v1/work-items/{item['id']}").json()
+    listed = client.get("/api/v1/work-items?search=login").json()["results"][0]
+    assert listed["snippet"]["match_count"] == 1

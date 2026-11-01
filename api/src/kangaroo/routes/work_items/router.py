@@ -9,6 +9,7 @@ from kangaroo.schemas import (
     WorkItemBulkDeleted,
     WorkItemCreate,
     WorkItemDetail,
+    WorkItemListItem,
     WorkItemReplace,
     WorkItemUpdate,
 )
@@ -25,14 +26,14 @@ def create_work_item(
     return service.create(item)
 
 
-@router.get("/", response_model=PaginatedResponse[WorkItemDetail])
+@router.get("/", response_model=PaginatedResponse[WorkItemListItem])
 def list_work_items(
     params: ListParamsDep,
     service: WorkItemServiceDep,
     project_id: UUID | None = None,
     parent_id: UUID | None = None,
     filter: FilterQuery = None,
-) -> PaginatedResponse[WorkItemDetail]:
+) -> PaginatedResponse[WorkItemListItem]:
     """List work items with pagination.
 
     Args:

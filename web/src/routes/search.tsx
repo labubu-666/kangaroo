@@ -4,6 +4,8 @@ import { fetchProject } from "../lib/projects";
 import { searchAll } from "../lib/search";
 
 import { ErrorBanner } from "../components/shared/ErrorBanner";
+import { Highlight } from "../components/shared/Highlight";
+import { SearchSnippet } from "../components/shared/SearchSnippet";
 import { Loading } from "../components/shared/Loading";
 import { StatusBadge } from "../components/shared/StatusBadge";
 import { TypeBadge } from "../components/shared/TypeBadge";
@@ -69,11 +71,14 @@ function SearchResults() {
                   params={{ id: item.id }}
                   className="flex flex-col gap-2 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-semibold text-primary">
-                      {item.summary}
-                    </h3>
-                    <TypeBadge type={item.type} />
+                  <div className="flex flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold text-primary">
+                        <Highlight text={item.summary} term={term} />
+                      </h3>
+                      <TypeBadge type={item.type} />
+                    </div>
+                    <SearchSnippet hit={item.snippet ?? null} term={term} />
                   </div>
                   <StatusBadge status={item.status} />
                 </Link>
@@ -95,7 +100,9 @@ function SearchResults() {
                   params={{ id: project.id }}
                   className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
                 >
-                  <h3 className="font-semibold text-primary">{project.name}</h3>
+                  <h3 className="font-semibold text-primary">
+                    <Highlight text={project.name} term={term} />
+                  </h3>
                   {project.description && (
                     <p className="text-sm text-fg-secondary">
                       {project.description}
@@ -120,7 +127,9 @@ function SearchResults() {
                   params={{ id: board.project_id, boardId: board.id }}
                   className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
                 >
-                  <h3 className="font-semibold text-primary">{board.name}</h3>
+                  <h3 className="font-semibold text-primary">
+                    <Highlight text={board.name} term={term} />
+                  </h3>
                   <BoardProjectName projectId={board.project_id} />
                   {board.description && (
                     <p className="text-sm text-fg-secondary">
@@ -176,8 +185,9 @@ function SearchResults() {
                   className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
                 >
                   <h3 className="font-semibold text-primary">
-                    {article.title}
+                    <Highlight text={article.title} term={term} />
                   </h3>
+                  <SearchSnippet hit={article.snippet ?? null} term={term} />
                 </Link>
               ))
             )}

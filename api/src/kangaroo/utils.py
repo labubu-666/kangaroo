@@ -1,3 +1,4 @@
+import html
 from xml.etree import ElementTree
 
 import markdown
@@ -48,6 +49,43 @@ def render_markdown(text: str) -> str:
         text, extensions=["fenced_code", "tables", LinkifyExtension()]
     )
     return nh3.clean(html, set_tag_attribute_values={"a": {"target": "_blank"}})
+
+
+def markdown_to_plain(text: str | None) -> str | None:
+    """Turn Markdown into the plain text a reader sees, or None if there is none.
+
+    Search matches this text, so Markdown syntax such as ``**`` or link targets
+    is not searchable.
+    """
+    if not text:
+        return None
+    plain = html.unescape(nh3.clean(render_markdown(text), tags=set()))
+    return " ".join(plain.split()) or None
+
+
+SNIPPET_RADIUS = 80
+
+
+def snippet_around(plain: str | None, term: str) -> tuple[str, int] | None:
+    """Return (text around the first case-insensitive match, total match count).
+
+    Returns None when there is no text or no match.
+    """
+    if not plain or not term:
+        return None
+    lowered = plain.lower()
+    needle = term.lower()
+    first = lowered.find(needle)
+    if first == -1:
+        return None
+    start = max(0, first - SNIPPET_RADIUS)
+    end = min(len(plain), first + len(term) + SNIPPET_RADIUS)
+    text = plain[start:end]
+    if start > 0:
+        text = "…" + text
+    if end < len(plain):
+        text = text + "…"
+    return text, lowered.count(needle)
 
 
 def render_doc_markdown(text: str) -> str:

@@ -241,3 +241,69 @@ def test_delete_article(client, knowledge_base_id):
     created = create(client, knowledge_base_id).json()
     assert client.delete(f"/api/v1/articles/{created['id']}").status_code == 204
     assert client.get(f"/api/v1/articles/{created['id']}").status_code == 404
+
+
+def test_search_matches_plain_body_not_markdown_syntax(client, knowledge_base_id):
+    """Article search matches rendered text, so Markdown markup is not searchable."""
+    create(client, knowledge_base_id, title="A", body="**Setup** steps")
+
+    assert client.get("/api/v1/articles?search=setup").json()["total"] == 1
+    assert client.get("/api/v1/articles?search=**Setup**").json()["total"] == 0
+
+
+def test_article_search_result_has_snippet(client, knowledge_base_id):
+    """A body match comes back with a snippet and the match count."""
+    create(client, knowledge_base_id, title="Guide", body="Install it. Install again.")
+
+    results = client.get("/api/v1/articles?search=install").json()["results"]
+
+    assert results[0]["snippet"] == {
+        "text": "Install it. Install again.",
+        "match_count": 2,
+    }
+
+
+def test_article_title_match_has_no_snippet(client, knowledge_base_id):
+    """A match only in the title has no snippet."""
+    create(client, knowledge_base_id, title="Install", body="unrelated")
+
+    results = client.get("/api/v1/articles?search=install").json()["results"]
+
+    assert results[0]["snippet"] is None
+
+
+def test_plain_body_follows_updates(client, knowledge_base_id):
+    """Updating the body changes what search matches."""
+    created = create(client, knowledge_base_id, body="old").json()
+
+    client.patch(f"/api/v1/articles/{created['id']}", json={"body": "fresh"})
+
+    assert client.get("/api/v1/articles?search=fresh").json()["total"] == 1
+    assert client.get("/api/v1/articles?search=old").json()["total"] == 0
+
+
+def test_sort_by_internal_field_is_rejected(client, knowledge_base_id):
+    """Internal fields such as plain_body cannot be used to sort."""
+    create(client, knowledge_base_id)
+    assert client.get("/api/v1/articles?sort=plain_body").status_code == 422
+    assert client.get("/api/v1/articles?sort=snippet").status_code == 422
+
+
+def test_padded_search_still_gets_a_snippet(client, knowledge_base_id):
+    """Spaces around the search term do not stop a snippet from being returned."""
+    create(client, knowledge_base_id, title="G", body="Install it")
+
+    results = client.get("/api/v1/articles?search=%20install%20").json()["results"]
+
+    assert results[0]["snippet"]["match_count"] == 1
+
+
+def test_snippet_is_only_in_article_list(client, knowledge_base_id):
+    """The snippet appears in list results only, never on a single article."""
+    created = create(client, knowledge_base_id, title="G", body="Install it").json()
+
+    assert "snippet" not in created
+    assert "snippet" not in client.get(f"/api/v1/articles/{created['id']}").json()
+    listed = client.get("/api/v1/articles?search=install").json()["results"][0]
+    assert listed["snippet"]["match_count"] == 1
+    assert client.get("/api/v1/articles").json()["results"][0]["snippet"] is None

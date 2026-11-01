@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useId, useState, type KeyboardEvent } from "react";
-import { searchAll } from "../../lib/search";
+import { searchAll, type SearchHit } from "../../lib/search";
+import { SearchSnippet } from "../shared/SearchSnippet";
 
 const MIN_CHARS = 2;
 const DEBOUNCE_MS = 250;
@@ -13,6 +14,7 @@ interface Suggestion {
   group: string;
   to: string;
   params: { id: string; boardId?: string };
+  snippet?: SearchHit | null;
 }
 
 export function SearchBar() {
@@ -47,6 +49,7 @@ export function SearchBar() {
           group: "Work items",
           to: "/work-items/$id",
           params: { id: item.id },
+          snippet: item.snippet,
         })),
         ...data.projects.results.map((project) => ({
           key: `project-${project.id}`,
@@ -75,6 +78,7 @@ export function SearchBar() {
           group: "Articles",
           to: "/articles/$id",
           params: { id: article.id },
+          snippet: article.snippet,
         })),
       ]
     : [];
@@ -173,7 +177,10 @@ export function SearchBar() {
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-between gap-2 hover:underline"
               >
-                <span className="truncate">{s.label}</span>
+                <span className="min-w-0">
+                  <span className="block truncate">{s.label}</span>
+                  <SearchSnippet hit={s.snippet ?? null} term={term} />
+                </span>
                 <span className="shrink-0 text-xs text-fg-muted">
                   {s.group}
                 </span>
