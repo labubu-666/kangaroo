@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useId, useState } from "react";
-import { fetchProject, updateProject } from "../../lib/projects";
+import { deleteProject, fetchProject, updateProject } from "../../lib/projects";
 import { useDismiss } from "../../lib/use-dismiss";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
-import { useRecordRecent } from "../../lib/recent";
+import { removeRecent, useRecordRecent } from "../../lib/recent";
 import { useDocumentTitle } from "../../lib/use-document-title";
 
 import { BoardList } from "../../components/boards/BoardList";
@@ -30,6 +30,7 @@ const TABS: { value: ProjectTab; label: string }[] = [
 function ProjectDetail() {
   const { id } = Route.useParams();
   const { tab = "work-items" } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
@@ -51,6 +52,23 @@ function ProjectDetail() {
     queryClient.invalidateQueries({ queryKey: ["projects"] });
   };
 
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteProject(id),
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["projects", id] });
+      removeRecent("project", id);
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      navigate({ to: "/projects" });
+    },
+  });
+
+  const handleDelete = () => {
+    setMenuOpen(false);
+    if (confirm("Are you sure you want to delete this project?")) {
+      deleteMutation.mutate();
+    }
+  };
+
   useBreadcrumbs([
     { label: "Projects", to: "/projects" },
     { label: project?.name ?? "Loading..." },
@@ -70,6 +88,10 @@ function ProjectDetail() {
   return (
     <div className="space-y-6 p-4">
       {error && <ErrorBanner>Error loading project</ErrorBanner>}
+
+      {deleteMutation.error && (
+        <ErrorBanner>{deleteMutation.error.message}</ErrorBanner>
+      )}
 
       {isLoading ? (
         <Loading />
@@ -127,6 +149,15 @@ function ProjectDetail() {
                   >
                     Edit
                   </Link>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
+                    className="px-3 py-2 text-left font-medium text-danger hover:bg-surface-strong disabled:text-fg-disabled"
+                  >
+                    Delete
+                  </button>
                 </div>
               )}
             </div>
