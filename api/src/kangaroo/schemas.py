@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
@@ -521,3 +521,33 @@ class CurrentUser(BaseModel):
     username: str
     email: str | None
     avatar_url: str
+
+
+class ApiKey(BaseModel):
+    """A machine login's details. The secret is only returned when it is created."""
+
+    id: UUID
+    name: str
+    created_at: datetime
+    last_used_at: datetime | None
+    expires_at: datetime | None
+
+
+class ApiKeyCreate(BaseModel):
+    """Request to create an API key that acts as the current user."""
+
+    name: str = Field(min_length=1, max_length=100)
+    expires_at: datetime | None = None
+
+    @field_validator("expires_at")
+    @classmethod
+    def expires_in_future(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.astimezone(UTC) <= datetime.now(UTC):
+            raise ValueError("expires_at must be in the future")
+        return value
+
+
+class ApiKeyCreated(ApiKey):
+    """A new API key. ``key`` is the only time the secret is shown."""
+
+    key: str

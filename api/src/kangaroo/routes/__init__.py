@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 
+from kangaroo.routes.api_keys import router as api_keys_router
 from kangaroo.routes.articles import router as articles_router
 from kangaroo.routes.auth import require_user
 from kangaroo.routes.backup import router as backup_router
@@ -37,5 +38,6 @@ api_v1_router.include_router(invocations_router)
 api_v1_router.include_router(user_router)
 api_v1_router.include_router(backup_router)
 api_v1_router.include_router(settings_router)
+api_v1_router.include_router(api_keys_router)
 
 __all__ = ["api_v1_router"]

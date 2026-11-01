@@ -1,12 +1,16 @@
-from typing import Any
+from typing import Annotated, Any
 
 import httpx
 from authlib.integrations.starlette_client import OAuth, OAuthError
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from itsdangerous import BadData, URLSafeTimedSerializer
+from sqlalchemy.orm import Session
 
+from kangaroo.repositories import ApiKeyRepository
+from kangaroo.routes.dependencies import get_session
 from kangaroo.schemas import MAX_RUN_TIMEOUT_SECONDS
+from kangaroo.services.api_keys import API_KEY_PREFIX, api_key_claims, hash_api_key
 from kangaroo.settings import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -39,9 +43,25 @@ def _user_from_bearer(request: Request) -> dict[str, Any] | None:
         return None
 
 
-def require_user(request: Request) -> dict[str, Any]:
-    """Accept a logged-in Dex session or an impersonation token; otherwise return 401."""
-    user = request.session.get("user") or _user_from_bearer(request)
+def _user_from_api_key(request: Request, session: Session) -> dict[str, Any] | None:
+    """Return the owner of a valid ``kg_`` API key sent as a bearer token."""
+    scheme, _, token = request.headers.get("authorization", "").partition(" ")
+    if scheme.lower() != "bearer" or not token.startswith(API_KEY_PREFIX):
+        return None
+    row = ApiKeyRepository(session).authenticate(hash_api_key(token))
+    return api_key_claims(row) if row else None
+
+
+def require_user(
+    request: Request,
+    session: Annotated[Session, Depends(get_session)],
+) -> dict[str, Any]:
+    """Accept a Dex session, an API key or an impersonation token; otherwise 401."""
+    user = (
+        request.session.get("user")
+        or _user_from_api_key(request, session)
+        or _user_from_bearer(request)
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"

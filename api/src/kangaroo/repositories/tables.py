@@ -171,3 +171,18 @@ class ArticleRow(Base):
     body: Mapped[str] = mapped_column(String)
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
     viewed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+
+
+class ApiKeyRow(Base):
+    """A machine login. Only the SHA-256 hash of the key is stored, never the key."""
+
+    __tablename__ = "api_keys"
+
+    name: Mapped[str] = mapped_column(String)
+    key_hash: Mapped[str] = mapped_column(String, unique=True, index=True)
+    owner: Mapped[str] = mapped_column(String, index=True)
+    owner_email: Mapped[str | None] = mapped_column(String, nullable=True)
+    owner_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
