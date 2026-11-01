@@ -13,6 +13,7 @@ import {
   updateKnowledgeBase,
 } from "../../lib/knowledge-bases";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
+import { CopyId } from "../../components/shared/CopyId";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { InlineEdit } from "../../components/InlineEdit";
 import { Loading } from "../../components/shared/Loading";
@@ -268,16 +269,29 @@ function KnowledgeBaseDetail() {
                     key={article.id}
                     to="/articles/$id"
                     params={{ id: article.id }}
-                    className="flex flex-col gap-1 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
+                    className="flex flex-col gap-3 rounded border border-border p-4 hover:border-primary hover:bg-primary-subtle transition"
                   >
                     <h3 className="font-semibold text-primary">
                       {article.title}
                     </h3>
                     {article.labels.length > 0 && (
-                      <span className="text-xs text-fg-secondary">
-                        {article.labels.join(", ")}
-                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {article.labels.map((label) => (
+                          <span
+                            key={label}
+                            className="rounded bg-surface-strong px-2 py-0.5 text-xs font-medium text-fg-secondary"
+                          >
+                            {label}
+                          </span>
+                        ))}
+                      </div>
                     )}
+                    <div className="flex items-center">
+                      <CopyId
+                        id={article.id}
+                        url={`${window.location.origin}/web/articles/${article.id}`}
+                      />
+                    </div>
                   </Link>
                 ))}
               </div>
