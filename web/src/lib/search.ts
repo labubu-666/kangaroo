@@ -7,6 +7,12 @@ import {
 import { fetchProjects, type PaginatedProjects } from "./projects";
 import { fetchWorkItems, type PaginatedWorkItems } from "./work-items";
 
+// The text around a search match, shown under the result title
+export interface SearchHit {
+  text: string;
+  match_count: number;
+}
+
 export interface SearchResults {
   workItems: PaginatedWorkItems;
   projects: PaginatedProjects;

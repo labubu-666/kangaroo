@@ -1,4 +1,5 @@
 import { apiFetch, apiJson, jsonBody, type Paginated } from "./api";
+import type { SearchHit } from "./search";
 
 export interface Article {
   id: string;
@@ -11,11 +12,16 @@ export interface Article {
   viewed_at: string | null;
 }
 
+// A list result carries a snippet when the list is searched
+export interface ArticleListItem extends Article {
+  snippet: SearchHit | null;
+}
+
 export interface ArticleDetail extends Article {
   html: string | null;
 }
 
-export type PaginatedArticles = Paginated<Article>;
+export type PaginatedArticles = Paginated<ArticleListItem>;
 
 export interface ArticleInput {
   knowledge_base_id: string;

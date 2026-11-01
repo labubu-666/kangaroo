@@ -1,4 +1,5 @@
 import { apiFetch, apiJson, jsonBody, type Paginated } from "./api";
+import type { SearchHit } from "./search";
 import type { StatusCategory } from "./workflow";
 
 // A work item's status and type, as the API embeds them
@@ -30,7 +31,12 @@ export interface WorkItem {
   modified_at: string;
 }
 
-export type PaginatedWorkItems = Paginated<WorkItem>;
+// A list result carries a snippet when the list is searched
+export interface WorkItemListItem extends WorkItem {
+  snippet: SearchHit | null;
+}
+
+export type PaginatedWorkItems = Paginated<WorkItemListItem>;
 
 export interface WorkItemCreate {
   summary: string;

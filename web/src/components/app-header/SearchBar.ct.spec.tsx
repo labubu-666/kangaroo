@@ -277,6 +277,42 @@ test.describe("SearchBar", () => {
     );
   });
 
+  test("shows the matching text under a work item in the dropdown", async ({
+    mount,
+    page,
+  }) => {
+    await page.route("**/api/v1/work-items/**", (route) =>
+      route.fulfill({
+        json: {
+          results: [
+            {
+              ...workItems.results[0],
+              snippet: {
+                text: "Users cannot log in after reset",
+                match_count: 2,
+              },
+            },
+          ],
+          limit: 3,
+          offset: 0,
+          total: 1,
+        },
+      }),
+    );
+    const component = await mount(
+      <TestRouter paths={paths}>
+        <SearchBar />
+      </TestRouter>,
+    );
+    await component.getByRole("combobox", { name: "Search" }).fill("log in");
+    const list = page.getByRole("listbox", { name: "Search suggestions" });
+    await expect(list.getByRole("option").first()).toContainText(
+      "Users cannot log in after reset",
+    );
+    await expect(list.locator("mark").first()).toHaveText("log in");
+    await expect(list).toContainText("+1 more match");
+  });
+
   test("shows boards in a Boards group and links to the board", async ({
     mount,
     page,

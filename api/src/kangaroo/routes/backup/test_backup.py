@@ -186,3 +186,26 @@ def test_restore_rejects_archive_over_size_limit(client, monkeypatch):
 
     assert response.status_code == 422
     assert project_names(client) == ["Kept"]
+
+
+def test_backup_leaves_out_derived_columns_and_restore_rebuilds_them(client):
+    """Backups skip plain_* columns, and restoring rebuilds them from the Markdown."""
+    project = client.post("/api/v1/projects", json={"name": "P"}).json()
+    client.post(
+        "/api/v1/work-items",
+        json={
+            "summary": "Task",
+            "description": "**Find** me",
+            "project_id": project["id"],
+            "type_id": type_id(client, project["id"], "task"),
+        },
+    )
+    backup = client.get("/api/v1/backup/").content
+    with zipfile.ZipFile(io.BytesIO(backup)) as archive:
+        rows = archive.read("work_items.jsonl").decode().splitlines()
+    assert rows and all("plain_description" not in row for row in rows)
+
+    assert restore(client, backup).status_code == 204
+
+    assert client.get("/api/v1/work-items?search=find").json()["total"] == 1
+    assert client.get("/api/v1/work-items?search=**find**").json()["total"] == 0

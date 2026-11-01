@@ -6,6 +6,7 @@ size of the database.
 
 import json
 import zipfile
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import IO, Any
 from uuid import UUID
@@ -18,6 +19,7 @@ from sqlalchemy.types import TypeEngine
 
 from kangaroo.errors import InvalidBackupError
 from kangaroo.repositories.tables import Base, UTCDateTime
+from kangaroo.utils import markdown_to_plain
 
 BACKUP_VERSION = 1
 BATCH_SIZE = 1000
@@ -83,7 +85,7 @@ class BackupService:
                 self.session.execute(statement).mappings().partitions(BATCH_SIZE)
             ):
                 for row in batch:
-                    line = json.dumps(to_jsonable_python(dict(row)))
+                    line = json.dumps(to_jsonable_python(_stored_part(table, row)))
                     lines.write(line.encode() + b"\n")
 
     def _check_members(self, archive: zipfile.ZipFile, tables: list[Table]) -> None:
@@ -112,7 +114,7 @@ class BackupService:
             for line in lines:
                 if not line.strip():
                     continue
-                batch.append(_parse_row(table, line))
+                batch.append(_with_derived(table, _parse_row(table, line)))
                 if len(batch) == BATCH_SIZE:
                     self.session.execute(insert(table), batch)
                     batch = []
@@ -120,11 +122,30 @@ class BackupService:
             self.session.execute(insert(table), batch)
 
 
+def _derived_columns(table: Table) -> list[str]:
+    """Columns computed from another column. Backups leave them out."""
+    return [c.key for c in table.c if "derived_from" in c.info]
+
+
+def _stored_part(table: Table, row: Mapping[str, Any]) -> dict[str, Any]:
+    derived = _derived_columns(table)
+    return {k: v for k, v in row.items() if k not in derived}
+
+
+def _with_derived(table: Table, row: dict[str, Any]) -> dict[str, Any]:
+    """Rebuild derived columns from the values they come from."""
+    for name in _derived_columns(table):
+        source = table.c[name].info["derived_from"]
+        row[name] = markdown_to_plain(row.get(source))
+    return row
+
+
 def _parse_row(table: Table, line: bytes) -> dict[str, Any]:
     """Turn one JSON line back into Python values the table's columns accept."""
+    stored = set(table.c.keys()) - set(_derived_columns(table))
     try:
         raw = json.loads(line)
-        if not isinstance(raw, dict) or set(raw) != set(table.c.keys()):
+        if not isinstance(raw, dict) or set(raw) != stored:
             raise ValueError("columns do not match")
         return {
             name: _from_json(table.c[name].type, value) for name, value in raw.items()

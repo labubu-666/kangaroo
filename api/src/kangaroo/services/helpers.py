@@ -18,16 +18,19 @@ from kangaroo.repositories import (
 from kangaroo.repositories.repositories import Repository, clean_search
 from kangaroo.schemas import (
     ProjectStatus,
+    SearchHit,
     StatusCreate,
     StatusRef,
     StatusReplace,
     TypeRef,
     WorkItem,
     WorkItemDetail,
+    WorkItemListItem,
     WorkItemType,
     WorkItemTypeCreate,
     WorkItemTypeReplace,
 )
+from kangaroo.utils import snippet_around
 
 
 def ensure_project_exists(projects: ProjectRepository, project_id: UUID | None) -> None:
@@ -111,6 +114,13 @@ def lookups(
     )
 
 
+def search_hit(plain: str | None, search: str | None) -> SearchHit | None:
+    """The snippet for a search term, or None when there is no term or no match."""
+    term = clean_search(search)
+    found = snippet_around(plain, term) if term else None
+    return SearchHit(text=found[0], match_count=found[1]) if found else None
+
+
 def detail(
     item: WorkItem,
     statuses: dict[UUID, ProjectStatus],
@@ -122,6 +132,18 @@ def detail(
         **item.model_dump(exclude={"rendered_description"}),
         status=StatusRef(id=status.id, name=status.name, category=status.category),
         type=TypeRef(id=work_item_type.id, name=work_item_type.name),
+    )
+
+
+def list_item(
+    item: WorkItem,
+    statuses: dict[UUID, ProjectStatus],
+    types: dict[UUID, WorkItemType],
+    search: str | None,
+) -> WorkItemListItem:
+    return WorkItemListItem(
+        **detail(item, statuses, types).model_dump(),
+        snippet=search_hit(item.plain_description, search),
     )
 
 

@@ -405,8 +405,11 @@ class WorkItemRepository(
     Repository[WorkItem, WorkItemCreate, WorkItemUpdate, WorkItemReplace]
 ):
     entity = "Work item"
-    filter_fields = frozenset(WorkItem.model_fields)
-    search_fields = ("summary", "description")
+    filter_fields = frozenset(WorkItem.model_fields) - {
+        "plain_description",
+        "snippet",
+    }
+    search_fields = ("summary", "plain_description")
     model_type = WorkItem
     row_type = WorkItemRow
 
@@ -440,8 +443,8 @@ class ArticleRepository(
     Repository[Article, ArticleCreate, ArticleUpdate, ArticleReplace]
 ):
     entity = "Article"
-    filter_fields = frozenset(Article.model_fields)
-    search_fields = ("title", "body")
+    filter_fields = frozenset(Article.model_fields) - {"plain_body", "snippet"}
+    search_fields = ("title", "plain_body")
     model_type = Article
     row_type = ArticleRow
 

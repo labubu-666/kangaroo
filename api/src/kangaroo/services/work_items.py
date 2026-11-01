@@ -19,6 +19,7 @@ from kangaroo.schemas import (
     WorkItemBulkDelete,
     WorkItemCreate,
     WorkItemDetail,
+    WorkItemListItem,
     WorkItemReplace,
     WorkItemUpdate,
 )
@@ -29,6 +30,7 @@ from kangaroo.services.helpers import (
     filtered_page,
     get_in_project,
     in_position_order,
+    list_item,
     lookups,
     project_names,
 )
@@ -94,7 +96,7 @@ class WorkItemService:
         parent_id: UUID | None = None,
         search: str | None = None,
         filter: str | None = None,
-    ) -> PaginatedResponse[WorkItemDetail]:
+    ) -> PaginatedResponse[WorkItemListItem]:
         """List work items with pagination, including trashed ones.
 
         With a filter, the items are checked against it in Python first, then
@@ -109,8 +111,10 @@ class WorkItemService:
                 parent_id=parent_id,
             )
             statuses, types = lookups(self._statuses, self._types)
-            return PaginatedResponse[WorkItemDetail](
-                results=[detail(item, statuses, types) for item in page.results],
+            return PaginatedResponse[WorkItemListItem](
+                results=[
+                    list_item(item, statuses, types, search) for item in page.results
+                ],
                 limit=page.limit,
                 offset=page.offset,
                 total=page.total,
@@ -126,8 +130,8 @@ class WorkItemService:
             limit,
             offset,
         )
-        return PaginatedResponse[WorkItemDetail](
-            results=[detail(item, statuses, types) for item in page],
+        return PaginatedResponse[WorkItemListItem](
+            results=[list_item(item, statuses, types, search) for item in page],
             limit=limit,
             offset=offset,
             total=total,

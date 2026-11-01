@@ -126,6 +126,7 @@ class WorkItem(Timestamped):
     id: UUID
     summary: str
     description: str | None = None
+    plain_description: str | None = Field(default=None, exclude=True)
     project_id: UUID
     status_id: UUID
     type_id: UUID
@@ -176,11 +177,28 @@ class TypeRef(BaseModel):
     name: str
 
 
+class SearchHit(BaseModel):
+    """Where a search matched in the text, shown under the title.
+
+    ``text`` is plain text around the first match. ``match_count`` counts every
+    match in the same field.
+    """
+
+    text: str
+    match_count: int
+
+
 class WorkItemDetail(WorkItem):
     """A work item as the API returns it: the stored fields plus its status and type."""
 
     status: StatusRef
     type: TypeRef
+
+
+class WorkItemListItem(WorkItemDetail):
+    """A work item in a list. ``snippet`` is set only when the list is searched."""
+
+    snippet: SearchHit | None = None
 
 
 class StatusTransition(Timestamped):
@@ -413,6 +431,13 @@ class ArticleReplace(ArticleCreate):
 class Article(ArticleCreate, Timestamped):
     id: UUID
     viewed_at: datetime | None
+    plain_body: str | None = Field(default=None, exclude=True)
+
+
+class ArticleListItem(Article):
+    """An article in a list. ``snippet`` is set only when the list is searched."""
+
+    snippet: SearchHit | None = None
 
 
 class ArticleDetail(Article):

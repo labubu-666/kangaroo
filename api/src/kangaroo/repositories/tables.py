@@ -12,8 +12,10 @@ from sqlalchemy import (
     Uuid,
     false,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
 from sqlalchemy.types import TypeDecorator
+
+from kangaroo.utils import markdown_to_plain
 
 
 class UTCDateTime(TypeDecorator):
@@ -62,6 +64,9 @@ class WorkItemRow(Base):
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     summary: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
+    plain_description: Mapped[str | None] = mapped_column(
+        String, nullable=True, info={"derived_from": "description"}
+    )
     project_id: Mapped[UUID] = mapped_column(
         Uuid, ForeignKey("projects.id", ondelete="RESTRICT"), nullable=False
     )
@@ -75,6 +80,11 @@ class WorkItemRow(Base):
         Uuid, ForeignKey("work_items.id", ondelete="RESTRICT"), nullable=True
     )
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+
+    @validates("description")
+    def _sync_plain_description(self, _key, value):
+        self.plain_description = markdown_to_plain(value)
+        return value
 
 
 class BoardRow(Base):
@@ -169,8 +179,16 @@ class ArticleRow(Base):
     )
     title: Mapped[str] = mapped_column(String)
     body: Mapped[str | None] = mapped_column(String, nullable=True)
+    plain_body: Mapped[str | None] = mapped_column(
+        String, nullable=True, info={"derived_from": "body"}
+    )
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
     viewed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+
+    @validates("body")
+    def _sync_plain_body(self, _key, value):
+        self.plain_body = markdown_to_plain(value)
+        return value
 
 
 class ApiKeyRow(Base):

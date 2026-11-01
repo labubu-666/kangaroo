@@ -5,11 +5,12 @@ from kangaroo.schemas import (
     Article,
     ArticleCreate,
     ArticleDetail,
+    ArticleListItem,
     ArticleReplace,
     ArticleUpdate,
     PaginatedResponse,
 )
-from kangaroo.services.helpers import ensure_knowledge_base_exists
+from kangaroo.services.helpers import ensure_knowledge_base_exists, search_hit
 from kangaroo.utils import render_markdown
 
 
@@ -39,9 +40,21 @@ class ArticleService:
         search: str | None = None,
         sort: str | None = None,
         knowledge_base_id: UUID | None = None,
-    ) -> PaginatedResponse[Article]:
-        return self._articles.list_paginated(
+    ) -> PaginatedResponse[ArticleListItem]:
+        page = self._articles.list_paginated(
             limit, offset, search, sort, knowledge_base_id=knowledge_base_id
+        )
+        return PaginatedResponse[ArticleListItem](
+            results=[
+                ArticleListItem(
+                    **article.model_dump(),
+                    snippet=search_hit(article.plain_body, search),
+                )
+                for article in page.results
+            ],
+            limit=page.limit,
+            offset=page.offset,
+            total=page.total,
         )
 
     def replace(self, item_id: UUID, replace: ArticleReplace) -> Article:
