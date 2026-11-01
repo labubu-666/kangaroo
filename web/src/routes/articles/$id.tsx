@@ -178,7 +178,7 @@ function ArticleDetail() {
           >
             {article.body ? (
               <article
-                className="prose dark:prose-invert max-w-none"
+                className="prose prose-headings:mt-6 prose-headings:mb-2 dark:prose-invert max-w-none"
                 dangerouslySetInnerHTML={{ __html: article.html }}
               />
             ) : (

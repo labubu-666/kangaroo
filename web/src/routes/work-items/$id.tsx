@@ -346,7 +346,7 @@ function WorkItemDetail() {
               >
                 {item.description ? (
                   <div
-                    className="prose dark:prose-invert prose-sm max-w-none break-words"
+                    className="prose prose-headings:mt-6 prose-headings:mb-2 dark:prose-invert prose-sm max-w-none break-words"
                     dangerouslySetInnerHTML={{
                       __html: item.rendered_description ?? "",
                     }}
