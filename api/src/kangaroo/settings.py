@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     function_runner: str = "local"
     nuclio_runner_url: str | None = None
 
+    # Address of the Vite dev server that the API proxies /web to in development.
+    vite_url: str = "http://localhost:5173"
+
     # Base URL that function scripts use to call this API. Scripts run in other
     # containers when FUNCTION_RUNNER=nuclio, so set this to an address they can reach.
     api_public_url: str = "http://localhost:8000"

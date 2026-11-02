@@ -127,7 +127,7 @@ for error_type, status_code in ERROR_STATUS_CODES.items():
 
 
 # Web UI serving
-# ENV=development: proxies /web to Vite dev server (http://localhost:5173/web)
+# ENV=development: proxies /web to Vite dev server (VITE_URL/web)
 # ENV=production (default): serves built dist/ folder statically
 WEB_DIR = Path(__file__).parent.parent.parent.parent / "web"
 
@@ -161,8 +161,8 @@ if settings.env.lower() == "development":
 
     @app.api_route("/web/{path_name:path}", methods=["GET", "HEAD"])
     async def proxy_to_vite(path_name: str, request: Request):
-        """Proxy requests to Vite dev server at localhost:5173."""
-        vite_url = f"http://localhost:5173/web/{path_name}"
+        """Proxy requests to the Vite dev server at settings.vite_url."""
+        vite_url = f"{settings.vite_url}/web/{path_name}"
         if request.url.query:
             # Keep query strings such as ?tsr-split=component for code splitting.
             vite_url = f"{vite_url}?{request.url.query}"
@@ -170,12 +170,12 @@ if settings.env.lower() == "development":
             return await _fetch_from_vite(vite_url)
         except httpx.ConnectError:
             return PlainTextResponse(
-                "Vite dev server is not running on http://localhost:5173. "
+                f"Vite dev server is not running on {settings.vite_url}. "
                 "Start it with `npm run dev` in web/.",
                 status_code=502,
             )
         except httpx.HTTPError:
-            return await _fetch_from_vite("http://localhost:5173/web/index.html")
+            return await _fetch_from_vite(f"{settings.vite_url}/web/index.html")
 else:
     dist_dir = WEB_DIR / "dist"
     if dist_dir.exists():
