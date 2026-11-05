@@ -54,12 +54,18 @@ export function AppHeader() {
               className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-border bg-surface py-1 shadow-lg"
             >
               {user && (
-                <div className="border-b border-border px-3 py-2">
+                <Link
+                  to="/profile"
+                  role="menuitem"
+                  onClick={() => setMenuOpen(false)}
+                  className="border-b border-border px-3 py-2 hover:bg-surface-strong"
+                  activeProps={{ className: "text-primary" }}
+                >
                   <p className="font-medium">{user.username}</p>
                   {user.email && (
                     <p className="text-sm text-fg-muted">{user.email}</p>
                   )}
-                </div>
+                </Link>
               )}
               <Link
                 to="/admin"
@@ -71,13 +77,13 @@ export function AppHeader() {
                 Admin
               </Link>
               <Link
-                to="/api-keys"
+                to="/profile"
                 role="menuitem"
                 onClick={() => setMenuOpen(false)}
                 className="px-3 py-2 font-medium hover:bg-surface-strong"
                 activeProps={{ className: "text-primary" }}
               >
-                API keys
+                Profile
               </Link>
               <Link
                 to="/about"

@@ -1,23 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
-import { useBreadcrumbs } from "../components/breadcrumbs/BreadcrumbsContext";
-import { CopyBase } from "../components/shared/CopyBase";
-import { ErrorBanner } from "../components/shared/ErrorBanner";
-import { Loading } from "../components/shared/Loading";
+import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
+import { CopyBase } from "../../components/shared/CopyBase";
+import { ErrorBanner } from "../../components/shared/ErrorBanner";
+import { Loading } from "../../components/shared/Loading";
 import {
   createApiKey,
   fetchApiKeys,
   revokeApiKey,
   type ApiKeyCreated,
-} from "../lib/api-keys";
+} from "../../lib/api-keys";
 
-export const Route = createFileRoute("/api-keys")({
+export const Route = createFileRoute("/profile/api-keys")({
   component: ApiKeysPage,
 });
 
 function ApiKeysPage() {
-  useBreadcrumbs([{ label: "API keys" }]);
+  useBreadcrumbs([{ label: "Profile", to: "/profile" }, { label: "API keys" }]);
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
