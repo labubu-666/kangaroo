@@ -1,10 +1,15 @@
+# Commandline
+
+- Check the installed shell(`bash, fish, zsh` etc.) and adjust your commands based on that.
+
 # Dependencies
 
 - Dependencies managed using `npm`.
 
 # Linting
 
-- Run `npm run lint` to lint files.
+- Run `npm run lint` to lint files. It runs `oxlint` and `oxfmt --check`.
+- Use `oxlint`, not ESLint. The web project has no ESLint config.
 - Run `npx oxfmt` on the files you touch.
 
 # Implementation

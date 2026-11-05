@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { deleteBoard, fetchBoard, updateBoard } from "../../lib/boards";
 import { removeRecent } from "../../lib/recent";
 import { fetchProject, useProjectOptions } from "../../lib/projects";
+import { fetchStatuses } from "../../lib/workflow";
+import { ReorderButtons } from "../../components/workflow/ReorderButtons";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
@@ -20,7 +23,7 @@ interface BoardForm {
   filter: string;
 }
 
-function EditBoard() {
+export function EditBoard() {
   const { id, boardId } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -40,6 +43,25 @@ function EditBoard() {
   });
 
   const { data: projects } = useProjectOptions();
+
+  const { data: statuses } = useQuery({
+    queryKey: ["statuses", board?.project_id],
+    queryFn: () => fetchStatuses(board?.project_id ?? ""),
+    enabled: !!board,
+  });
+
+  // Column order and visibility are not form fields, so isDirty never sees them.
+  // Each starts from the saved board until the user changes it.
+  const [columnIds, setColumnIds] = useState<string[] | null>(null);
+  const [hiddenIds, setHiddenIds] = useState<string[] | null>(null);
+  const hidden = new Set(hiddenIds ?? board?.hidden_status_ids ?? []);
+  const columnsChanged = columnIds !== null || hiddenIds !== null;
+  const savedOrder = columnIds ?? board?.status_order ?? [];
+  const position = (id: string) =>
+    savedOrder.includes(id) ? savedOrder.indexOf(id) : savedOrder.length;
+  const orderedStatuses = [...(statuses ?? [])].sort(
+    (a, b) => position(a.id) - position(b.id),
+  );
 
   const {
     register,
@@ -64,6 +86,14 @@ function EditBoard() {
         description: data.description.trim() || null,
         project_id: data.projectId,
         filter: data.filter.trim() || null,
+        // The columns belong to the saved project's statuses, so they only apply
+        // while the board stays in that project
+        ...(data.projectId === board?.project_id
+          ? {
+              status_order: orderedStatuses.map((status) => status.id),
+              hidden_status_ids: [...hidden],
+            }
+          : {}),
       }),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
@@ -203,6 +233,57 @@ function EditBoard() {
             </select>
           </div>
 
+          <fieldset className="space-y-2">
+            <legend className="block font-medium">Columns</legend>
+            <p className="text-sm text-fg-muted">
+              The order the board shows its status columns in. Statuses are
+              managed on the{" "}
+              <Link
+                to="/projects/$id"
+                params={{ id }}
+                search={{ tab: "statuses" }}
+                className="text-primary underline"
+              >
+                project's Status tab
+              </Link>
+              .
+            </p>
+            <ul className="divide-y divide-border rounded border border-border">
+              {orderedStatuses.map((status, index) => (
+                <li
+                  key={status.id}
+                  className="flex items-center justify-between gap-3 p-3"
+                >
+                  <label className="flex items-center gap-2 font-medium">
+                    <input
+                      type="checkbox"
+                      checked={!hidden.has(status.id)}
+                      disabled={mutation.isPending}
+                      onChange={(e) => {
+                        const next = new Set(hidden);
+                        if (e.target.checked) next.delete(status.id);
+                        else next.add(status.id);
+                        setHiddenIds([...next]);
+                      }}
+                    />
+                    {status.name}
+                  </label>
+                  <ReorderButtons
+                    index={index}
+                    count={orderedStatuses.length}
+                    disabled={mutation.isPending}
+                    onMove={(delta) => {
+                      const next = [...orderedStatuses];
+                      const target = index + delta;
+                      [next[index], next[target]] = [next[target], next[index]];
+                      setColumnIds(next.map((s) => s.id));
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
+          </fieldset>
+
           <div className="space-y-2">
             <label htmlFor="description" className="block font-medium">
               Description
@@ -220,7 +301,7 @@ function EditBoard() {
           <div className="flex flex-wrap gap-3">
             <button
               type="submit"
-              disabled={mutation.isPending || !isDirty}
+              disabled={mutation.isPending || !(isDirty || columnsChanged)}
               className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled"
             >
               {mutation.isPending ? "Saving..." : "Save"}

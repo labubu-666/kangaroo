@@ -1336,3 +1336,27 @@ def test_snippet_is_only_in_work_item_list(client, project_id):
     assert "snippet" not in client.get(f"/api/v1/work-items/{item['id']}").json()
     listed = client.get("/api/v1/work-items?search=login").json()["results"][0]
     assert listed["snippet"]["match_count"] == 1
+
+
+def test_patch_type_changes_type(client, project_id):
+    item_id = _create(client, project_id).json()["id"]
+    bug = client.post(
+        "/api/v1/work-item-types/",
+        json={"project_id": project_id, "name": "Bug"},
+    ).json()["id"]
+
+    response = client.patch(f"/api/v1/work-items/{item_id}", json={"type_id": bug})
+    assert response.status_code == 200
+    assert response.json()["type_id"] == bug
+    assert response.json()["type"]["name"] == "Bug"
+
+
+def test_patch_type_of_other_project_returns_422(client, project_id):
+    item_id = _create(client, project_id).json()["id"]
+    other = client.post("/api/v1/projects", json={"name": "Other"}).json()["id"]
+
+    response = client.patch(
+        f"/api/v1/work-items/{item_id}",
+        json={"type_id": type_id(client, other, "task")},
+    )
+    assert response.status_code == 422

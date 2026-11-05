@@ -1,6 +1,6 @@
 import { expect, test } from "../../../playwright/fixtures.ts";
-import { TestRouter } from "../../components/TestRouter.story";
-import { WorkflowPage } from "../../components/workflow/WorkflowPage";
+import { TestRouter } from "../TestRouter.story";
+import { WorkflowPage } from "./WorkflowPage";
 
 const PROJECT = "01a1-proj";
 const STAMP = {
@@ -89,15 +89,15 @@ async function stubApi(
   );
 }
 
-const PATHS = ["/projects/$id", "/projects/$id/statuses"];
-const INITIAL = `/projects/${PROJECT}/statuses`;
+const PATHS = ["/projects/$id"];
+const INITIAL = `/projects/${PROJECT}?tab=statuses`;
 
-test.describe("statuses and types page", () => {
+test.describe("workflow page", () => {
   test("lists the project's statuses", async ({ mount, page }) => {
     await stubApi(page);
     const component = await mount(
       <TestRouter paths={PATHS} initialPath={INITIAL}>
-        <WorkflowPage projectId={PROJECT} />
+        <WorkflowPage projectId={PROJECT} section="statuses" />
       </TestRouter>,
     );
     await expect(component.getByLabel("Name of In Progress")).toHaveValue(
@@ -117,10 +117,25 @@ test.describe("statuses and types page", () => {
     });
     const component = await mount(
       <TestRouter paths={PATHS} initialPath={INITIAL}>
-        <WorkflowPage projectId={PROJECT} />
+        <WorkflowPage projectId={PROJECT} section="statuses" />
       </TestRouter>,
     );
     await expect(component).toContainText("No status is in the Done category");
+  });
+
+  test("lists the project's work item types", async ({ mount, page }) => {
+    await stubApi(page);
+    const component = await mount(
+      <TestRouter paths={PATHS} initialPath={`/projects/${PROJECT}?tab=types`}>
+        <WorkflowPage projectId={PROJECT} section="types" />
+      </TestRouter>,
+    );
+    await expect(
+      component.getByRole("heading", { name: "Work item types" }),
+    ).toBeVisible();
+    await expect(
+      component.getByRole("button", { name: "Delete Task" }),
+    ).toBeVisible();
   });
 
   test("an in-use status opens the replacement dialog", async ({
@@ -140,7 +155,7 @@ test.describe("statuses and types page", () => {
     });
     const component = await mount(
       <TestRouter paths={PATHS} initialPath={INITIAL}>
-        <WorkflowPage projectId={PROJECT} />
+        <WorkflowPage projectId={PROJECT} section="statuses" />
       </TestRouter>,
     );
     await component.getByRole("button", { name: "Delete In Progress" }).click();

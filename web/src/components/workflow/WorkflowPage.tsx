@@ -1,12 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
-type Pending =
-  | { kind: "status"; item: ProjectStatus; count: number }
-  | { kind: "type"; item: WorkItemType; count: number };
-import { fetchProject } from "../../lib/projects";
-import { useBreadcrumbs } from "../breadcrumbs/BreadcrumbsContext";
 import { ReplacementDialog } from "./ReplacementDialog";
 import { ConfirmChange } from "./ConfirmChange";
 import {
@@ -29,9 +23,18 @@ import { fetchBoards } from "../../lib/boards";
 import { boardsUsingStatusName } from "../../lib/rename-warning";
 import { fetchWorkItems } from "../../lib/work-items";
 import { updateStatus, type StatusCategory } from "../../lib/workflow";
-import { Loading } from "../shared/Loading";
 
-export function WorkflowPage({ projectId: id }: { projectId: string }) {
+type Pending =
+  | { kind: "status"; item: ProjectStatus; count: number }
+  | { kind: "type"; item: WorkItemType; count: number };
+
+export function WorkflowPage({
+  projectId: id,
+  section,
+}: {
+  projectId: string;
+  section: "statuses" | "types";
+}) {
   const queryClient = useQueryClient();
   const [pending, setPending] = useState<Pending | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
@@ -43,11 +46,6 @@ export function WorkflowPage({ projectId: id }: { projectId: string }) {
     newCategory?: StatusCategory;
     lines: string[];
   } | null>(null);
-
-  const { data: project, isLoading } = useQuery({
-    queryKey: ["projects", id],
-    queryFn: () => fetchProject(id),
-  });
 
   const { data: statuses = [], error: statusesError } = useQuery({
     queryKey: ["statuses", id],
@@ -63,16 +61,6 @@ export function WorkflowPage({ projectId: id }: { projectId: string }) {
     queryKey: ["status-transitions", id],
     queryFn: () => fetchTransitions(id),
   });
-
-  useBreadcrumbs([
-    { label: "Projects", to: "/projects" },
-    {
-      label: project?.name ?? "Loading...",
-      to: "/projects/$id",
-      params: { id },
-    },
-    { label: "Statuses and types" },
-  ]);
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["statuses", id] });
@@ -206,18 +194,7 @@ export function WorkflowPage({ projectId: id }: { projectId: string }) {
   const doneCount = statuses.filter((s) => s.category === "done").length;
 
   return (
-    <div className="space-y-8 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Statuses and types</h1>
-        <Link
-          to="/projects/$id"
-          params={{ id }}
-          className="rounded border border-border-strong px-4 py-2 font-medium hover:bg-surface-muted"
-        >
-          Back to project
-        </Link>
-      </div>
-
+    <div className="space-y-8">
       {(statusesError || typesError) && (
         <ErrorBanner>Error loading statuses and types</ErrorBanner>
       )}
@@ -274,9 +251,7 @@ export function WorkflowPage({ projectId: id }: { projectId: string }) {
         />
       )}
 
-      {isLoading ? (
-        <Loading />
-      ) : (
+      {section === "statuses" ? (
         <>
           <StatusSection
             projectId={id}
@@ -295,13 +270,6 @@ export function WorkflowPage({ projectId: id }: { projectId: string }) {
               );
             }}
           />
-          <TypeSection
-            projectId={id}
-            types={types}
-            busy={deleteItem.isPending}
-            onRun={runAction}
-            onDelete={(item) => requestDelete("type", item.id)}
-          />
           <TransitionSection
             projectId={id}
             statuses={statuses}
@@ -310,6 +278,14 @@ export function WorkflowPage({ projectId: id }: { projectId: string }) {
             onRun={runAction}
           />
         </>
+      ) : (
+        <TypeSection
+          projectId={id}
+          types={types}
+          busy={deleteItem.isPending}
+          onRun={runAction}
+          onDelete={(item) => requestDelete("type", item.id)}
+        />
       )}
     </div>
   );

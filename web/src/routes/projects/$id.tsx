@@ -7,24 +7,29 @@ import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext"
 import { removeRecent, useRecordRecent } from "../../lib/recent";
 import { useDocumentTitle } from "../../lib/use-document-title";
 
+import { BacklogPage } from "../../components/backlog/BacklogPage";
 import { BoardList } from "../../components/boards/BoardList";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { InlineEdit } from "../../components/InlineEdit";
 import { Loading } from "../../components/shared/Loading";
 import { WorkItemList } from "../../components/work-items/WorkItemList";
+import { WorkflowPage } from "../../components/workflow/WorkflowPage";
 
-type ProjectTab = "boards" | "work-items";
+type ProjectTab = "work-items" | "boards" | "backlog" | "statuses" | "types";
 
 export const Route = createFileRoute("/projects/$id")({
   component: ProjectDetail,
   validateSearch: (search: Record<string, unknown>): { tab?: ProjectTab } => ({
-    tab: search.tab === "boards" ? "boards" : "work-items",
+    tab: TABS.find((t) => t.value === search.tab)?.value ?? "work-items",
   }),
 });
 
 const TABS: { value: ProjectTab; label: string }[] = [
   { value: "work-items", label: "Work items" },
   { value: "boards", label: "Boards" },
+  { value: "backlog", label: "Backlog" },
+  { value: "types", label: "Work item types" },
+  { value: "statuses", label: "Work item statuses" },
 ];
 
 function ProjectDetail() {
@@ -132,15 +137,6 @@ function ProjectDetail() {
                   className="absolute right-0 z-10 mt-2 flex min-w-40 flex-col rounded border border-border bg-surface py-1 shadow-lg"
                 >
                   <Link
-                    to="/projects/$id/statuses"
-                    params={{ id: project.id }}
-                    role="menuitem"
-                    onClick={() => setMenuOpen(false)}
-                    className="px-3 py-2 font-medium hover:bg-surface-strong"
-                  >
-                    Statuses and types
-                  </Link>
-                  <Link
                     to="/projects/$id/edit"
                     params={{ id: project.id }}
                     role="menuitem"
@@ -196,7 +192,11 @@ function ProjectDetail() {
               ))}
             </div>
 
-            {tab === "boards" ? (
+            {tab === "statuses" || tab === "types" ? (
+              <WorkflowPage projectId={project.id} section={tab} />
+            ) : tab === "backlog" ? (
+              <BacklogPage projectId={project.id} />
+            ) : tab === "boards" ? (
               <>
                 <div className="flex justify-end">
                   <Link

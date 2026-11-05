@@ -1,5 +1,16 @@
 {
   "extends": [
     "config:recommended",
-  ]
+  ],
+  "packageRules": [
+    {
+      "description": "Update Playwright packages together so the test runner and component test versions stay in step",
+      "groupName": "playwright",
+      "matchPackageNames": [
+        "@playwright/test",
+        "@playwright/experimental-ct-react",
+        "@playwright/experimental-ct-core",
+      ],
+    },
+  ],
 }

@@ -21,7 +21,7 @@ export function ReorderButtons({
         disabled={disabled || index === 0}
         onClick={() => onMove(-1)}
       >
-        Up
+        ↑
       </button>
       <button
         type="button"
@@ -30,7 +30,7 @@ export function ReorderButtons({
         disabled={disabled || index === count - 1}
         onClick={() => onMove(1)}
       >
-        Down
+        ↓
       </button>
     </div>
   );

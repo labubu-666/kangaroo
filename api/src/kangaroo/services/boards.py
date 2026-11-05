@@ -20,6 +20,7 @@ from kangaroo.schemas import (
     BoardUpdate,
     BoardView,
     PaginatedResponse,
+    ProjectStatus,
     WorkItemDetail,
 )
 from kangaroo.services.helpers import (
@@ -34,6 +35,18 @@ from kangaroo.services.helpers import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _board_statuses(board: Board, statuses: list[ProjectStatus]) -> list[ProjectStatus]:
+    """The statuses that get a column, in the board's order, hidden ones left out.
+
+    Statuses the board does not list keep their project order and come last, so a
+    status added later still shows up on the board.
+    """
+    rank = {status_id: index for index, status_id in enumerate(board.status_order)}
+    hidden = set(board.hidden_status_ids)
+    visible = [status for status in statuses if str(status.id) not in hidden]
+    return sorted(visible, key=lambda status: rank.get(str(status.id), len(rank)))
 
 
 def _board_record(board: Board, project_names: dict[UUID, str]) -> dict[str, Any]:
@@ -155,8 +168,9 @@ class BoardService:
         matches = self._stored_filter(board)
         names = project_names(self._projects)
         statuses, types = lookups(self._statuses, self._types)
-        project_statuses = in_position_order(
-            self._statuses.list_all(project_id=board.project_id)
+        project_statuses = _board_statuses(
+            board,
+            in_position_order(self._statuses.list_all(project_id=board.project_id)),
         )
         columns: dict[UUID, list[WorkItemDetail]] = {
             status.id: [] for status in project_statuses
@@ -164,6 +178,9 @@ class BoardService:
         for item in self._work_items.list_all(
             project_id=board.project_id, trashed=False
         ):
+            # Items in a hidden status have no column, so they are left out
+            if item.status_id not in columns:
+                continue
             if matches(filter_record(item, names, statuses, types)):
                 columns[item.status_id].append(detail(item, statuses, types))
         return BoardView(

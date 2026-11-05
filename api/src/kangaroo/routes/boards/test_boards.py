@@ -534,3 +534,160 @@ def test_view_with_invalid_stored_filter_shows_empty_board(
     assert items == []
     assert item_id not in str(items)
     assert f"Board {board_id} has an invalid filter" in caplog.text
+
+
+def test_view_columns_follow_board_status_order(client, project_id):
+    """A board's status_order sets its column order; unlisted statuses follow."""
+    board_id = client.post(
+        "/api/v1/boards", json={"name": "Ordered", "project_id": project_id}
+    ).json()["id"]
+    done = status_id(client, project_id, "done")
+    open_ = status_id(client, project_id, "open")
+
+    response = client.patch(
+        f"/api/v1/boards/{board_id}", json={"status_order": [done, open_]}
+    )
+    assert response.status_code == 200
+    assert response.json()["status_order"] == [done, open_]
+
+    names = [
+        column["status"]["name"]
+        for column in client.get(f"/api/v1/boards/{board_id}/view").json()["columns"]
+    ]
+    assert names == ["Done", "Open", "In Progress"]
+
+
+def test_update_without_status_order_keeps_it(client, project_id):
+    """A partial update that leaves status_order out does not reset the order."""
+    done = status_id(client, project_id, "done")
+    board_id = client.post(
+        "/api/v1/boards",
+        json={"name": "Kept", "project_id": project_id, "status_order": [done]},
+    ).json()["id"]
+
+    client.patch(f"/api/v1/boards/{board_id}", json={"name": "Renamed"})
+
+    assert client.get(f"/api/v1/boards/{board_id}").json()["status_order"] == [done]
+
+
+def test_view_leaves_out_hidden_status_columns(client, project_id):
+    """Statuses in hidden_status_ids get no column on the board."""
+    in_progress = status_id(client, project_id, "in_progress")
+    board_id = client.post(
+        "/api/v1/boards",
+        json={"name": "Hidden", "project_id": project_id},
+    ).json()["id"]
+
+    response = client.patch(
+        f"/api/v1/boards/{board_id}", json={"hidden_status_ids": [in_progress]}
+    )
+    assert response.status_code == 200
+    assert response.json()["hidden_status_ids"] == [in_progress]
+
+    names = [
+        column["status"]["name"]
+        for column in client.get(f"/api/v1/boards/{board_id}/view").json()["columns"]
+    ]
+    assert names == ["Open", "Done"]
+
+
+def test_view_with_hidden_status_that_has_items(client, project_id):
+    """Hiding a status that holds work items must not break the view."""
+    in_progress = status_id(client, project_id, "in_progress")
+    client.post(
+        "/api/v1/work-items",
+        json={
+            "type_id": type_id(client, project_id, "task"),
+            "summary": "Busy",
+            "project_id": project_id,
+            "status_id": in_progress,
+        },
+    )
+    board_id = client.post(
+        "/api/v1/boards",
+        json={
+            "name": "Hide busy",
+            "project_id": project_id,
+            "hidden_status_ids": [in_progress],
+        },
+    ).json()["id"]
+
+    response = client.get(f"/api/v1/boards/{board_id}/view")
+    assert response.status_code == 200
+    names = [column["status"]["name"] for column in response.json()["columns"]]
+    assert "In Progress" not in names
+
+
+def test_create_board_returns_column_fields(client, project_id):
+    done = status_id(client, project_id, "done")
+    response = client.post(
+        "/api/v1/boards",
+        json={
+            "name": "Columns",
+            "project_id": project_id,
+            "status_order": [done],
+            "hidden_status_ids": [],
+        },
+    )
+    assert response.status_code == 201
+    assert response.json()["status_order"] == [done]
+    assert response.json()["hidden_status_ids"] == []
+
+
+def test_replace_board_column_fields(client, project_id):
+    """PUT sets the column order and hidden statuses; omitting them clears both."""
+    done = status_id(client, project_id, "done")
+    in_progress = status_id(client, project_id, "in_progress")
+    board_id = client.post(
+        "/api/v1/boards",
+        json={
+            "name": "Old",
+            "project_id": project_id,
+            "status_order": [done],
+            "hidden_status_ids": [in_progress],
+        },
+    ).json()["id"]
+
+    replaced = client.put(
+        f"/api/v1/boards/{board_id}",
+        json={
+            "name": "New",
+            "project_id": project_id,
+            "status_order": [in_progress],
+            "hidden_status_ids": [done],
+        },
+    )
+    assert replaced.json()["status_order"] == [in_progress]
+    assert replaced.json()["hidden_status_ids"] == [done]
+
+    cleared = client.put(
+        f"/api/v1/boards/{board_id}", json={"name": "New", "project_id": project_id}
+    )
+    assert cleared.json()["status_order"] == []
+    assert cleared.json()["hidden_status_ids"] == []
+
+
+def test_view_hides_items_in_hidden_status(client, project_id):
+    """An item in a hidden status appears in no column."""
+    in_progress = status_id(client, project_id, "in_progress")
+    client.post(
+        "/api/v1/work-items",
+        json={
+            "type_id": type_id(client, project_id, "task"),
+            "summary": "Hidden work",
+            "project_id": project_id,
+            "status_id": in_progress,
+        },
+    )
+    board_id = client.post(
+        "/api/v1/boards",
+        json={
+            "name": "Hide work",
+            "project_id": project_id,
+            "hidden_status_ids": [in_progress],
+        },
+    ).json()["id"]
+
+    response = client.get(f"/api/v1/boards/{board_id}/view")
+    assert response.status_code == 200
+    assert "Hidden work" not in response.text
