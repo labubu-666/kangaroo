@@ -10,18 +10,7 @@ const ICONS: Record<string, { fill: string; glyph: ReactNode }> = {
   },
   bug: {
     fill: "#E5493A",
-    glyph: (
-      <g fill="white" stroke="white" strokeLinecap="round">
-        <circle cx="8" cy="4" r="1.6" stroke="none" />
-        <rect x="5" y="6.25" width="6" height="7.5" rx="3" stroke="none" />
-        <path d="M6.5 2.5L5.25 1.25M9.5 2.5L10.75 1.25" strokeWidth={1} />
-        <path
-          d="M4.75 8.25H2.5M4.75 11H2.5M11.25 8.25H13.5M11.25 11H13.5"
-          strokeWidth={1}
-        />
-        <path d="M8 6.75V13.25" stroke="#E5493A" strokeWidth={0.8} />
-      </g>
-    ),
+    glyph: <circle cx="8" cy="8" r="4.5" fill="white" />,
   },
   task: {
     fill: "#4BADE8",

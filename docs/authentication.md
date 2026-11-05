@@ -56,7 +56,7 @@ impersonates the user who ran it, with the same permissions.
 ## Machine access with API keys
 
 Scripts and services outside Kangaroo can call the API with an API key. Create
-one on the **API keys** page (profile menu, then API keys), or send
+one on the **API keys** page (profile menu, then Profile, then API keys), or send
 `POST /api/v1/api-keys/` while logged in:
 
 ```sh
