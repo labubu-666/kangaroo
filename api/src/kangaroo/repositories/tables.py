@@ -98,6 +98,12 @@ class BoardRow(Base):
         Uuid, ForeignKey("projects.id", ondelete="RESTRICT"), nullable=False
     )
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    status_order: Mapped[list[str]] = mapped_column(
+        JSON, default=list, server_default="[]"
+    )
+    hidden_status_ids: Mapped[list[str]] = mapped_column(
+        JSON, default=list, server_default="[]"
+    )
 
 
 class WorkItemTypeRow(Base):

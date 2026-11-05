@@ -92,6 +92,44 @@ export function StatusSection({
         Work items move through these in order. The category decides how a
         status counts on boards and reports.
       </p>
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <label htmlFor="new-status" className="block text-sm font-medium">
+            New status
+          </label>
+          <input
+            id="new-status"
+            value={name}
+            disabled={busy}
+            onChange={(e) => setName(e.target.value)}
+            className={FIELD}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="new-status-category"
+            className="block text-sm font-medium"
+          >
+            Category
+          </label>
+          <select
+            id="new-status-category"
+            value={category}
+            disabled={busy}
+            onChange={(e) => setCategory(e.target.value as StatusCategory)}
+            className={FIELD}
+          >
+            {(Object.keys(CATEGORY_LABELS) as StatusCategory[]).map((c) => (
+              <option key={c} value={c}>
+                {CATEGORY_LABELS[c]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button type="button" disabled={busy} onClick={add} className={PRIMARY}>
+          Add status
+        </button>
+      </div>
       <ul className="divide-y divide-border rounded border border-border">
         {statuses.map((status, index) => (
           <li
@@ -132,53 +170,16 @@ export function StatusSection({
                 type="button"
                 disabled={busy}
                 onClick={() => onDelete(status)}
+                aria-label={`Delete ${status.name}`}
                 className={DANGER}
               >
-                Delete {status.name}
+                Delete
               </button>
             </div>
           </li>
         ))}
       </ul>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div>
-          <label htmlFor="new-status" className="block text-sm font-medium">
-            New status
-          </label>
-          <input
-            id="new-status"
-            value={name}
-            disabled={busy}
-            onChange={(e) => setName(e.target.value)}
-            className={FIELD}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="new-status-category"
-            className="block text-sm font-medium"
-          >
-            Category
-          </label>
-          <select
-            id="new-status-category"
-            value={category}
-            disabled={busy}
-            onChange={(e) => setCategory(e.target.value as StatusCategory)}
-            className={FIELD}
-          >
-            {(Object.keys(CATEGORY_LABELS) as StatusCategory[]).map((c) => (
-              <option key={c} value={c}>
-                {CATEGORY_LABELS[c]}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button type="button" disabled={busy} onClick={add} className={PRIMARY}>
-          Add status
-        </button>
-      </div>
       {error && <p className="text-sm text-danger">{error}</p>}
     </section>
   );
@@ -277,9 +278,10 @@ export function TypeSection({
                 type="button"
                 disabled={busy}
                 onClick={() => onDelete(type)}
+                aria-label={`Delete ${type.name}`}
                 className={DANGER}
               >
-                Delete {type.name}
+                Delete
               </button>
             </div>
           </li>
@@ -339,28 +341,6 @@ export function TransitionSection({
           ? "No transitions: work items can move between any two statuses."
           : "Work items can only move along these transitions. Other moves are refused."}
       </p>
-      <ul className="divide-y divide-border rounded border border-border">
-        {transitions.map((transition) => (
-          <li
-            key={transition.id}
-            className="flex items-center justify-between gap-3 p-3"
-          >
-            <span>
-              {nameOf(transition.from_status_id)} →{" "}
-              {nameOf(transition.to_status_id)}
-            </span>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => onRun(() => deleteTransition(transition.id))}
-              className={DANGER}
-            >
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
-
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <label
@@ -412,6 +392,28 @@ export function TransitionSection({
           Add transition
         </button>
       </div>
+
+      <ul className="divide-y divide-border rounded border border-border">
+        {transitions.map((transition) => (
+          <li
+            key={transition.id}
+            className="flex items-center justify-between gap-3 p-3"
+          >
+            <span>
+              {nameOf(transition.from_status_id)} →{" "}
+              {nameOf(transition.to_status_id)}
+            </span>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => onRun(() => deleteTransition(transition.id))}
+              className={DANGER}
+            >
+              Remove
+            </button>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

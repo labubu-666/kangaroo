@@ -9,7 +9,7 @@ import {
   duplicateWorkItem,
   WORK_ITEM_LIMIT,
 } from "../../lib/work-items";
-import { fetchStatuses } from "../../lib/workflow";
+import { fetchStatuses, fetchWorkItemTypes } from "../../lib/workflow";
 import { fetchProject, useProjectOptions } from "../../lib/projects";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 import { removeRecent, useRecordRecent } from "../../lib/recent";
@@ -36,6 +36,7 @@ function WorkItemDetail() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
   const parentInputId = useId();
+  const typeSelectId = useId();
   const menuRef = useDismiss<HTMLDivElement>(menuOpen, () =>
     setMenuOpen(false),
   );
@@ -68,6 +69,12 @@ function WorkItemDetail() {
   const { data: statuses } = useQuery({
     queryKey: ["statuses", item?.project_id],
     queryFn: () => fetchStatuses(item?.project_id ?? ""),
+    enabled: !!item?.project_id,
+  });
+
+  const { data: types } = useQuery({
+    queryKey: ["work-item-types", item?.project_id],
+    queryFn: () => fetchWorkItemTypes(item?.project_id ?? ""),
     enabled: !!item?.project_id,
   });
 
@@ -170,6 +177,13 @@ function WorkItemDetail() {
         params: { id: item.id },
       },
   );
+
+  const typeMutation = useMutation({
+    mutationFn: (typeId: string) => updateWorkItem(id, { type_id: typeId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["work-items"] });
+    },
+  });
 
   const handleStatusChange = (newStatusId: string) => {
     updateMutation.mutate(newStatusId);
@@ -393,10 +407,28 @@ function WorkItemDetail() {
 
           <aside className="space-y-5 rounded border border-border p-4 sm:p-6 md:col-span-1">
             <div>
-              <p className="text-sm font-medium text-fg-secondary">Type</p>
-              <span className="mt-1 inline-block rounded bg-surface-strong px-2 py-0.5 text-xs font-medium text-fg-secondary">
-                {item.type.name}
-              </span>
+              <label
+                htmlFor={typeSelectId}
+                className="block text-sm font-medium text-fg-secondary"
+              >
+                Type
+              </label>
+              <select
+                id={typeSelectId}
+                value={item.type_id}
+                onChange={(e) => typeMutation.mutate(e.target.value)}
+                disabled={typeMutation.isPending}
+                className="mt-2 w-full rounded border border-border-strong px-3 py-2"
+              >
+                {(types ?? []).map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
+              </select>
+              {typeMutation.error && (
+                <ErrorBanner>{typeMutation.error.message}</ErrorBanner>
+              )}
             </div>
 
             <div>

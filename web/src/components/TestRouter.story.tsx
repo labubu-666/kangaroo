@@ -66,7 +66,10 @@ export function TestRouter({
     routeTree: rootRoute.addChildren(routes),
     history: createMemoryHistory({ initialEntries }),
   });
-  const queryClient = new QueryClient();
+  // Failed requests show their error at once instead of after the retry backoff
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />

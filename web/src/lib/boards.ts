@@ -8,6 +8,8 @@ export interface Board {
   description: string | null;
   project_id: string;
   filter: string | null;
+  status_order: string[];
+  hidden_status_ids: string[];
   created_at: string;
   modified_at: string;
 }
@@ -26,6 +28,8 @@ export interface BoardUpdate {
   description?: string | null;
   project_id?: string;
   filter?: string | null;
+  status_order?: string[];
+  hidden_status_ids?: string[];
 }
 
 export interface BoardColumn {

@@ -317,6 +317,8 @@ class BoardCreate(BaseModel):
     project_id: UUID
     filter: str | None = None
     labels: Labels = Field(default_factory=list)
+    status_order: list[str] = Field(default_factory=list)
+    hidden_status_ids: list[str] = Field(default_factory=list)
 
 
 class BoardUpdate(BaseModel):
@@ -325,6 +327,8 @@ class BoardUpdate(BaseModel):
     project_id: UUID | None = None
     filter: str | None = None
     labels: Labels = Field(default_factory=list)
+    status_order: list[str] = Field(default_factory=list)
+    hidden_status_ids: list[str] = Field(default_factory=list)
 
     _reject_null_name = field_validator("name")(reject_null)
 
@@ -335,6 +339,8 @@ class BoardReplace(BaseModel):
     project_id: UUID
     filter: str | None = None
     labels: Labels = Field(default_factory=list)
+    status_order: list[str] = Field(default_factory=list)
+    hidden_status_ids: list[str] = Field(default_factory=list)
 
 
 class Board(BoardCreate, Timestamped):
