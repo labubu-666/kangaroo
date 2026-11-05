@@ -209,7 +209,7 @@ function BoardDetail() {
           {board.filter && <FilterPreview filter={board.filter} />}
 
           <DragDropProvider onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="grid auto-cols-[minmax(18rem,1fr)] grid-flow-col gap-4 overflow-x-auto pb-2">
               {(view?.columns ?? []).map(({ status, items }) => (
                 <BoardColumnView
                   key={status.id}
