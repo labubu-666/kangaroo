@@ -1,25 +1,5 @@
 from uuid import uuid4
 
-import pytest
-from fastapi.testclient import TestClient
-
-from kangaroo.app import app
-from kangaroo.routes.dependencies import get_engine
-
-
-@pytest.fixture
-def client(engine):
-    """Provide a TestClient that uses fresh database for each test."""
-    app.dependency_overrides[get_engine] = lambda: engine
-    yield TestClient(app)
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def project_id(client):
-    """Create a project from the default template."""
-    return client.post("/api/v1/projects", json={"name": "Test"}).json()["id"]
-
 
 def _statuses(client, project_id):
     return client.get(f"/api/v1/statuses/?project_id={project_id}").json()

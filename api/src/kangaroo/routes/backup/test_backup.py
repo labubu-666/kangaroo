@@ -3,23 +3,10 @@ import json
 import zipfile
 from uuid import uuid4
 
-import pytest
-from fastapi.testclient import TestClient
-
-from kangaroo.app import app
 from kangaroo.repositories.tables import Base
-from kangaroo.routes.dependencies import get_engine
 from kangaroo.services.backup import BACKUP_VERSION
 from kangaroo.settings import settings
 from kangaroo.testing import type_id
-
-
-@pytest.fixture
-def client(engine):
-    """Provide a TestClient that uses fresh database for each test."""
-    app.dependency_overrides[get_engine] = lambda: engine
-    yield TestClient(app)
-    app.dependency_overrides.clear()
 
 
 def download(client) -> bytes:
@@ -209,3 +196,38 @@ def test_backup_leaves_out_derived_columns_and_restore_rebuilds_them(client):
 
     assert client.get("/api/v1/work-items?search=find").json()["total"] == 1
     assert client.get("/api/v1/work-items?search=**find**").json()["total"] == 0
+
+
+def test_restore_rejects_id_that_is_not_a_string(client):
+    """A non-string UUID is an invalid row, not a server error."""
+    item = {
+        "id": 123,
+        "trashed": False,
+        "created_at": "2026-01-01T00:00:00",
+        "modified_at": "2026-01-01T00:00:00",
+        "summary": "Bad id",
+        "description": None,
+        "project_id": str(uuid4()),
+        "type_id": str(uuid4()),
+        "status_id": str(uuid4()),
+        "parent_id": None,
+        "labels": [],
+    }
+
+    response = restore(client, make_backup({"work_items": [item]}))
+
+    assert response.status_code == 422
+
+
+def test_restore_rejects_corrupt_member(client):
+    """A table file whose data fails its CRC check is rejected, not a server error."""
+    data = bytearray(make_backup({}))
+    archive = zipfile.ZipFile(io.BytesIO(bytes(data)))
+    info = archive.getinfo("manifest.json")
+    # Flip a byte in the stored manifest so reading it fails the CRC check.
+    offset = info.header_offset + 30 + len(info.filename) + len(info.extra)
+    data[offset] ^= 0xFF
+
+    response = restore(client, bytes(data))
+
+    assert response.status_code == 422

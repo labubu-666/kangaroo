@@ -62,7 +62,10 @@ def parse_filter(text: str | None) -> Predicate:
     """
     if text is None or not text.strip():
         return lambda _record: True
-    return _Parser(_tokenize(text)).parse()
+    try:
+        return _Parser(_tokenize(text)).parse()
+    except RecursionError as exc:
+        raise InvalidFilterError("Filter is nested too deeply") from exc
 
 
 def _skip_spaces(text: str, pos: int) -> int:

@@ -214,3 +214,9 @@ def test_status_category_is_an_exact_field():
 
 def test_status_substring_still_works():
     assert matches("status ~ 'progress'", **NAMED)
+
+
+def test_deeply_nested_filter_is_invalid():
+    """Nesting deep enough to exhaust the parser's recursion is a 422, not a 500."""
+    with pytest.raises(InvalidFilterError, match="nested too deeply"):
+        parse_filter("(" * 300 + "trashed == true" + ")" * 300)

@@ -11,8 +11,7 @@ from fastapi.testclient import TestClient
 
 import kangaroo.app
 import kangaroo.settings
-from kangaroo.app import SPAStaticFiles, app
-from kangaroo.routes.auth import require_user
+from kangaroo.app import SPAStaticFiles
 
 auth = importlib.import_module("kangaroo.routes.auth.router")
 
@@ -29,19 +28,15 @@ def log_in(client, monkeypatch):
     client.get("/auth/callback", follow_redirects=False)
 
 
-def test_logged_out_web_request_redirects_to_login():
+def test_logged_out_web_request_redirects_to_login(logged_out, client):
     """Logged-out browsers go to login before the web UI is served."""
-    app.dependency_overrides.pop(require_user, None)
-    client = TestClient(app)
     response = client.get("/web/", follow_redirects=False)
     assert response.status_code == 307
     assert response.headers["location"] == "/auth/login?next=%2Fweb%2F"
 
 
-def test_login_redirect_keeps_path_and_query():
+def test_login_redirect_keeps_path_and_query(logged_out, client):
     """The original path and query string come back after logging in."""
-    app.dependency_overrides.pop(require_user, None)
-    client = TestClient(app)
     response = client.get("/web/projects?view=list", follow_redirects=False)
     assert response.status_code == 307
     assert response.headers["location"] == "/auth/login?next=" + quote(
@@ -49,57 +44,48 @@ def test_login_redirect_keeps_path_and_query():
     )
 
 
-def test_logged_in_web_request_is_not_redirected(monkeypatch):
+def test_logged_in_web_request_is_not_redirected(logged_out, client, monkeypatch):
     """Logged-in users are not sent to login when opening the web UI."""
-    app.dependency_overrides.pop(require_user, None)
-    client = TestClient(app)
     log_in(client, monkeypatch)
     response = client.get("/web/", follow_redirects=False)
     assert "/auth/login" not in response.headers.get("location", "")
 
 
-def test_health():
-    client = TestClient(app)
+def test_health(client):
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 
-def test_root_redirects_to_web():
+def test_root_redirects_to_web(client):
     """Root path should redirect to the web UI."""
-    client = TestClient(app)
     response = client.get("/", follow_redirects=False)
     assert response.status_code == 307
     assert response.headers["location"] == "/web/"
 
 
-def test_docs_at_api_v1():
+def test_docs_at_api_v1(client):
     """Swagger UI docs should be served at /api/v1/docs."""
-    client = TestClient(app)
     response = client.get("/api/v1/docs")
     assert response.status_code == 200
 
 
 @pytest.mark.parametrize("path", ["/api/v1/docs", "/api/v1/openapi.json"])
-def test_docs_require_login(path):
+def test_docs_require_login(logged_out, client, path):
     """API docs and the OpenAPI schema should not be public."""
-    app.dependency_overrides.pop(require_user, None)
-    client = TestClient(app)
     response = client.get(path)
     assert response.status_code == 401
 
 
-def test_openapi_schema_for_logged_in_user():
+def test_openapi_schema_for_logged_in_user(client):
     """Logged-in users get the OpenAPI schema for the API."""
-    client = TestClient(app)
     response = client.get("/api/v1/openapi.json")
     assert response.status_code == 200
     assert "/api/v1/work-items/" in response.json()["paths"]
 
 
-def test_docs_not_at_root():
+def test_docs_not_at_root(client):
     """Swagger UI docs should not be served at /docs."""
-    client = TestClient(app)
     response = client.get("/docs")
     assert response.status_code == 404
 
