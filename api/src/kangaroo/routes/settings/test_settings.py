@@ -1,15 +1,12 @@
-from fastapi.testclient import TestClient
-
 from kangaroo.app import app
 from kangaroo.routes.auth import require_user
 from kangaroo.settings import settings
 
 
-def test_settings_dump_masks_secrets(monkeypatch):
+def test_settings_dump_masks_secrets(client, monkeypatch):
     monkeypatch.setitem(
         app.dependency_overrides, require_user, lambda: {"email": "admin@example.com"}
     )
-    client = TestClient(app)
 
     response = client.get("/api/v1/settings/")
 

@@ -37,17 +37,6 @@ from kangaroo.schemas import (
 from kangaroo.testing import new_child, new_task, seed_project
 
 
-@pytest.fixture
-def seeded(projects, statuses, types):
-    """A project with the To Do List statuses and types."""
-    return seed_project(projects, statuses, types)
-
-
-@pytest.fixture
-def project_id(seeded):
-    return seeded.project_id
-
-
 @pytest.mark.parametrize("url", ["sqlite://memo", "sqlite:///", "memory://", "sqlite:"])
 def test_engine_rejects_urls_that_are_not_memory_or_a_file(url):
     """A typo such as sqlite://memo is refused instead of giving a lost database."""

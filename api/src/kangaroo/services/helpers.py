@@ -142,7 +142,7 @@ def list_item(
     search: str | None,
 ) -> WorkItemListItem:
     return WorkItemListItem(
-        **detail(item, statuses, types).model_dump(),
+        **detail(item, statuses, types).model_dump(exclude={"rendered_description"}),
         snippet=search_hit(item.plain_description, search),
     )
 

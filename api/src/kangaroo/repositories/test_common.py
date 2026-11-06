@@ -1,18 +1,7 @@
 import pytest
 
 from kangaroo.schemas import WorkItemReplace, WorkItemUpdate
-from kangaroo.testing import new_task, seed_project
-
-
-@pytest.fixture
-def seeded(projects, statuses, types):
-    """A project with the To Do List statuses and types."""
-    return seed_project(projects, statuses, types)
-
-
-@pytest.fixture
-def project_id(seeded):
-    return seeded.project_id
+from kangaroo.testing import new_task
 
 
 def test_search_matches_summary_and_description(work_items, project_id, seeded):

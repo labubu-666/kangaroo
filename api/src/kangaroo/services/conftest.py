@@ -8,12 +8,6 @@ from kangaroo.testing import seed_project
 
 
 @pytest.fixture
-def seeded(projects, statuses, types):
-    """A project with the To Do List statuses and types."""
-    return seed_project(projects, statuses, types)
-
-
-@pytest.fixture
 def other(projects, statuses, types):
     """A second project, to test moves and cross-project checks."""
     return seed_project(projects, statuses, types, name="Other")

@@ -1,18 +1,3 @@
-import pytest
-from fastapi.testclient import TestClient
-
-from kangaroo.app import app
-from kangaroo.routes.dependencies import get_engine
-
-
-@pytest.fixture
-def client(engine):
-    """Provide a TestClient that uses fresh database for each test."""
-    app.dependency_overrides[get_engine] = lambda: engine
-    yield TestClient(app)
-    app.dependency_overrides.clear()
-
-
 def create(client, **overrides):
     body = {"name": "Docs", **overrides}
     return client.post("/api/v1/knowledge-bases", json=body)

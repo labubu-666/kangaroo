@@ -13,7 +13,7 @@ from uuid import UUID
 
 from pydantic_core import to_jsonable_python
 from sqlalchemy import Table, Uuid, insert, select, text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import StatementError
 from sqlalchemy.orm import Session
 from sqlalchemy.types import TypeEngine
 
@@ -68,7 +68,10 @@ class BackupService:
                     self.session.execute(table.delete())
                 for table in tables:
                     self._restore_table(archive, table)
-            except IntegrityError as exc:
+            except zipfile.BadZipFile as exc:
+                raise InvalidBackupError("The backup archive is corrupt.") from exc
+            # StatementError also covers IntegrityError and values a column rejects.
+            except StatementError as exc:
                 raise InvalidBackupError(
                     "The backup does not fit the database."
                 ) from exc
@@ -101,7 +104,7 @@ class BackupService:
     def _check_manifest(self, archive: zipfile.ZipFile) -> None:
         try:
             manifest = json.loads(archive.read(MANIFEST))
-        except ValueError as exc:
+        except (ValueError, zipfile.BadZipFile) as exc:
             raise InvalidBackupError("The backup manifest is not valid.") from exc
         if not isinstance(manifest, dict) or manifest.get("version") != BACKUP_VERSION:
             raise InvalidBackupError(
@@ -150,7 +153,7 @@ def _parse_row(table: Table, line: bytes) -> dict[str, Any]:
         return {
             name: _from_json(table.c[name].type, value) for name, value in raw.items()
         }
-    except (ValueError, TypeError) as exc:
+    except (ValueError, TypeError, AttributeError) as exc:
         raise InvalidBackupError(f"Invalid row in {table.name}.") from exc
 
 

@@ -1,21 +1,11 @@
-import pytest
 from fastapi.testclient import TestClient
 
 from kangaroo.app import app
 from kangaroo.routes.auth import require_user
-from kangaroo.routes.dependencies import get_engine
 from kangaroo.schemas import RunResult
 from kangaroo.settings import settings
 
 HELLO = 'print("hello")'
-
-
-@pytest.fixture
-def client(engine):
-    """Provide a TestClient that uses fresh database for each test."""
-    app.dependency_overrides[get_engine] = lambda: engine
-    yield TestClient(app)
-    app.dependency_overrides.clear()
 
 
 def create(client, **overrides):

@@ -1,26 +1,15 @@
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from kangaroo.app import app
 from kangaroo.repositories import (
     ProjectRepository,
     StatusRepository,
     WorkItemRepository,
     WorkItemTypeRepository,
 )
-from kangaroo.routes.dependencies import get_engine
 from kangaroo.runners import RunnerUnavailableError
 from kangaroo.schemas import RunResult
 from kangaroo.testing import new_task, seed_project
-
-
-@pytest.fixture
-def client(engine):
-    """Provide a TestClient that uses fresh database for each test."""
-    app.dependency_overrides[get_engine] = lambda: engine
-    yield TestClient(app)
-    app.dependency_overrides.clear()
 
 
 def create_function(client, code="print(1 + 1)"):
@@ -150,3 +139,20 @@ def test_deleting_function_deletes_its_invocations(client):
     client.post(f"/api/v1/functions/{function_id}/run")
     client.delete(f"/api/v1/functions/{function_id}")
     assert client.get("/api/v1/invocations").json()["total"] == 0
+
+
+def test_unexpected_runner_failure_marks_invocation_error(client, monkeypatch):
+    """A runner crash, such as uv missing from PATH, does not leave the run RUNNING."""
+
+    class BrokenRunner:
+        def run(self, request):
+            raise FileNotFoundError("uv")
+
+    monkeypatch.setattr(
+        "kangaroo.routes.dependencies.get_function_runner", lambda: BrokenRunner()
+    )
+    function_id = create_function(client)
+    with pytest.raises(FileNotFoundError):
+        client.post(f"/api/v1/functions/{function_id}/run")
+    listed = client.get(f"/api/v1/invocations?function_id={function_id}").json()
+    assert listed["results"][0]["status"] == "ERROR"

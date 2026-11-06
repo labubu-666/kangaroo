@@ -5,10 +5,11 @@ from authlib.integrations.starlette_client import OAuth, OAuthError
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from itsdangerous import BadData, URLSafeTimedSerializer
+from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
 from kangaroo.repositories import ApiKeyRepository
-from kangaroo.routes.dependencies import get_session
+from kangaroo.routes.dependencies import get_engine
 from kangaroo.schemas import MAX_RUN_TIMEOUT_SECONDS
 from kangaroo.services.api_keys import API_KEY_PREFIX, api_key_claims, hash_api_key
 from kangaroo.settings import settings
@@ -26,7 +27,9 @@ _impersonation_serializer = URLSafeTimedSerializer(
 
 def create_impersonation_token(user: dict[str, Any]) -> str:
     """Sign a short-lived token that lets a function run call the API as ``user``."""
-    claims = {key: user[key] for key in ("sub", "email", "name") if key in user}
+    # api_key_id carries over so a run started with an API key cannot manage keys.
+    keys = ("sub", "email", "name", "api_key_id")
+    claims = {key: user[key] for key in keys if key in user}
     return _impersonation_serializer.dumps(claims)
 
 
@@ -43,23 +46,29 @@ def _user_from_bearer(request: Request) -> dict[str, Any] | None:
         return None
 
 
-def _user_from_api_key(request: Request, session: Session) -> dict[str, Any] | None:
-    """Return the owner of a valid ``kg_`` API key sent as a bearer token."""
+def _user_from_api_key(request: Request, engine: Engine) -> dict[str, Any] | None:
+    """Return the owner of a valid ``kg_`` API key sent as a bearer token.
+
+    Recording the key's use commits in its own transaction. Done in the request's
+    transaction, it would hold SQLite's write lock until the request ends, and a
+    function run's own writes would fail with "database is locked".
+    """
     scheme, _, token = request.headers.get("authorization", "").partition(" ")
     if scheme.lower() != "bearer" or not token.startswith(API_KEY_PREFIX):
         return None
-    row = ApiKeyRepository(session).authenticate(hash_api_key(token))
-    return api_key_claims(row) if row else None
+    with Session(engine) as session, session.begin():
+        row = ApiKeyRepository(session).authenticate(hash_api_key(token))
+        return api_key_claims(row) if row else None
 
 
 def require_user(
     request: Request,
-    session: Annotated[Session, Depends(get_session)],
+    engine: Annotated[Engine, Depends(get_engine)],
 ) -> dict[str, Any]:
     """Accept a Dex session, an API key or an impersonation token; otherwise 401."""
     user = (
         request.session.get("user")
-        or _user_from_api_key(request, session)
+        or _user_from_api_key(request, engine)
         or _user_from_bearer(request)
     )
     if not user:

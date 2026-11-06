@@ -7,7 +7,7 @@ from kangaroo.repositories import (
     FunctionRepository,
     InvocationRepository,
 )
-from kangaroo.runners import BaseRunner, RunnerUnavailableError
+from kangaroo.runners import BaseRunner
 from kangaroo.schemas import (
     Function,
     FunctionCreate,
@@ -67,7 +67,7 @@ class FunctionService:
 
         Raises:
             RunnerUnavailableError: If the runner cannot be reached. The invocation
-                is then stored as ERROR.
+                is then stored as ERROR, as it is for any other runner failure.
         """
         function = self._functions.get_by_id(item_id)
         invocation = self._write(
@@ -77,7 +77,7 @@ class FunctionService:
         )
         try:
             result = self._runner.run(RunRequest(code=function.code, env=env or {}))
-        except RunnerUnavailableError as exc:
+        except Exception as exc:
             error = str(exc)
             self._write(
                 lambda invocations: invocations.update(

@@ -2,23 +2,17 @@ from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
 
 from kangaroo.app import app
-from kangaroo.routes.auth import require_user
-from kangaroo.routes.dependencies import get_engine
+from kangaroo.routes.auth import create_impersonation_token, require_user
 
 OWNER = {"sub": "user-1", "email": "test@example.com", "name": "test-user"}
 OTHER_USER = {"sub": "user-2", "email": "other@example.com", "name": "other"}
 
 
-@pytest.fixture
-def client(engine):
-    """A TestClient with a fresh database, logged in as OWNER."""
-    app.dependency_overrides[get_engine] = lambda: engine
-    app.dependency_overrides[require_user] = lambda: dict(OWNER)
-    yield TestClient(app)
-    app.dependency_overrides.clear()
+@pytest.fixture(autouse=True)
+def signed_in_as_owner(monkeypatch):
+    monkeypatch.setitem(app.dependency_overrides, require_user, lambda: dict(OWNER))
 
 
 def act_as(user: dict) -> None:
@@ -108,3 +102,11 @@ def test_api_key_cannot_manage_api_keys(client):
         ).status_code
         == 403
     )
+
+
+def test_function_run_started_with_api_key_cannot_manage_api_keys(logged_out, client):
+    """The run's impersonation token keeps the API key marker."""
+    token = create_impersonation_token({"sub": "user-1", "api_key_id": "key-1"})
+    headers = {"Authorization": f"Bearer {token}"}
+
+    assert client.get("/api/v1/api-keys/", headers=headers).status_code == 403
