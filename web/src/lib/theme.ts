@@ -15,15 +15,18 @@ function readChoice(): ThemeChoice {
 
 function resolve(choice: ThemeChoice): Theme {
   if (choice !== "system") return choice;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return systemDark.matches ? "dark" : "light";
 }
+
+const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
+  // Re-apply on OS changes; a saved light or dark choice still wins in resolve()
+  if (listeners.size === 1) systemDark.addEventListener("change", apply);
   return () => {
     listeners.delete(listener);
+    if (listeners.size === 0) systemDark.removeEventListener("change", apply);
   };
 }
 

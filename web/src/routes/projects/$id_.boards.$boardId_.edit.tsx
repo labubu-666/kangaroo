@@ -115,7 +115,11 @@ export function EditBoard() {
       queryClient.removeQueries({ queryKey: ["boards", boardId] });
       removeRecent("board", boardId);
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      navigate({ to: "/projects/$id", params: { id } });
+      navigate({
+        to: "/projects/$id",
+        params: { id },
+        search: { tab: "boards" },
+      });
     },
   });
 

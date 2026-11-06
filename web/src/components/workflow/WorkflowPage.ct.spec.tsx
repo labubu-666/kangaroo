@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expect, test } from "../../../playwright/fixtures.ts";
 import { TestRouter } from "../TestRouter.story";
 import { WorkflowPage } from "./WorkflowPage";
@@ -44,16 +45,8 @@ const TYPES = [
 ];
 
 // Answers the endpoints the page reads. A status delete is answered by `onDelete`.
-type RoutablePage = {
-  route: (url: string, handler: (route: Route) => unknown) => Promise<unknown>;
-};
-type Route = {
-  request: () => { method: () => string; url: () => string };
-  fulfill: (options: { status?: number; json?: unknown }) => unknown;
-};
-
 async function stubApi(
-  page: RoutablePage,
+  page: Page,
   options: {
     statuses?: unknown[];
     onDelete?: (url: URL) => { status: number; json?: unknown };
@@ -136,6 +129,25 @@ test.describe("workflow page", () => {
     await expect(
       component.getByRole("button", { name: "Delete Task" }),
     ).toBeVisible();
+  });
+
+  test("a rejected new type keeps the typed name", async ({ mount, page }) => {
+    await stubApi(page);
+    await page.route("**/api/v1/work-item-types/**", (route) =>
+      route.request().method() === "POST"
+        ? route.fulfill({ status: 409, json: { detail: "Name taken" } })
+        : route.fallback(),
+    );
+    const component = await mount(
+      <TestRouter paths={PATHS} initialPath={`/projects/${PROJECT}?tab=types`}>
+        <WorkflowPage projectId={PROJECT} section="types" />
+      </TestRouter>,
+    );
+    await component.getByLabel("New type").fill("Bug");
+    await component.getByRole("button", { name: "Add type" }).click();
+
+    await expect(component).toContainText("Name taken");
+    await expect(component.getByLabel("New type")).toHaveValue("Bug");
   });
 
   test("an in-use status opens the replacement dialog", async ({

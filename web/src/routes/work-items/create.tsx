@@ -65,12 +65,13 @@ function CreateWorkItem() {
     queryFn: () => fetchWorkItemTypes(projectId),
     enabled: !!projectId,
   });
-  const firstType = types?.[0]?.id;
   useEffect(() => {
-    if (firstType && !getValues("typeId")) {
+    const firstType = types?.[0]?.id;
+    const typeId = getValues("typeId");
+    if (firstType && !types?.some((type) => type.id === typeId)) {
       setValue("typeId", firstType);
     }
-  }, [firstType, getValues, setValue]);
+  }, [types, getValues, setValue]);
 
   const { data: projects } = useProjectOptions();
   const hasProjects = (projects?.results ?? []).length > 0;

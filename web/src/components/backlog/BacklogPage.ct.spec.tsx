@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expect, test } from "../../../playwright/fixtures.ts";
 import { TestRouter } from "../TestRouter.story";
 import { BacklogPage } from "./BacklogPage";
@@ -49,9 +50,7 @@ function item(id: string, summary: string) {
 const PATHS = ["/", "/work-items/$id"];
 
 async function stubApi(
-  page: {
-    route: (url: string, handler: (route: any) => unknown) => Promise<unknown>;
-  },
+  page: Page,
   workItems: { status?: number; json: unknown },
 ) {
   await page.route("**/api/v1/statuses/**", (route) =>

@@ -24,7 +24,7 @@ const FIELD =
 const PRIMARY =
   "rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover disabled:bg-fg-disabled";
 const DANGER =
-  "rounded border border-red-300 dark:border-red-800 px-3 py-1 text-sm text-danger-hover hover:bg-danger-subtle disabled:text-fg-disabled";
+  "rounded border border-danger/40 px-3 py-1 text-sm text-danger-hover hover:bg-danger-subtle disabled:text-fg-disabled";
 
 function swapPositions<T extends { id: string; position: number }>(
   items: T[],
@@ -67,8 +67,10 @@ export function StatusSection({
       return;
     }
     setError(null);
-    onRun(() => createStatus(projectId, { name: name.trim(), category }));
-    setName("");
+    onRun(async () => {
+      await createStatus(projectId, { name: name.trim(), category });
+      setName("");
+    });
   };
 
   const move = (index: number, delta: -1 | 1) => {
@@ -243,8 +245,10 @@ export function TypeSection({
       return;
     }
     setError(null);
-    onRun(() => createWorkItemType(projectId, { name: name.trim() }));
-    setName("");
+    onRun(async () => {
+      await createWorkItemType(projectId, { name: name.trim() });
+      setName("");
+    });
   };
 
   const move = (index: number, delta: -1 | 1) => {
