@@ -1,5 +1,7 @@
 from uuid import uuid4
 
+from kangaroo.testing import status_id, type_id
+
 
 def _statuses(client, project_id):
     return client.get(f"/api/v1/statuses/?project_id={project_id}").json()
@@ -97,3 +99,36 @@ def test_put_status_keeps_position_when_omitted(client, project_id):
     )
     assert response.status_code == 200
     assert response.json()["position"] == 0
+
+
+def _create_task(client, project_id):
+    client.post(
+        "/api/v1/work-items",
+        json={
+            "summary": "Busy",
+            "project_id": project_id,
+            "type_id": type_id(client, project_id, "task"),
+        },
+    )
+
+
+def test_delete_status_with_missing_replacement_returns_422(client, project_id):
+    """An unknown replacement is a bad reference, like every other one."""
+    _create_task(client, project_id)
+    open_id = status_id(client, project_id, "open")
+    response = client.delete(
+        f"/api/v1/statuses/{open_id}", params={"replacement_id": str(uuid4())}
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Replacement status not found"
+
+
+def test_delete_type_with_missing_replacement_returns_422(client, project_id):
+    """An unknown replacement is a bad reference, like every other one."""
+    _create_task(client, project_id)
+    task_id = type_id(client, project_id, "task")
+    response = client.delete(
+        f"/api/v1/work-item-types/{task_id}", params={"replacement_id": str(uuid4())}
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Replacement type not found"

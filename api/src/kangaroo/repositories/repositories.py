@@ -102,29 +102,6 @@ def utc_now() -> datetime:
     return datetime.now(UTC)
 
 
-def new_work_item_fields(item: WorkItemCreate) -> dict[str, Any]:
-    """Return the stored fields for a new work item.
-
-    The service fills in ``status_id`` before it reaches the repository.
-    """
-    if item.status_id is None:
-        raise ValueError("status_id must be set before a work item is stored")
-    now = utc_now()
-    return {
-        "id": uuid7(),
-        "summary": item.summary,
-        "description": item.description,
-        "project_id": item.project_id,
-        "type_id": item.type_id,
-        "status_id": item.status_id,
-        "parent_id": item.parent_id,
-        "labels": item.labels,
-        "trashed": False,
-        "created_at": now,
-        "modified_at": now,
-    }
-
-
 def _escape_like(text: str) -> str:
     """Escape LIKE wildcards so the search text is matched literally."""
     return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
@@ -411,9 +388,6 @@ class WorkItemRepository(
     search_fields = ("summary", "plain_description")
     model_type = WorkItem
     row_type = WorkItemRow
-
-    def _new_row(self, item: WorkItemCreate) -> WorkItemRow:
-        return WorkItemRow(**new_work_item_fields(item))
 
 
 class FunctionRepository(

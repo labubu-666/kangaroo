@@ -1,11 +1,7 @@
 import requests
 
-from kangaroo.runners.base import BaseRunner
+from kangaroo.runners.base import BaseRunner, RunnerUnavailableError
 from kangaroo.schemas import RunRequest, RunResult
-
-
-class RunnerUnavailableError(Exception):
-    """The runner could not be reached or returned an error."""
 
 
 class NuclioRunner(BaseRunner):

@@ -1,7 +1,7 @@
-from kangaroo.runners.base import BaseRunner
+from kangaroo.runners.base import BaseRunner, RunnerUnavailableError
 from kangaroo.runners.factory import create_runner
 from kangaroo.runners.local import LocalRunner
-from kangaroo.runners.nuclio import NuclioRunner, RunnerUnavailableError
+from kangaroo.runners.nuclio import NuclioRunner
 
 __all__ = [
     "BaseRunner",

@@ -3,6 +3,10 @@ from abc import ABC, abstractmethod
 from kangaroo.schemas import RunRequest, RunResult
 
 
+class RunnerUnavailableError(Exception):
+    """The runner could not be reached or returned an error."""
+
+
 class BaseRunner(ABC):
     """Runs a Python script and reports its output.
 
