@@ -37,6 +37,8 @@ function WorkItemDetail() {
   const menuId = useId();
   const parentInputId = useId();
   const typeSelectId = useId();
+  const statusInputId = useId();
+  const projectInputId = useId();
   const menuRef = useDismiss<HTMLDivElement>(menuOpen, () =>
     setMenuOpen(false),
   );
@@ -155,6 +157,7 @@ function WorkItemDetail() {
   const deleteMutation = useMutation({
     mutationFn: () => deleteWorkItem(id),
     onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["work-items", id] });
       removeRecent("work-item", id);
       queryClient.invalidateQueries({ queryKey: ["work-items"] });
       goBackOr(() =>
@@ -432,10 +435,14 @@ function WorkItemDetail() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fg-secondary">
+              <label
+                htmlFor={statusInputId}
+                className="block text-sm font-medium text-fg-secondary"
+              >
                 Status
               </label>
               <select
+                id={statusInputId}
                 value={item.status_id}
                 onChange={(e) => handleStatusChange(e.target.value)}
                 disabled={updateMutation.isPending}
@@ -447,6 +454,9 @@ function WorkItemDetail() {
                   </option>
                 ))}
               </select>
+              {updateMutation.error && (
+                <ErrorBanner>{updateMutation.error.message}</ErrorBanner>
+              )}
             </div>
 
             <div>
@@ -476,10 +486,14 @@ function WorkItemDetail() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fg-secondary">
+              <label
+                htmlFor={projectInputId}
+                className="block text-sm font-medium text-fg-secondary"
+              >
                 Project
               </label>
               <select
+                id={projectInputId}
                 value={item.project_id}
                 onChange={(e) => projectMutation.mutate(e.target.value)}
                 disabled={projectMutation.isPending}
@@ -491,6 +505,9 @@ function WorkItemDetail() {
                   </option>
                 ))}
               </select>
+              {projectMutation.error && (
+                <ErrorBanner>{projectMutation.error.message}</ErrorBanner>
+              )}
             </div>
 
             <LabelsEditor
@@ -498,6 +515,9 @@ function WorkItemDetail() {
               onChange={(labels) => labelsMutation.mutate(labels)}
               disabled={labelsMutation.isPending}
             />
+            {labelsMutation.error && (
+              <ErrorBanner>{labelsMutation.error.message}</ErrorBanner>
+            )}
 
             <div>
               <p className="text-sm font-medium text-fg-secondary">Created</p>

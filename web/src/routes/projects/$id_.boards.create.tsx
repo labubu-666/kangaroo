@@ -45,7 +45,11 @@ function CreateBoard() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      navigate({ to: "/projects/$id", params: { id } });
+      navigate({
+        to: "/projects/$id",
+        params: { id },
+        search: { tab: "boards" },
+      });
     },
     onError: (err) => {
       setError("root", {

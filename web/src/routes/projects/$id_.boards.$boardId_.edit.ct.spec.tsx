@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expect, test } from "../../../playwright/fixtures.ts";
 import { TestRouter } from "../../components/TestRouter.story";
 import { EditBoard } from "./$id_.boards.$boardId_.edit";
@@ -57,9 +58,7 @@ const PATHS = ["/projects/$id/boards/$boardId/edit"];
 const INITIAL = `/projects/${PROJECT}/boards/${BOARD}/edit`;
 
 // Answers the endpoints the page reads and records the board PATCH body
-async function stubApi(page: {
-  route: (url: string, handler: (route: any) => unknown) => Promise<unknown>;
-}) {
+async function stubApi(page: Page) {
   const sent: { body: Record<string, unknown> | null } = { body: null };
   await page.route("**/api/v1/projects/*", (route) =>
     route.fulfill({ json: PROJECT_JSON }),

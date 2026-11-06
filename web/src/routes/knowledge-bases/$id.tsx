@@ -42,10 +42,7 @@ export const Route = createFileRoute("/knowledge-bases/$id")({
     const limit = Number(search.limit);
     return {
       tab: search.tab === "summary" ? "summary" : "articles",
-      sort:
-        typeof search.sort === "string" && search.sort !== ""
-          ? search.sort
-          : undefined,
+      sort: ARTICLE_SORTS.find((option) => option.value === search.sort)?.value,
       offset: Number.isInteger(offset) && offset > 0 ? offset : undefined,
       limit:
         Number.isInteger(limit) &&
@@ -83,7 +80,11 @@ function KnowledgeBaseDetail() {
     queryFn: () => fetchKnowledgeBase(id),
   });
 
-  const { data: articles } = useQuery({
+  const {
+    data: articles,
+    isLoading: articlesLoading,
+    error: articlesError,
+  } = useQuery({
     queryKey: ["articles", "in", id, offset, limit, sort],
     queryFn: () => fetchArticles(limit, offset, id, undefined, sort),
   });
@@ -260,7 +261,11 @@ function KnowledgeBaseDetail() {
               </div>
             </div>
 
-            {items.length === 0 ? (
+            {articlesLoading ? (
+              <Loading />
+            ) : articlesError ? (
+              <ErrorBanner>{articlesError.message}</ErrorBanner>
+            ) : items.length === 0 ? (
               <div className="text-center text-fg-muted">No articles yet</div>
             ) : (
               <div className="flex flex-col gap-4">

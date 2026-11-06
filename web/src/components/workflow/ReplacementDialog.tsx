@@ -32,7 +32,7 @@ export function ReplacementDialog({
       role="dialog"
       aria-modal="true"
       aria-labelledby="replacement-title"
-      className="space-y-4 rounded border border-red-200 dark:border-red-900 bg-surface p-4 shadow"
+      className="space-y-4 rounded border border-danger/30 bg-surface p-4 shadow"
     >
       <h3 id="replacement-title" className="font-semibold">
         Delete {kind} “{name}”?
