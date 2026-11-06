@@ -173,7 +173,7 @@ def test_replacement_status_must_be_in_same_project(
             status_id=in_progress.id,
         )
     )
-    with pytest.raises(InvalidReferenceError, match="same project"):
+    with pytest.raises(InvalidReferenceError, match="not in the project"):
         workflow.delete_status(in_progress.id, replacement_id=foreign.id)
 
 

@@ -41,7 +41,7 @@ class UTCDateTime(TypeDecorator):
 class Base(DeclarativeBase):
     """Declarative base for the tables."""
 
-    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, sort_order=-1)
     trashed: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=false()
     )
@@ -52,7 +52,6 @@ class Base(DeclarativeBase):
 class ProjectRow(Base):
     __tablename__ = "projects"
 
-    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     name: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
@@ -61,7 +60,6 @@ class ProjectRow(Base):
 class WorkItemRow(Base):
     __tablename__ = "work_items"
 
-    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     summary: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     plain_description: Mapped[str | None] = mapped_column(
@@ -90,7 +88,6 @@ class WorkItemRow(Base):
 class BoardRow(Base):
     __tablename__ = "boards"
 
-    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     name: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     filter: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -109,7 +106,6 @@ class BoardRow(Base):
 class WorkItemTypeRow(Base):
     __tablename__ = "work_item_types"
 
-    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     project_id: Mapped[UUID] = mapped_column(
         Uuid, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
     )
@@ -120,7 +116,6 @@ class WorkItemTypeRow(Base):
 class StatusRow(Base):
     __tablename__ = "statuses"
 
-    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     project_id: Mapped[UUID] = mapped_column(
         Uuid, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
     )
@@ -132,7 +127,6 @@ class StatusRow(Base):
 class StatusTransitionRow(Base):
     __tablename__ = "status_transitions"
 
-    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     project_id: Mapped[UUID] = mapped_column(
         Uuid, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
     )
@@ -147,7 +141,6 @@ class StatusTransitionRow(Base):
 class InvocationRow(Base):
     __tablename__ = "invocations"
 
-    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     function_id: Mapped[UUID] = mapped_column(
         Uuid, ForeignKey("functions.id", ondelete="CASCADE"), nullable=False
     )
@@ -160,7 +153,6 @@ class InvocationRow(Base):
 class FunctionRow(Base):
     __tablename__ = "functions"
 
-    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     name: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     code: Mapped[str] = mapped_column(String)
@@ -170,7 +162,6 @@ class FunctionRow(Base):
 class KnowledgeBaseRow(Base):
     __tablename__ = "knowledge_bases"
 
-    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     name: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
@@ -179,7 +170,6 @@ class KnowledgeBaseRow(Base):
 class ArticleRow(Base):
     __tablename__ = "articles"
 
-    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     knowledge_base_id: Mapped[UUID] = mapped_column(
         Uuid, ForeignKey("knowledge_bases.id", ondelete="RESTRICT"), nullable=False
     )

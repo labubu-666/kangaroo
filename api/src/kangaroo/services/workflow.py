@@ -100,11 +100,9 @@ class WorkflowService:
                 )
             if replacement_id == item_id:
                 raise InvalidReferenceError("The replacement must be another status")
-            replacement = self._statuses.get_by_id(replacement_id)
-            if replacement.project_id != status.project_id:
-                raise InvalidReferenceError(
-                    "The replacement must be in the same project"
-                )
+            get_in_project(
+                self._statuses, replacement_id, status.project_id, "Replacement status"
+            )
             self._move_items("status_id", item_id, replacement_id)
         if status.category == "todo":
             self._ensure_other_todo_status(status)
@@ -182,11 +180,12 @@ class WorkflowService:
                 )
             if replacement_id == item_id:
                 raise InvalidReferenceError("The replacement must be another type")
-            replacement = self._types.get_by_id(replacement_id)
-            if replacement.project_id != work_item_type.project_id:
-                raise InvalidReferenceError(
-                    "The replacement must be in the same project"
-                )
+            get_in_project(
+                self._types,
+                replacement_id,
+                work_item_type.project_id,
+                "Replacement type",
+            )
             self._move_items("type_id", item_id, replacement_id)
         self._types.delete(item_id)
 
