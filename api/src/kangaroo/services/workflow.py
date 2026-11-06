@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 from kangaroo.errors import (
@@ -112,7 +113,9 @@ class WorkflowService:
                 self._transitions.delete(transition.id)
         self._statuses.delete(item_id)
 
-    def _move_items(self, field: str, old_id: UUID, new_id: UUID) -> None:
+    def _move_items(
+        self, field: Literal["status_id", "type_id"], old_id: UUID, new_id: UUID
+    ) -> None:
         """Point every work item whose ``field`` is ``old_id`` at ``new_id``."""
         for item in self._work_items.list_all(**{field: old_id}):
             self._work_items.update(

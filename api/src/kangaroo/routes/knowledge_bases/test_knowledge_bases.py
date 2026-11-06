@@ -97,3 +97,15 @@ def test_delete_knowledge_base_with_articles_forbidden(client):
     response = client.delete(f"/api/v1/knowledge-bases/{kb_id}")
     assert response.status_code == 409
     assert client.get(f"/api/v1/knowledge-bases/{kb_id}").status_code == 200
+
+
+def test_list_knowledge_bases_sorts(client):
+    """GET /api/v1/knowledge-bases?sort=-name sorts Z to A."""
+    for name in ["Beta", "Alpha", "Gamma"]:
+        create(client, name=name)
+    response = client.get("/api/v1/knowledge-bases", params={"sort": "-name"})
+    assert [kb["name"] for kb in response.json()["results"]] == [
+        "Gamma",
+        "Beta",
+        "Alpha",
+    ]

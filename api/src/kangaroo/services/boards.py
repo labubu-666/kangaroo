@@ -99,6 +99,7 @@ class BoardService:
         limit: int,
         offset: int,
         search: str | None = None,
+        sort: str | None = None,
         project_id: UUID | None = None,
         filter: str | None = None,
     ) -> PaginatedResponse[Board]:
@@ -109,11 +110,11 @@ class BoardService:
         """
         if not filter or not filter.strip():
             return self._boards.list_paginated(
-                limit, offset, search, project_id=project_id
+                limit, offset, search, sort, project_id=project_id
             )
         names = project_names(self._projects)
         page, total = filtered_page(
-            self._boards.list_all(project_id=project_id),
+            self._boards.list_all(sort=sort, project_id=project_id),
             filter,
             lambda board: _board_record(board, names),
             search,

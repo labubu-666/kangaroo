@@ -41,9 +41,13 @@ class FunctionService:
         return self._functions.get_by_id(item_id)
 
     def list_paginated(
-        self, limit: int, offset: int, search: str | None = None
+        self,
+        limit: int,
+        offset: int,
+        search: str | None = None,
+        sort: str | None = None,
     ) -> PaginatedResponse[Function]:
-        return self._functions.list_paginated(limit, offset, search)
+        return self._functions.list_paginated(limit, offset, search, sort)
 
     def replace(self, item_id: UUID, replace: FunctionReplace) -> Function:
         return self._functions.replace(item_id, replace)

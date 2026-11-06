@@ -29,9 +29,13 @@ class KnowledgeBaseService:
         return self._knowledge_bases.get_by_id(item_id)
 
     def list_paginated(
-        self, limit: int, offset: int, search: str | None = None
+        self,
+        limit: int,
+        offset: int,
+        search: str | None = None,
+        sort: str | None = None,
     ) -> PaginatedResponse[KnowledgeBase]:
-        return self._knowledge_bases.list_paginated(limit, offset, search)
+        return self._knowledge_bases.list_paginated(limit, offset, search, sort)
 
     def replace(self, item_id: UUID, replace: KnowledgeBaseReplace) -> KnowledgeBase:
         return self._knowledge_bases.replace(item_id, replace)

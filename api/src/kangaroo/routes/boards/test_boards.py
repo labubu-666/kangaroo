@@ -1,5 +1,6 @@
 from uuid import UUID
 
+import pytest
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
@@ -673,3 +674,15 @@ def test_view_hides_items_in_hidden_status(client, project_id):
     response = client.get(f"/api/v1/boards/{board_id}/view")
     assert response.status_code == 200
     assert "Hidden work" not in response.text
+
+
+@pytest.mark.parametrize("with_filter", [False, True])
+def test_list_boards_sorts(client, project_id, with_filter):
+    """GET /api/v1/boards?sort=-name sorts Z to A, with or without a filter."""
+    for name in ["Beta", "Alpha", "Gamma"]:
+        client.post("/api/v1/boards", json={"name": name, "project_id": project_id})
+    params = {"sort": "-name"}
+    if with_filter:
+        params["filter"] = f"project.id == '{project_id}'"
+    response = client.get("/api/v1/boards", params=params)
+    assert [b["name"] for b in response.json()["results"]] == ["Gamma", "Beta", "Alpha"]
