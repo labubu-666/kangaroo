@@ -33,11 +33,15 @@ def list_knowledge_bases(
         limit: The maximum number of items to return (default: 10, max: 100).
         offset: The number of items to skip from the beginning (default: 0).
         search: Optional text to match case-insensitively in name or description.
+        sort: Optional comma-separated fields, e.g. "-modified_at,name". A "+"
+            or no prefix sorts ascending, "-" descending.
 
     Returns:
         A paginated response containing items and metadata.
     """
-    return service.list_paginated(params.limit, params.offset, params.search)
+    return service.list_paginated(
+        params.limit, params.offset, params.search, params.sort
+    )
 
 
 @router.get("/{item_id}", response_model=KnowledgeBase)

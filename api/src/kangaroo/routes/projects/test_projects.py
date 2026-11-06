@@ -313,3 +313,16 @@ def test_failed_delete_request_keeps_everything(client, session, monkeypatch):
         session.scalar(select(func.count()).select_from(StatusRow)),
         session.scalar(select(func.count()).select_from(WorkItemTypeRow)),
     ) == before
+
+
+def test_list_projects_sorts(client):
+    """GET /api/v1/projects?sort=-name sorts Z to A."""
+    for name in ["Beta", "Alpha", "Gamma"]:
+        client.post("/api/v1/projects", json={"name": name})
+    response = client.get("/api/v1/projects", params={"sort": "-name"})
+    assert [p["name"] for p in response.json()["results"]] == ["Gamma", "Beta", "Alpha"]
+
+
+def test_list_projects_rejects_unknown_sort_field(client):
+    response = client.get("/api/v1/projects", params={"sort": "nope"})
+    assert response.status_code == 422

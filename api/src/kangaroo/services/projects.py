@@ -85,10 +85,14 @@ class ProjectService:
         return project
 
     def list_paginated(
-        self, limit: int, offset: int, search: str | None = None
+        self,
+        limit: int,
+        offset: int,
+        search: str | None = None,
+        sort: str | None = None,
     ) -> PaginatedResponse[Project]:
         """List projects with pagination."""
-        return self._projects.list_paginated(limit, offset, search)
+        return self._projects.list_paginated(limit, offset, search, sort)
 
     def get(self, item_id: UUID) -> Project:
         """Get a project by ID."""

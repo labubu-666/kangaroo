@@ -34,6 +34,8 @@ def list_boards(
         limit: The maximum number of items to return (default: 10, max: 100).
         offset: The number of items to skip from the beginning (default: 0).
         search: Optional text to match case-insensitively in name or description.
+        sort: Optional comma-separated fields, e.g. "-modified_at,name". A "+"
+            or no prefix sorts ascending, "-" descending.
         project_id: Optional project ID to list only that project's boards.
         filter: Optional filter in the filter language, e.g.
             ``project.id == '<uuid>'``. Invalid filters return 422.
@@ -45,6 +47,7 @@ def list_boards(
         params.limit,
         params.offset,
         params.search,
+        params.sort,
         project_id=project_id,
         filter=filter,
     )

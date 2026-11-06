@@ -256,16 +256,18 @@ class Repository[M: BaseModel, C: BaseModel, U: BaseModel, R: BaseModel]:
         self._session.delete(self._get_row(item_id))
         self._session.flush()
 
-    def list_all(self, **filters: Any) -> list[M]:
+    def list_all(self, *, sort: str | None = None, **filters: Any) -> list[M]:
         """Return all entities matching the filters.
 
         Filters are exact matches on ``filter_fields``. A filter set to None is
-        ignored.
+        ignored. ``sort`` works as in ``list_paginated``.
 
         Raises:
             ValueError: If a filter name is not one of ``filter_fields``.
+            InvalidSortError: If a sort field is not one of ``filter_fields``.
         """
-        return self._select(self._checked(filters), None, None, 0)
+        ordering = parse_sort(sort, self.filter_fields)
+        return self._select(self._checked(filters), None, None, 0, ordering)
 
     def list_paginated(
         self,

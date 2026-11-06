@@ -95,6 +95,7 @@ class WorkItemService:
         project_id: UUID | None = None,
         parent_id: UUID | None = None,
         search: str | None = None,
+        sort: str | None = None,
         filter: str | None = None,
     ) -> PaginatedResponse[WorkItemListItem]:
         """List work items with pagination, including trashed ones.
@@ -107,6 +108,7 @@ class WorkItemService:
                 limit,
                 offset,
                 search,
+                sort,
                 project_id=project_id,
                 parent_id=parent_id,
             )
@@ -122,7 +124,9 @@ class WorkItemService:
         names = project_names(self._projects)
         statuses, types = lookups(self._statuses, self._types)
         page, total = filtered_page(
-            self._work_items.list_all(project_id=project_id, parent_id=parent_id),
+            self._work_items.list_all(
+                sort=sort, project_id=project_id, parent_id=parent_id
+            ),
             filter,
             lambda item: filter_record(item, names, statuses, types),
             search,

@@ -138,3 +138,11 @@ def test_run_missing_function(client):
     """POST /api/v1/functions/{id}/run returns 404 for an unknown ID."""
     response = client.post("/api/v1/functions/00000000-0000-0000-0000-000000000000/run")
     assert response.status_code == 404
+
+
+def test_list_functions_sorts(client):
+    """GET /api/v1/functions?sort=name sorts A to Z."""
+    for name in ["Beta", "Alpha", "Gamma"]:
+        create(client, name=name)
+    response = client.get("/api/v1/functions", params={"sort": "name"})
+    assert [f["name"] for f in response.json()["results"]] == ["Alpha", "Beta", "Gamma"]

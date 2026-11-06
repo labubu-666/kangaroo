@@ -1,5 +1,7 @@
 from uuid import UUID, uuid4
 
+import pytest
+
 from kangaroo.testing import status_id, type_id
 
 
@@ -1340,4 +1342,29 @@ def test_patch_type_of_other_project_returns_422(client, project_id):
         f"/api/v1/work-items/{item_id}",
         json={"type_id": type_id(client, other, "task")},
     )
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize("with_filter", [False, True])
+def test_list_work_items_sorts(client, project_id, with_filter):
+    """GET /api/v1/work-items?sort=-summary sorts Z to A, with or without a filter."""
+    for summary in ["Beta", "Alpha", "Gamma"]:
+        _create(client, project_id, summary)
+    params = {"sort": "-summary"}
+    if with_filter:
+        params["filter"] = "trashed == false"
+    response = client.get("/api/v1/work-items", params=params)
+    assert [i["summary"] for i in response.json()["results"]] == [
+        "Gamma",
+        "Beta",
+        "Alpha",
+    ]
+
+
+@pytest.mark.parametrize("with_filter", [False, True])
+def test_list_work_items_rejects_unknown_sort_field(client, with_filter):
+    params = {"sort": "nope"}
+    if with_filter:
+        params["filter"] = "trashed == false"
+    response = client.get("/api/v1/work-items", params=params)
     assert response.status_code == 422

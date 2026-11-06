@@ -42,6 +42,8 @@ def list_work_items(
         project_id: Optional project ID to filter work items by.
         parent_id: Optional parent work item ID to list the children of.
         search: Optional text to match case-insensitively in summary or description.
+        sort: Optional comma-separated fields, e.g. "-modified_at,summary". A "+"
+            or no prefix sorts ascending, "-" descending.
         filter: Optional filter in the board filter language, e.g.
             ``status == 'in_progress'`` or ``trashed == false``. Invalid filters
             return 422. Trashed items are included unless the filter excludes them.
@@ -55,6 +57,7 @@ def list_work_items(
         project_id=project_id,
         parent_id=parent_id,
         search=params.search,
+        sort=params.sort,
         filter=filter,
     )
 
