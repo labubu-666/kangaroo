@@ -29,7 +29,7 @@ def test_create_project_copies_default_template(client, project_id):
     """A new project gets the To Do List types and statuses in position order."""
     statuses = _statuses(client, project_id)
     assert [(s["name"], s["category"], s["position"]) for s in statuses] == [
-        ("Open", "todo", 0),
+        ("To do", "todo", 0),
         ("In Progress", "in_progress", 1),
         ("Done", "done", 2),
     ]

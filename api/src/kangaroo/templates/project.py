@@ -35,7 +35,7 @@ TO_DO_LIST = ProjectTemplate(
     name="To Do List",
     types=(TemplateType(name="Task", position=0),),
     statuses=(
-        TemplateStatus(name="Open", category="todo", position=0),
+        TemplateStatus(name="To do", category="todo", position=0),
         TemplateStatus(name="In Progress", category="in_progress", position=1),
         TemplateStatus(name="Done", category="done", position=2),
     ),
@@ -43,4 +43,20 @@ TO_DO_LIST = ProjectTemplate(
 
 DEFAULT_TEMPLATE_NAME = TO_DO_LIST.name
 
-TEMPLATES: dict[str, ProjectTemplate] = {TO_DO_LIST.name: TO_DO_LIST}
+SOFTWARE_PROJECT = ProjectTemplate(
+    name="Software Project",
+    types=(TemplateType(name="Task", position=0),),
+    statuses=(
+        TemplateStatus(name="Open", category="todo", position=0),
+        TemplateStatus(name="To do", category="todo", position=1),
+        TemplateStatus(name="In progress", category="in_progress", position=2),
+        TemplateStatus(name="Review", category="in_progress", position=3),
+        TemplateStatus(name="Done", category="done", position=4),
+        TemplateStatus(name="Won't do", category="done", position=5),
+    ),
+)
+
+TEMPLATES: dict[str, ProjectTemplate] = {
+    TO_DO_LIST.name: TO_DO_LIST,
+    SOFTWARE_PROJECT.name: SOFTWARE_PROJECT,
+}

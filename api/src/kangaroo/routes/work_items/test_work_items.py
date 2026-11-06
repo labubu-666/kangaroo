@@ -1214,7 +1214,7 @@ def test_work_item_includes_status_and_type_names(client, project_id):
     data = _create(client, project_id).json()
     assert data["status"] == {
         "id": status_id(client, project_id, "open"),
-        "name": "Open",
+        "name": "To do",
         "category": "todo",
     }
     assert data["type"] == {
@@ -1255,7 +1255,7 @@ def test_names_are_present_on_every_read_and_write(client, project_id):
             "type_id": type_id(client, project_id, "task"),
         },
     ).json()
-    assert replaced["status"]["name"] == "Open"
+    assert replaced["status"]["name"] == "To do"
 
 
 def test_renamed_status_shows_new_name_on_work_items(client, project_id):

@@ -106,7 +106,7 @@ def test_summary_counts_by_status(client, project_id):
         for entry in counts["by_status"]
         if entry["count"]
     }
-    assert per_status == {"Open": 1, "Done": 1}
+    assert per_status == {"To do": 1, "Done": 1}
 
 
 def test_summary_counts_by_category_across_custom_statuses(client, project_id):
@@ -129,4 +129,4 @@ def test_summary_counts_by_category_across_custom_statuses(client, project_id):
     counts = client.get("/api/v1/reports/summary").json()["work_items"]
     assert (counts["todo"], counts["in_progress"], counts["done"]) == (0, 2, 1)
     by_name = {e["status"]["name"]: e["count"] for e in counts["by_status"]}
-    assert by_name == {"Open": 0, "In Progress": 0, "Done": 1, "Review": 2}
+    assert by_name == {"To do": 0, "In Progress": 0, "Done": 1, "Review": 2}

@@ -1,5 +1,6 @@
 from kangaroo.templates.project import (
     DEFAULT_TEMPLATE_NAME,
+    SOFTWARE_PROJECT,
     TEMPLATES,
     TO_DO_LIST,
     ProjectTemplate,
@@ -9,6 +10,7 @@ from kangaroo.templates.project import (
 
 __all__ = [
     "DEFAULT_TEMPLATE_NAME",
+    "SOFTWARE_PROJECT",
     "TEMPLATES",
     "TO_DO_LIST",
     "ProjectTemplate",

@@ -17,7 +17,7 @@ from kangaroo.templates import TO_DO_LIST
 
 NAMES = {
     "task": "Task",
-    "open": "Open",
+    "open": "To do",
     "in_progress": "In Progress",
     "done": "Done",
 }
@@ -69,7 +69,7 @@ def seed_project(projects, statuses, types, name: str = "Test") -> SeededProject
     return SeededProject(
         project_id=project.id,
         task_id=type_ids["Task"],
-        open_id=status_ids["Open"],
+        open_id=status_ids["To do"],
         in_progress_id=status_ids["In Progress"],
         done_id=status_ids["Done"],
     )

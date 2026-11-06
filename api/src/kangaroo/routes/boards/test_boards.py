@@ -189,7 +189,7 @@ def test_view_groups_matching_items_by_status(client, project_id):
     data = response.json()
     assert data["board"]["id"] == board_id
     assert [column["status"]["name"] for column in data["columns"]] == [
-        "Open",
+        "To do",
         "In Progress",
         "Done",
     ]
@@ -434,7 +434,7 @@ def test_view_has_a_column_for_every_status_including_empty(client, project_id):
 
     columns = client.get(f"/api/v1/boards/{board_id}/view").json()["columns"]
     assert [c["status"]["name"] for c in columns] == [
-        "Open",
+        "To do",
         "In Progress",
         "Done",
         "Review",
@@ -499,7 +499,7 @@ def test_view_items_carry_status_and_type_names(client, project_id):
     ).json()["id"]
     columns = client.get(f"/api/v1/boards/{board_id}/view").json()["columns"]
     item = columns[0]["items"][0]
-    assert item["status"]["name"] == "Open"
+    assert item["status"]["name"] == "To do"
     assert item["type"]["name"] == "Task"
 
 
@@ -554,7 +554,7 @@ def test_view_columns_follow_board_status_order(client, project_id):
         column["status"]["name"]
         for column in client.get(f"/api/v1/boards/{board_id}/view").json()["columns"]
     ]
-    assert names == ["Done", "Open", "In Progress"]
+    assert names == ["Done", "To do", "In Progress"]
 
 
 def test_update_without_status_order_keeps_it(client, project_id):
@@ -588,7 +588,7 @@ def test_view_leaves_out_hidden_status_columns(client, project_id):
         column["status"]["name"]
         for column in client.get(f"/api/v1/boards/{board_id}/view").json()["columns"]
     ]
-    assert names == ["Open", "Done"]
+    assert names == ["To do", "Done"]
 
 
 def test_view_with_hidden_status_that_has_items(client, project_id):
