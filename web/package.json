@@ -36,7 +36,7 @@
     "@playwright/test": "1.62.1",
     "@tanstack/react-router-devtools": "1.167.2",
     "@tanstack/router-plugin": "1.168.48",
-    "@types/node": "24.13.3",
+    "@types/node": "24.19.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
     "@vitejs/plugin-react": "6.1.2",
