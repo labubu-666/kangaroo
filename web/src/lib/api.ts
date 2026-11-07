@@ -18,9 +18,9 @@ export async function apiFetch(
   init?: RequestInit,
 ): Promise<Response> {
   const res = await fetch(path, init);
-  // Not logged in: send the user to the backend login (Dex), which returns to this page.
+  // Not logged in: send the user to the backend login (OIDC), which returns to this page.
   // If we just came back from login and still get a 401, the session cookie isn't
-  // sticking, so stop instead of looping through Dex again.
+  // sticking, so stop instead of looping through the provider again.
   if (res.status === 401) {
     const redirectedAt = Number(
       sessionStorage.getItem(LOGIN_REDIRECTED_AT) ?? 0,

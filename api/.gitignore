@@ -7,5 +7,5 @@ wheels/
 *.py[oc]
 .env
 *.egg-info
-kangaroo.db
-kangaroo.db.*.bak
+*.db
+*.db.*.bak

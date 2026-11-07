@@ -1,7 +1,7 @@
 # Database migrations
 - This is a greenfield project.
 - During schema changes. Run DDL and retroactively backfill the columns. 
-- Create `kangaroo.db.*.bak` in case things go south.
+- Create `*.db.*.bak` backups in case things go south.
 - When ready, we will add an `alembic` based migration utility.
 # Dependencies
 - The project uses `uv`.

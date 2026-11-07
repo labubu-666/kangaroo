@@ -65,7 +65,7 @@ def require_user(
     request: Request,
     engine: Annotated[Engine, Depends(get_engine)],
 ) -> dict[str, Any]:
-    """Accept a Dex session, an API key or an impersonation token; otherwise 401."""
+    """Accept an OIDC session, an API key or an impersonation token; otherwise 401."""
     user = (
         request.session.get("user")
         or _user_from_api_key(request, engine)

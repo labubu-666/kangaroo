@@ -51,7 +51,7 @@ export function AppHeader() {
               id={menuId}
               role="menu"
               aria-label="Profile"
-              className="absolute right-0 z-10 mt-2 flex min-w-32 flex-col rounded border border-border bg-surface py-1 shadow-lg"
+              className="absolute right-0 top-full z-10 mt-2 flex min-w-32 flex-col rounded border border-border bg-surface py-1 shadow-lg"
             >
               {user && (
                 <Link

@@ -32,7 +32,8 @@ class Settings(BaseSettings):
     # containers when FUNCTION_RUNNER=nuclio, so set this to an address they can reach.
     api_public_url: str = "http://localhost:8000"
 
-    # OpenID Connect login via Dex. The session key signs the session cookie.
+    # OpenID Connect login. Any OIDC provider works (Dex, Keycloak, Google...).
+    # The session key signs the session cookie.
     session_secret_key: SecretStr = SecretStr(SESSION_SECRET_KEY)
     oidc_metadata_url: str = (
         "http://localhost:5556/dex/.well-known/openid-configuration"
