@@ -35,7 +35,7 @@ test.describe("AppHeader", () => {
       </TestRouter>,
     );
     await component.getByRole("button", { name: "Profile menu" }).click();
-    const menu = component.getByRole("menu");
+    const menu = component.getByRole("menu", { name: "Profile" });
     await expect(menu.getByText("test-user", { exact: true })).toBeVisible();
     await expect(menu.getByText("test@example.com")).toBeVisible();
   });
