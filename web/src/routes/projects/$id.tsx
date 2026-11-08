@@ -69,7 +69,7 @@ function ProjectDetail() {
     mutationFn: () => deleteProject(id),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ["projects", id] });
-      removeRecent("project", id);
+      TABS.forEach((t) => removeRecent("project-tab", `${id}:${t.value}`));
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       navigate({ to: "/projects" });
     },
@@ -90,11 +90,13 @@ function ProjectDetail() {
 
   useRecordRecent(
     project && {
-      type: "project",
-      id: project.id,
-      title: project.name,
+      type: "project-tab",
+      id: `${project.id}:${tab}`,
+      title: TABS.find((t) => t.value === tab)?.label ?? "Work items",
+      parent: project.name,
       to: "/projects/$id",
       params: { id: project.id },
+      search: { tab },
     },
   );
 

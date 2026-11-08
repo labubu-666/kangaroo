@@ -73,3 +73,22 @@ test.describe("CalendarPage", () => {
     );
   });
 });
+
+test.describe("CalendarPage without a project", () => {
+  test("shows items from every project", async ({ mount, page }) => {
+    await stubApi(page, [
+      item("w1", "Write docs", thisMonth().toISOString()),
+      {
+        ...item("w2", "Other project task", thisMonth().toISOString()),
+        project_id: "other",
+      },
+    ]);
+    const component = await mount(
+      <TestRouter paths={PATHS}>
+        <CalendarPage />
+      </TestRouter>,
+    );
+    await expect(component.getByText("Write docs")).toBeVisible();
+    await expect(component.getByText("Other project task")).toBeVisible();
+  });
+});

@@ -15,6 +15,7 @@ from kangaroo.repositories import (
     InvocationRepository,
     KnowledgeBaseRepository,
     ProjectRepository,
+    RecentHistoryRepository,
     StatusRepository,
     StatusTransitionRepository,
     WorkItemRepository,
@@ -31,6 +32,7 @@ from kangaroo.services import (
     InvocationService,
     KnowledgeBaseService,
     ProjectService,
+    RecentHistoryService,
     ReportService,
     WorkflowService,
     WorkItemService,
@@ -169,6 +171,12 @@ def get_api_key_service(
     return ApiKeyService(ApiKeyRepository(session))
 
 
+def get_recent_history_service(
+    session: Annotated[Session, Depends(get_session)],
+) -> RecentHistoryService:
+    return RecentHistoryService(RecentHistoryRepository(session))
+
+
 def get_backup_service(
     session: Annotated[Session, Depends(get_session)],
 ) -> BackupService:
@@ -201,3 +209,6 @@ BoardServiceDep = Annotated[BoardService, Depends(get_board_service)]
 ReportServiceDep = Annotated[ReportService, Depends(get_report_service)]
 BackupServiceDep = Annotated[BackupService, Depends(get_backup_service)]
 ApiKeyServiceDep = Annotated[ApiKeyService, Depends(get_api_key_service)]
+RecentHistoryServiceDep = Annotated[
+    RecentHistoryService, Depends(get_recent_history_service)
+]

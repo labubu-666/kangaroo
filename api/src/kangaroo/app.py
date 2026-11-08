@@ -24,7 +24,7 @@ from kangaroo.errors import (
     InvalidTemplateError,
     NotFoundError,
 )
-from kangaroo.routes import api_v1_router
+from kangaroo.routes import api_internal_v1_router, api_v1_router
 from kangaroo.routes.auth import require_user
 from kangaroo.routes.auth import router as auth_router
 from kangaroo.runners import RunnerUnavailableError
@@ -103,6 +103,7 @@ app.add_middleware(
 )
 app.include_router(auth_router)
 app.include_router(api_v1_router, prefix="/api/v1")
+app.include_router(api_internal_v1_router, prefix="/api-internal/v1")
 
 
 def _error_handler(status_code: int):

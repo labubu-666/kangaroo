@@ -11,6 +11,7 @@ from kangaroo.routes.invocations import router as invocations_router
 from kangaroo.routes.knowledge_bases import router as knowledge_bases_router
 from kangaroo.routes.project_templates import router as project_templates_router
 from kangaroo.routes.projects import router as projects_router
+from kangaroo.routes.recent_history import router as recent_history_router
 from kangaroo.routes.reports import router as reports_router
 from kangaroo.routes.settings import router as settings_router
 from kangaroo.routes.user import router as user_router
@@ -40,4 +41,7 @@ api_v1_router.include_router(backup_router)
 api_v1_router.include_router(settings_router)
 api_v1_router.include_router(api_keys_router)
 
-__all__ = ["api_v1_router"]
+api_internal_v1_router = APIRouter(dependencies=[Depends(require_user)])
+api_internal_v1_router.include_router(recent_history_router)
+
+__all__ = ["api_internal_v1_router", "api_v1_router"]
