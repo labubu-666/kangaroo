@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -351,3 +352,27 @@ def test_bulk_delete_all_matching_without_filter_deletes_everything(
     work_item_service.create(task(seeded, "Other"))
     assert work_item_service.bulk_delete(WorkItemBulkDelete(all_matching=True)) == 3
     assert work_item_service.list_paginated(10, 0).total == 0
+
+
+def test_create_and_update_due_at(work_item_service, seeded):
+    due = datetime(2030, 1, 15, 9, 30, tzinfo=UTC)
+    item = work_item_service.create(task(seeded, due_at=due))
+    assert item.due_at == due
+    updated = work_item_service.update(item.id, WorkItemUpdate(due_at=None))
+    assert updated.due_at is None
+
+
+def test_duplicate_copies_due_at(work_item_service, seeded):
+    due = datetime(2030, 1, 15, 9, 30, tzinfo=UTC)
+    original = work_item_service.create(task(seeded, due_at=due))
+    assert work_item_service.duplicate(original.id).due_at == due
+
+
+def test_list_paginated_due_range_excludes_undated(work_item_service, seeded):
+    start = datetime(2030, 1, 1, tzinfo=UTC)
+    work_item_service.create(task(seeded, "In", due_at=start))
+    work_item_service.create(task(seeded, "Undated"))
+    page = work_item_service.list_paginated(
+        10, 0, due_from=start, due_to=datetime(2031, 1, 1, tzinfo=UTC)
+    )
+    assert [item.summary for item in page.results] == ["In"]

@@ -9,13 +9,20 @@ import { useDocumentTitle } from "../../lib/use-document-title";
 
 import { BacklogPage } from "../../components/backlog/BacklogPage";
 import { BoardList } from "../../components/boards/BoardList";
+import { CalendarPage } from "../../components/calendar/CalendarPage";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { InlineEdit } from "../../components/InlineEdit";
 import { Loading } from "../../components/shared/Loading";
 import { WorkItemList } from "../../components/work-items/WorkItemList";
 import { WorkflowPage } from "../../components/workflow/WorkflowPage";
 
-type ProjectTab = "work-items" | "boards" | "backlog" | "statuses" | "types";
+type ProjectTab =
+  | "work-items"
+  | "boards"
+  | "backlog"
+  | "calendar"
+  | "statuses"
+  | "types";
 
 export const Route = createFileRoute("/projects/$id")({
   component: ProjectDetail,
@@ -28,6 +35,7 @@ const TABS: { value: ProjectTab; label: string }[] = [
   { value: "work-items", label: "Work items" },
   { value: "boards", label: "Boards" },
   { value: "backlog", label: "Backlog" },
+  { value: "calendar", label: "Calendar" },
   { value: "types", label: "Work item types" },
   { value: "statuses", label: "Work item statuses" },
 ];
@@ -196,6 +204,8 @@ function ProjectDetail() {
               <WorkflowPage projectId={project.id} section={tab} />
             ) : tab === "backlog" ? (
               <BacklogPage projectId={project.id} />
+            ) : tab === "calendar" ? (
+              <CalendarPage projectId={project.id} />
             ) : tab === "boards" ? (
               <>
                 <div className="flex justify-end">

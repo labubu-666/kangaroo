@@ -7,6 +7,8 @@ import {
   updateWorkItem,
   deleteWorkItem,
   duplicateWorkItem,
+  dueAtToInput,
+  inputToDueAt,
   WORK_ITEM_LIMIT,
 } from "../../lib/work-items";
 import { fetchStatuses, fetchWorkItemTypes } from "../../lib/workflow";
@@ -36,6 +38,7 @@ function WorkItemDetail() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
   const parentInputId = useId();
+  const dueInputId = useId();
   const typeSelectId = useId();
   const statusInputId = useId();
   const projectInputId = useId();
@@ -111,6 +114,13 @@ function WorkItemDetail() {
 
   const labelsMutation = useMutation({
     mutationFn: (labels: string[]) => updateWorkItem(id, { labels }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["work-items", id] });
+    },
+  });
+
+  const dueMutation = useMutation({
+    mutationFn: (dueAt: string | null) => updateWorkItem(id, { due_at: dueAt }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["work-items", id] });
     },
@@ -518,6 +528,32 @@ function WorkItemDetail() {
             {labelsMutation.error && (
               <ErrorBanner>{labelsMutation.error.message}</ErrorBanner>
             )}
+
+            <div>
+              <label
+                htmlFor={dueInputId}
+                className="block text-sm font-medium text-fg-secondary"
+              >
+                Due
+              </label>
+              <input
+                id={dueInputId}
+                type="datetime-local"
+                key={item.due_at ?? "none"}
+                defaultValue={dueAtToInput(item.due_at)}
+                disabled={dueMutation.isPending}
+                onBlur={(e) => {
+                  const value = inputToDueAt(e.target.value);
+                  if (value !== item.due_at) {
+                    dueMutation.mutate(value);
+                  }
+                }}
+                className="mt-1 w-full rounded border border-border-strong px-3 py-2"
+              />
+              {dueMutation.error && (
+                <ErrorBanner>{dueMutation.error.message}</ErrorBanner>
+              )}
+            </div>
 
             <div>
               <p className="text-sm font-medium text-fg-secondary">Created</p>

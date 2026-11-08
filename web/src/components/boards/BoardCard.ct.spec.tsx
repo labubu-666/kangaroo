@@ -14,6 +14,7 @@ const task: WorkItem = {
   status_id: "s-prog",
   type_id: "t-task",
   parent_id: null,
+  due_at: null,
   status: { id: "s-prog", name: "In progress", category: "in_progress" },
   created_at: "2026-01-01T00:00:00Z",
   modified_at: "2026-01-01T00:00:00Z",

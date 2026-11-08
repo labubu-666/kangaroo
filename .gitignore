@@ -1,3 +1,4 @@
+.agent-cache/
 unversioned/
 
 .env

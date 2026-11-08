@@ -54,6 +54,7 @@ class WorkItemCreate(BaseModel):
     status_id: UUID | None = None
     parent_id: UUID | None = None
     labels: Labels = Field(default_factory=list)
+    due_at: datetime | None = None
 
 
 def reject_null[T](value: T | None) -> T | None:
@@ -71,6 +72,7 @@ class WorkItemUpdate(BaseModel):
     type_id: UUID | None = None
     parent_id: UUID | None = None
     labels: Labels = Field(default_factory=list)
+    due_at: datetime | None = None
     trashed: bool | None = None
 
     _reject_null_summary = field_validator("summary")(reject_null)
@@ -117,6 +119,7 @@ class WorkItemReplace(BaseModel):
     status_id: UUID | None = None
     parent_id: UUID | None = None
     labels: Labels = Field(default_factory=list)
+    due_at: datetime | None = None
     trashed: bool = False
 
 
@@ -132,6 +135,7 @@ class WorkItem(Timestamped):
     type_id: UUID
     parent_id: UUID | None = None
     labels: list[str] = Field(default_factory=list)
+    due_at: datetime | None = None
     trashed: bool = False
 
     @computed_field

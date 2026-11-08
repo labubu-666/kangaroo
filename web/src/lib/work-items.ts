@@ -26,6 +26,7 @@ export interface WorkItem {
   type: TypeRef;
   parent_id: string | null;
   labels: string[];
+  due_at: string | null;
   trashed: boolean;
   created_at: string;
   modified_at: string;
@@ -46,12 +47,14 @@ export interface WorkItemCreate {
   status_id?: string;
   parent_id?: string;
   labels?: string[];
+  due_at?: string;
 }
 
 export interface WorkItemUpdate {
   summary?: string;
   description?: string | null;
   labels?: string[];
+  due_at?: string | null;
   status_id?: string;
   type_id?: string;
   project_id?: string;
@@ -60,12 +63,26 @@ export interface WorkItemUpdate {
 }
 export const WORK_ITEM_LIMIT = 10;
 
+// The date input works in local time with no zone, so convert at its edges.
+export function dueAtToInput(dueAt: string | null): string {
+  if (!dueAt) return "";
+  const date = new Date(dueAt);
+  const localMs = date.getTime() - date.getTimezoneOffset() * 60000;
+  return new Date(localMs).toISOString().slice(0, 16);
+}
+
+export function inputToDueAt(value: string): string | null {
+  return value ? new Date(value).toISOString() : null;
+}
+
 export interface WorkItemFilters {
   projectId?: string;
   parentId?: string;
   search?: string;
   trashed?: boolean | "all";
   filter?: string;
+  dueFrom?: string;
+  dueTo?: string;
 }
 
 // Live items by default; trashed=true selects only trashed items;
@@ -91,6 +108,8 @@ export function fetchWorkItems(
   if (filters.projectId) params.set("project_id", filters.projectId);
   if (filters.parentId) params.set("parent_id", filters.parentId);
   if (filters.search) params.set("search", filters.search);
+  if (filters.dueFrom) params.set("due_from", filters.dueFrom);
+  if (filters.dueTo) params.set("due_to", filters.dueTo);
   const filter = trashFilter(filters.trashed, filters.filter);
   if (filter) params.set("filter", filter);
   return apiJson(`/api/v1/work-items/?${params}`, "Failed to fetch work items");
