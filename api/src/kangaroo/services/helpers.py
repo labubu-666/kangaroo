@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -51,6 +52,19 @@ def ensure_knowledge_base_exists(
         knowledge_bases.get_by_id(knowledge_base_id)
     except NotFoundError:
         raise InvalidReferenceError("Knowledge base not found") from None
+
+
+def in_due_range(
+    due_at: datetime | None, due_from: datetime | None, due_to: datetime | None
+) -> bool:
+    """Whether ``due_at`` is in [due_from, due_to). Items without a due date never are."""
+    if due_from is None and due_to is None:
+        return True
+    if due_at is None:
+        return False
+    return (due_from is None or due_at >= due_from) and (
+        due_to is None or due_at < due_to
+    )
 
 
 def project_names(projects: ProjectRepository) -> dict[UUID, str]:

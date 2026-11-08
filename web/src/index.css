@@ -51,3 +51,20 @@
 body {
   background-color: var(--color-canvas);
 }
+
+/* Map the calendar's classic theme onto the app's tokens so it follows .dark */
+.fc {
+  --fc-classic-primary: var(--color-primary);
+  --fc-classic-primary-foreground: var(--color-on-primary);
+  --fc-classic-button: var(--color-surface-strong);
+  --fc-classic-button-border: var(--color-border-strong);
+  --fc-classic-button-strong: var(--color-surface-emphasis);
+  --fc-classic-button-strong-border: var(--color-border-strong);
+  --fc-classic-button-foreground: var(--color-fg);
+  --fc-classic-background: var(--color-surface);
+  --fc-classic-foreground: var(--color-fg);
+  --fc-classic-muted-foreground: var(--color-fg-muted);
+  --fc-classic-faint-foreground: var(--color-fg-disabled);
+  --fc-classic-border: var(--color-border);
+  --fc-classic-strong-border: var(--color-border-strong);
+}

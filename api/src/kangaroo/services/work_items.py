@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from kangaroo.errors import (
@@ -13,6 +14,7 @@ from kangaroo.repositories import (
     WorkItemRepository,
     WorkItemTypeRepository,
 )
+from kangaroo.repositories.repositories import clean_search
 from kangaroo.schemas import (
     PaginatedResponse,
     WorkItem,
@@ -29,9 +31,11 @@ from kangaroo.services.helpers import (
     filter_record,
     filtered_page,
     get_in_project,
+    in_due_range,
     in_position_order,
     list_item,
     lookups,
+    matches_search,
     project_names,
 )
 
@@ -72,7 +76,7 @@ class WorkItemService:
     def duplicate(self, item_id: UUID) -> WorkItemDetail:
         """Create a copy of a work item with ``<summary> (copy)`` as its summary.
 
-        The copy keeps the original's project, type, status, parent and labels.
+        The copy keeps the original's project, type, status, parent, labels and due date.
         It is never trashed, and the original's children are not copied.
         """
         original = self._work_items.get_by_id(item_id)
@@ -85,6 +89,7 @@ class WorkItemService:
                 status_id=original.status_id,
                 parent_id=original.parent_id,
                 labels=original.labels,
+                due_at=original.due_at,
             )
         )
 
@@ -97,13 +102,17 @@ class WorkItemService:
         search: str | None = None,
         sort: str | None = None,
         filter: str | None = None,
+        due_from: datetime | None = None,
+        due_to: datetime | None = None,
     ) -> PaginatedResponse[WorkItemListItem]:
         """List work items with pagination, including trashed ones.
 
-        With a filter, the items are checked against it in Python first, then
-        ``search`` and the page are applied to the matches.
+        With a filter or a due range, the items are checked in Python first, then
+        ``search`` and the page are applied to the matches. The due range keeps
+        items due from ``due_from`` (inclusive) up to ``due_to`` (exclusive).
         """
-        if not filter or not filter.strip():
+        has_filter = bool(filter and filter.strip())
+        if not has_filter and due_from is None and due_to is None:
             page = self._work_items.list_paginated(
                 limit,
                 offset,
@@ -123,17 +132,32 @@ class WorkItemService:
             )
         names = project_names(self._projects)
         statuses, types = lookups(self._statuses, self._types)
-        page, total = filtered_page(
-            self._work_items.list_all(
+        candidates = [
+            item
+            for item in self._work_items.list_all(
                 sort=sort, project_id=project_id, parent_id=parent_id
-            ),
-            filter,
-            lambda item: filter_record(item, names, statuses, types),
-            search,
-            self._work_items.search_fields,
-            limit,
-            offset,
-        )
+            )
+            if in_due_range(item.due_at, due_from, due_to)
+        ]
+        if has_filter:
+            page, total = filtered_page(
+                candidates,
+                filter,
+                lambda item: filter_record(item, names, statuses, types),
+                search,
+                self._work_items.search_fields,
+                limit,
+                offset,
+            )
+        else:
+            text = clean_search(search)
+            matched = [
+                item
+                for item in candidates
+                if text is None
+                or matches_search(item, text, self._work_items.search_fields)
+            ]
+            page, total = matched[offset : offset + limit], len(matched)
         return PaginatedResponse[WorkItemListItem](
             results=[list_item(item, statuses, types, search) for item in page],
             limit=limit,

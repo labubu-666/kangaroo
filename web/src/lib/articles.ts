@@ -43,6 +43,9 @@ export const ARTICLE_DEFAULT_SORT = "-modified_at";
 export const ARTICLE_SORTS = [
   { value: "-modified_at", label: "Recently modified" },
   { value: "modified_at", label: "Least recently modified" },
+  { value: "-created_at", label: "Newest created" },
+  { value: "created_at", label: "Oldest created" },
+  { value: "-viewed_at", label: "Recently viewed" },
   { value: "title", label: "Title A–Z" },
   { value: "-title", label: "Title Z–A" },
 ] as const;

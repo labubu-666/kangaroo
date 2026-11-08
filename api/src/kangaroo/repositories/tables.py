@@ -78,6 +78,7 @@ class WorkItemRow(Base):
         Uuid, ForeignKey("work_items.id", ondelete="RESTRICT"), nullable=True
     )
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    due_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
 
     @validates("description")
     def _sync_plain_description(self, _key, value):

@@ -23,6 +23,7 @@ function item(id: string, summary: string) {
     type: TYPE,
     parent_id: null,
     labels: [],
+    due_at: null,
     trashed: false,
     ...STAMP,
   };

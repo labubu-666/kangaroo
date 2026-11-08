@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, status
@@ -33,6 +34,8 @@ def list_work_items(
     project_id: UUID | None = None,
     parent_id: UUID | None = None,
     filter: FilterQuery = None,
+    due_from: datetime | None = None,
+    due_to: datetime | None = None,
 ) -> PaginatedResponse[WorkItemListItem]:
     """List work items with pagination.
 
@@ -41,6 +44,9 @@ def list_work_items(
         offset: The number of items to skip from the beginning (default: 0).
         project_id: Optional project ID to filter work items by.
         parent_id: Optional parent work item ID to list the children of.
+        due_from: Optional start of a due range, inclusive.
+        due_to: Optional end of a due range, exclusive. Items without a due date
+            are left out when either bound is set.
         search: Optional text to match case-insensitively in summary or description.
         sort: Optional comma-separated fields, e.g. "-modified_at,summary". A "+"
             or no prefix sorts ascending, "-" descending.
@@ -59,6 +65,8 @@ def list_work_items(
         search=params.search,
         sort=params.sort,
         filter=filter,
+        due_from=due_from,
+        due_to=due_to,
     )
 
 

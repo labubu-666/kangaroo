@@ -1368,3 +1368,63 @@ def test_list_work_items_rejects_unknown_sort_field(client, with_filter):
         params["filter"] = "trashed == false"
     response = client.get("/api/v1/work-items", params=params)
     assert response.status_code == 422
+
+
+def test_work_item_due_at_round_trip(client, project_id):
+    """due_at is set on create, sent as null to clear, and copied by duplicate."""
+    created = _create(
+        client, project_id, "Fix bug", due_at="2030-01-15T09:30:00Z"
+    ).json()
+    assert created["due_at"].startswith("2030-01-15T09:30:00")
+    copy = client.post(f"/api/v1/work-items/{created['id']}/duplicate").json()
+    assert copy["due_at"] == created["due_at"]
+    cleared = client.patch(f"/api/v1/work-items/{created['id']}", json={"due_at": None})
+    assert cleared.status_code == 200
+    assert cleared.json()["due_at"] is None
+
+
+def test_list_work_items_sorts_by_due_at(client, project_id):
+    _create(client, project_id, "Late", due_at="2030-03-01T00:00:00Z")
+    _create(client, project_id, "Early", due_at="2030-01-01T00:00:00Z")
+    response = client.get("/api/v1/work-items", params={"sort": "due_at"})
+    assert [i["summary"] for i in response.json()["results"]][:2] == ["Early", "Late"]
+
+
+def test_list_work_items_due_range(client, project_id):
+    """due_from is inclusive, due_to is exclusive, and undated items are left out."""
+    _create(client, project_id, "Jan", due_at="2030-01-10T00:00:00Z")
+    _create(client, project_id, "Feb", due_at="2030-02-10T00:00:00Z")
+    _create(client, project_id, "Undated")
+    response = client.get(
+        "/api/v1/work-items",
+        params={
+            "project_id": project_id,
+            "due_from": "2030-01-10T00:00:00Z",
+            "due_to": "2030-02-10T00:00:00Z",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+    assert [item["summary"] for item in data["results"]] == ["Jan"]
+
+
+def test_list_work_items_due_range_with_filter_and_paging(client, project_id):
+    """The due range combines with the filter, and paging applies to the matches."""
+    for summary in ["A", "B", "C"]:
+        _create(client, project_id, summary, due_at="2030-01-10T00:00:00Z")
+    _create(client, project_id, "Outside", due_at="2031-01-10T00:00:00Z")
+    response = client.get(
+        "/api/v1/work-items",
+        params={
+            "project_id": project_id,
+            "filter": "summary != 'B'",
+            "due_from": "2030-01-01T00:00:00Z",
+            "due_to": "2030-12-31T00:00:00Z",
+            "limit": 1,
+            "offset": 1,
+        },
+    )
+    data = response.json()
+    assert data["total"] == 2
+    assert [item["summary"] for item in data["results"]] == ["C"]

@@ -2,7 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { createWorkItem, type WorkItemCreate } from "../../lib/work-items";
+import {
+  createWorkItem,
+  inputToDueAt,
+  type WorkItemCreate,
+} from "../../lib/work-items";
 import { fetchWorkItemTypes } from "../../lib/workflow";
 import { useProjectOptions } from "../../lib/projects";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
@@ -41,6 +45,7 @@ function CreateWorkItem() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [labels, setLabels] = useState<string[]>([]);
+  const [dueAt, setDueAt] = useState("");
 
   const {
     register,
@@ -122,6 +127,7 @@ function CreateWorkItem() {
       type_id: data.typeId,
       parent_id: parentId,
       labels,
+      due_at: inputToDueAt(dueAt) ?? undefined,
     });
   };
 
@@ -214,6 +220,20 @@ function CreateWorkItem() {
           {errors.typeId && (
             <p className="text-sm text-danger">{errors.typeId.message}</p>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="due" className="block font-medium">
+            Due
+          </label>
+          <input
+            id="due"
+            type="datetime-local"
+            disabled={mutation.isPending}
+            value={dueAt}
+            onChange={(e) => setDueAt(e.target.value)}
+            className="w-full rounded border border-border-strong px-3 py-2"
+          />
         </div>
 
         <LabelsEditor

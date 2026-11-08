@@ -18,6 +18,7 @@ import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { InlineEdit } from "../../components/InlineEdit";
 import { Loading } from "../../components/shared/Loading";
 import { Pagination } from "../../components/shared/Pagination";
+import { SearchSnippet } from "../../components/shared/SearchSnippet";
 import { useDismiss } from "../../lib/use-dismiss";
 import { removeRecent, useRecordRecent } from "../../lib/recent";
 
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/knowledge-bases/$id")({
   ): {
     tab?: KnowledgeBaseTab;
     sort?: string;
+    search?: string;
     offset?: number;
     limit?: number;
   } => {
@@ -43,6 +45,7 @@ export const Route = createFileRoute("/knowledge-bases/$id")({
     return {
       tab: search.tab === "summary" ? "summary" : "articles",
       sort: ARTICLE_SORTS.find((option) => option.value === search.sort)?.value,
+      search: typeof search.search === "string" ? search.search : undefined,
       offset: Number.isInteger(offset) && offset > 0 ? offset : undefined,
       limit:
         Number.isInteger(limit) &&
@@ -60,9 +63,11 @@ function KnowledgeBaseDetail() {
   const {
     tab = "articles",
     sort = ARTICLE_DEFAULT_SORT,
+    search = "",
     offset = 0,
     limit = ARTICLE_LIMIT,
   } = Route.useSearch();
+  const term = search.trim();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -85,8 +90,8 @@ function KnowledgeBaseDetail() {
     isLoading: articlesLoading,
     error: articlesError,
   } = useQuery({
-    queryKey: ["articles", "in", id, offset, limit, sort],
-    queryFn: () => fetchArticles(limit, offset, id, undefined, sort),
+    queryKey: ["articles", "in", id, offset, limit, sort, term],
+    queryFn: () => fetchArticles(limit, offset, id, term || undefined, sort),
   });
 
   const deleteMutation = useMutation({
@@ -231,7 +236,22 @@ function KnowledgeBaseDetail() {
           <div className="text-center text-fg-muted">No summary yet</div>
         ) : (
           <>
-            <div className="flex flex-wrap justify-end gap-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <input
+                type="search"
+                aria-label="Search articles"
+                placeholder="Search articles"
+                value={search}
+                onChange={(e) => {
+                  navigate({
+                    to: "/knowledge-bases/$id",
+                    params: { id },
+                    search: { tab, sort, limit, search: e.target.value },
+                    replace: true,
+                  });
+                }}
+                className="min-w-48 flex-1 rounded border border-border-strong px-3 py-2"
+              />
               <div className="flex items-center gap-2">
                 <select
                   aria-label="Sort articles"
@@ -240,7 +260,7 @@ function KnowledgeBaseDetail() {
                     navigate({
                       to: "/knowledge-bases/$id",
                       params: { id },
-                      search: { tab, sort: e.target.value, limit },
+                      search: { tab, sort: e.target.value, limit, search },
                     });
                   }}
                   className="rounded border border-border-strong px-3 py-2"
@@ -266,7 +286,9 @@ function KnowledgeBaseDetail() {
             ) : articlesError ? (
               <ErrorBanner>{articlesError.message}</ErrorBanner>
             ) : items.length === 0 ? (
-              <div className="text-center text-fg-muted">No articles yet</div>
+              <div className="text-center text-fg-muted">
+                {term ? "No articles match this search" : "No articles yet"}
+              </div>
             ) : (
               <div className="flex flex-col gap-4">
                 {items.map((article) => (
@@ -279,6 +301,7 @@ function KnowledgeBaseDetail() {
                     <h3 className="font-semibold text-primary">
                       {article.title}
                     </h3>
+                    <SearchSnippet hit={article.snippet} term={term} />
                     {article.labels.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {article.labels.map((label) => (
@@ -315,6 +338,7 @@ function KnowledgeBaseDetail() {
                     tab,
                     sort,
                     limit,
+                    search,
                     offset: nextOffset || undefined,
                   },
                 })
