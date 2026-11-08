@@ -1,4 +1,6 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiFetch, apiJson, jsonBody } from "./api";
 
 export type RecentType =
   | "project"
@@ -6,7 +8,9 @@ export type RecentType =
   | "work-item"
   | "function"
   | "article"
-  | "knowledge-base";
+  | "knowledge-base"
+  | "calendar"
+  | "project-tab";
 
 interface RecentBase {
   id: string;
@@ -41,67 +45,144 @@ export type RecentEntry = RecentBase &
         to: "/knowledge-bases/$id";
         params: { id: string };
       }
+    | { type: "calendar"; to: "/calendar"; params: Record<string, never> }
+    | {
+        type: "project-tab";
+        parent: string;
+        to: "/projects/$id";
+        params: { id: string };
+        search: { tab: string };
+      }
   );
 
-const STORAGE_KEY = "kangaroo-recent";
-const LIMIT = 10;
-const EMPTY: RecentEntry[] = [];
-const listeners = new Set<() => void>();
-let entries: RecentEntry[] | null = null;
+// The API's shape of one entry, before it is turned into a RecentEntry
+interface RecentEntryResponse {
+  type: RecentType;
+  item_id: string;
+  title: string;
+  parent: string | null;
+  to: string;
+  params: Record<string, string>;
+  search: Record<string, string>;
+  modified_at: string;
+}
 
-// Cached in memory so useSyncExternalStore gets the same array until something changes
-function load(): RecentEntry[] {
-  if (entries) return entries;
-  try {
-    const parsed: unknown = JSON.parse(
-      localStorage.getItem(STORAGE_KEY) ?? "[]",
-    );
-    entries = Array.isArray(parsed) ? (parsed as RecentEntry[]) : EMPTY;
-  } catch {
-    // Corrupt storage should not break the page
-    entries = EMPTY;
+const HISTORY_PATH = "/api-internal/v1/recent-history";
+// The old browser-only copy of the list, removed once the backend takes over
+const LEGACY_STORAGE_KEY = "kangaroo-recent";
+
+// The API sends every type with the same fields. The stored `to` and `params`
+// come from the page that recorded the visit, so they match the entry's type.
+function fromResponse(item: RecentEntryResponse): RecentEntry {
+  const base = { id: item.item_id, title: item.title };
+  if (item.parent === null) {
+    return {
+      ...base,
+      type: item.type,
+      to: item.to,
+      params: item.params,
+      search: item.search,
+    } as RecentEntry;
   }
-  return entries;
+  return {
+    ...base,
+    type: item.type,
+    parent: item.parent,
+    to: item.to,
+    params: item.params,
+    search: item.search,
+  } as RecentEntry;
 }
 
-function save(next: RecentEntry[]) {
-  entries = next;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  listeners.forEach((listener) => listener());
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
+function toRequest(entry: RecentEntry) {
+  return {
+    type: entry.type,
+    item_id: entry.id,
+    title: entry.title,
+    parent: "parent" in entry ? (entry.parent ?? null) : null,
+    to: entry.to,
+    params: entry.params,
+    search: "search" in entry ? (entry.search ?? {}) : {},
   };
 }
 
-export function useRecentEntries() {
-  return useSyncExternalStore(subscribe, load, () => EMPTY);
+function historyKey(search: string) {
+  return ["recent-history", search] as const;
 }
 
-function recordRecent(entry: RecentEntry) {
-  const others = load().filter(
-    (item) => !(item.type === entry.type && item.id === entry.id),
-  );
-  save([entry, ...others].slice(0, LIMIT));
+export function useRecentEntries(search = "") {
+  const trimmed = search.trim();
+  useRefreshOnChange();
+  const { data = [] } = useQuery({
+    queryKey: historyKey(trimmed),
+    queryFn: async () => {
+      const query = trimmed ? `?search=${encodeURIComponent(trimmed)}` : "";
+      const items = await apiJson<RecentEntryResponse[]>(
+        `${HISTORY_PATH}/${query}`,
+        "Failed to load recent history",
+      );
+      return items.map(fromResponse);
+    },
+  });
+  return data;
 }
 
-// Called by a detail page once its data has loaded; pass undefined until then
+// Pages that change an item outside React ask the list to refresh with this event
+const CHANGED_EVENT = "kangaroo-recent-changed";
+
+function useInvalidateHistory() {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: ["recent-history"] });
+}
+
+function useRefreshOnChange() {
+  const invalidate = useInvalidateHistory();
+  useEffect(() => {
+    window.addEventListener(CHANGED_EVENT, invalidate);
+    return () => window.removeEventListener(CHANGED_EVENT, invalidate);
+  }, [invalidate]);
+}
+
+// Records a visit once per distinct entry. Pass undefined until the page's data has loaded.
 export function useRecordRecent(entry: RecentEntry | undefined) {
+  const invalidate = useInvalidateHistory();
   // Compare by value so pages can pass a new object on every render without looping
   const serialized = JSON.stringify(entry ?? null);
   useEffect(() => {
     const next: RecentEntry | null = JSON.parse(serialized);
-    if (next) recordRecent(next);
-  }, [serialized]);
+    if (!next) return;
+    // Plain request, not useMutation: the list refreshes whether or not the
+    // component is still mounted when the visit is saved
+    apiFetch(
+      `${HISTORY_PATH}/`,
+      "Failed to record recent item",
+      jsonBody("POST", toRequest(next)),
+    ).finally(invalidate);
+  }, [serialized, invalidate]);
 }
 
-export function removeRecent(type: RecentType, id: string) {
-  save(load().filter((item) => !(item.type === type && item.id === id)));
+export function useClearRecent() {
+  const invalidate = useInvalidateHistory();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch(`${HISTORY_PATH}/`, "Failed to clear recent history", {
+        method: "DELETE",
+      }),
+    onSuccess: invalidate,
+  });
 }
 
-export function clearRecent() {
-  save([]);
+// Pages call this from their delete handlers, outside React
+export async function removeRecent(type: RecentType, id: string) {
+  await apiFetch(
+    `${HISTORY_PATH}/${type}/${encodeURIComponent(id)}`,
+    "Failed to remove recent item",
+    { method: "DELETE" },
+  );
+  window.dispatchEvent(new Event(CHANGED_EVENT));
+}
+
+// The browser copy of the list is no longer read, so drop it
+export function clearLegacyRecent() {
+  localStorage.removeItem(LEGACY_STORAGE_KEY);
 }

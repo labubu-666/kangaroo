@@ -585,3 +585,42 @@ class ApiKeyCreated(ApiKey):
     """A new API key. ``key`` is the only time the secret is shown."""
 
     key: str
+
+
+RecentType = Literal[
+    "project",
+    "board",
+    "work-item",
+    "function",
+    "article",
+    "knowledge-base",
+    "calendar",
+    "project-tab",
+]
+
+
+class RecentEntryCreate(BaseModel):
+    """A visit to an item, recorded so it can show in the recent history."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    type: RecentType
+    item_id: str = Field(min_length=1, max_length=100)
+    title: str = Field(min_length=1, max_length=500)
+    parent: str | None = Field(default=None, max_length=500)
+    to: str = Field(min_length=1, max_length=200)
+    params: dict[str, str] = Field(default_factory=dict)
+    search: dict[str, str] = Field(default_factory=dict)
+
+
+class RecentEntry(BaseModel):
+    """A recent history entry as the API returns it."""
+
+    type: RecentType
+    item_id: str
+    title: str
+    parent: str | None
+    to: str
+    params: dict[str, str]
+    search: dict[str, str]
+    modified_at: datetime

@@ -2,12 +2,15 @@ import { expect, test } from "../../../playwright/fixtures.ts";
 import { TestRouter } from "../TestRouter.story";
 import type { RecentEntry } from "../../lib/recent";
 import { RecentSection } from "./RecentSection";
+import { CalendarRecorder } from "./CalendarRecorder.story";
+import { fakeRecentHistory } from "./recent-history.fake";
 import { Sidebar } from "./Sidebar";
 import { SidebarProvider } from "./SidebarContext";
 import { SidebarToggle } from "./SidebarToggle";
 
 const paths = [
   "/",
+  "/calendar",
   "/projects/$id",
   "/projects/$id/boards/$boardId",
   "/work-items/$id",
@@ -66,10 +69,7 @@ test.describe("Sidebar", () => {
     mount,
     page,
   }) => {
-    await page.evaluate(
-      (value) => localStorage.setItem("kangaroo-recent", JSON.stringify(value)),
-      entries,
-    );
+    await fakeRecentHistory(page, entries);
     await mount(
       <SidebarProvider>
         <TestRouter paths={paths}>
@@ -101,10 +101,7 @@ test.describe("Sidebar", () => {
     mount,
     page,
   }) => {
-    await page.evaluate(
-      (value) => localStorage.setItem("kangaroo-recent", JSON.stringify(value)),
-      entries,
-    );
+    await fakeRecentHistory(page, entries);
     await mount(
       <SidebarProvider>
         <TestRouter paths={paths}>
@@ -143,10 +140,7 @@ test.describe("Sidebar", () => {
     mount,
     page,
   }) => {
-    await page.evaluate(
-      (value) => localStorage.setItem("kangaroo-recent", JSON.stringify(value)),
-      entries,
-    );
+    await fakeRecentHistory(page, entries);
     await page.evaluate(() =>
       localStorage.setItem("kangaroo-sidebar", "collapsed"),
     );
@@ -170,10 +164,7 @@ test.describe("Sidebar", () => {
     mount,
     page,
   }) => {
-    await page.evaluate(
-      (value) => localStorage.setItem("kangaroo-recent", JSON.stringify(value)),
-      entries,
-    );
+    await fakeRecentHistory(page, entries);
     await page.evaluate(() =>
       localStorage.setItem("kangaroo-sidebar", "collapsed"),
     );
@@ -201,10 +192,7 @@ test.describe("Sidebar", () => {
     mount,
     page,
   }) => {
-    await page.evaluate(
-      (value) => localStorage.setItem("kangaroo-recent", JSON.stringify(value)),
-      entries,
-    );
+    await fakeRecentHistory(page, entries);
     await mount(
       <SidebarProvider>
         <TestRouter paths={paths}>
@@ -238,10 +226,7 @@ test.describe("Sidebar", () => {
     mount,
     page,
   }) => {
-    await page.evaluate(
-      (value) => localStorage.setItem("kangaroo-recent", JSON.stringify(value)),
-      entries,
-    );
+    await fakeRecentHistory(page, entries);
     await mount(
       <SidebarProvider>
         <TestRouter paths={paths}>
@@ -266,10 +251,7 @@ test.describe("Sidebar", () => {
 
   test("the mobile drawer opens and closes", async ({ mount, page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
-    await page.evaluate(
-      (value) => localStorage.setItem("kangaroo-recent", JSON.stringify(value)),
-      entries,
-    );
+    await fakeRecentHistory(page, entries);
     await mount(
       <SidebarProvider>
         <TestRouter paths={paths}>
@@ -288,5 +270,100 @@ test.describe("Sidebar", () => {
 
     await page.getByRole("link", { name: "Kangaroo", exact: true }).click();
     await expect(sidebar).toBeHidden();
+  });
+});
+
+test.describe("Recent search", () => {
+  test("filters the list by title or parent", async ({ mount, page }) => {
+    await fakeRecentHistory(page, entries);
+    await mount(
+      <SidebarProvider>
+        <TestRouter paths={paths}>
+          <Sidebar>
+            <RecentSection />
+          </Sidebar>
+        </TestRouter>
+      </SidebarProvider>,
+    );
+    const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+    await sidebar
+      .getByRole("searchbox", { name: "Search recent" })
+      .fill("handbook");
+    await expect(
+      sidebar.getByRole("link", { name: "Onboarding guide" }),
+    ).toBeVisible();
+    await expect(sidebar.getByRole("link", { name: "Fix login" })).toHaveCount(
+      0,
+    );
+  });
+
+  test("says so when nothing matches", async ({ mount, page }) => {
+    await fakeRecentHistory(page, entries);
+    await mount(
+      <SidebarProvider>
+        <TestRouter paths={paths}>
+          <Sidebar>
+            <RecentSection />
+          </Sidebar>
+        </TestRouter>
+      </SidebarProvider>,
+    );
+    const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+    await sidebar.getByRole("searchbox", { name: "Search recent" }).fill("zzz");
+    await expect(sidebar.getByText("No matches")).toBeVisible();
+  });
+});
+
+test.describe("Calendar in recent", () => {
+  test("opening the calendar records it in recent", async ({ mount, page }) => {
+    await fakeRecentHistory(page);
+    await mount(
+      <SidebarProvider>
+        <TestRouter paths={paths} initialPath="/calendar">
+          <CalendarRecorder />
+          <Sidebar>
+            <RecentSection />
+          </Sidebar>
+        </TestRouter>
+      </SidebarProvider>,
+    );
+    await expect(
+      page
+        .getByRole("complementary", { name: "Sidebar" })
+        .getByRole("link", { name: "Calendar" }),
+    ).toHaveAttribute("href", "/calendar");
+  });
+});
+
+test.describe("Project tabs in recent", () => {
+  test("a project tab links back to that tab with the project as subtitle", async ({
+    mount,
+    page,
+  }) => {
+    await fakeRecentHistory(page, [
+      {
+        type: "project-tab",
+        id: "p1:calendar",
+        title: "Calendar",
+        parent: "Media",
+        to: "/projects/$id",
+        params: { id: "p1" },
+        search: { tab: "calendar" },
+      },
+    ]);
+    await mount(
+      <SidebarProvider>
+        <TestRouter paths={paths}>
+          <Sidebar>
+            <RecentSection />
+          </Sidebar>
+        </TestRouter>
+      </SidebarProvider>,
+    );
+    const link = page
+      .getByRole("complementary", { name: "Sidebar" })
+      .getByRole("link", { name: "Calendar" });
+    await expect(link).toContainText("Media");
+    await expect(link).toHaveAttribute("href", "/projects/p1?tab=calendar");
   });
 });

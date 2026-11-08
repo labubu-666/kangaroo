@@ -13,11 +13,17 @@ import { Loading } from "../shared/Loading";
 
 // Items are fetched for the month on screen. The API returns due dates as
 // instants, and the calendar places them on the day they fall on in local time.
-export function CalendarPage({ projectId }: { projectId: string }) {
+// Without a project, the calendar shows items from every project.
+export function CalendarPage({ projectId }: { projectId?: string }) {
   const [range, setRange] = useState<{ from: Date; to: Date } | null>(null);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["work-items", "calendar", projectId, range?.from.toISOString()],
+    queryKey: [
+      "work-items",
+      "calendar",
+      projectId ?? null,
+      range?.from.toISOString(),
+    ],
     queryFn: () =>
       fetchWorkItems(WORK_ITEM_LIMIT * 10, 0, {
         projectId,

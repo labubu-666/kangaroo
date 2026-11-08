@@ -1,6 +1,7 @@
 import { expect, test } from "../../playwright/fixtures.ts";
 import { AppHeader } from "./app-header/AppHeader";
 import { PageBreadcrumbs } from "./breadcrumbs/BreadcrumbsContext";
+import { fakeRecentHistory } from "./sidebar/recent-history.fake";
 import { RecentSection } from "./sidebar/RecentSection";
 import { Sidebar } from "./sidebar/Sidebar";
 import { SidebarProvider } from "./sidebar/SidebarContext";
@@ -8,6 +9,7 @@ import { SectionNav } from "./SectionNav";
 import { TestRouter } from "./TestRouter.story";
 
 test.beforeEach(async ({ page }) => {
+  await fakeRecentHistory(page);
   await page.route("**/api/v1/user", (route) =>
     route.fulfill({
       json: {

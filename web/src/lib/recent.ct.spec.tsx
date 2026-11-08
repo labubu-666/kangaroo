@@ -1,5 +1,6 @@
 import { expect, test } from "../../playwright/fixtures.ts";
 import { RecentRecorder } from "../components/sidebar/RecentRecorder.story";
+import { fakeRecentHistory } from "../components/sidebar/recent-history.fake";
 import { RecentSection } from "../components/sidebar/RecentSection";
 import { Sidebar } from "../components/sidebar/Sidebar";
 import { SidebarProvider } from "../components/sidebar/SidebarContext";
@@ -20,7 +21,7 @@ function workItem(id: string): RecentEntry {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.evaluate(() => localStorage.clear());
+  await fakeRecentHistory(page);
 });
 
 test.describe("recent entries", () => {
@@ -28,8 +29,8 @@ test.describe("recent entries", () => {
     await mount(
       <SidebarProvider>
         <TestRouter paths={paths}>
-          <RecentRecorder entry={workItem("1")} />
-          <RecentRecorder entry={workItem("2")} />
+          <RecentRecorder key="a" entry={workItem("1")} />
+          <RecentRecorder key="b" entry={workItem("2")} />
           <Sidebar>
             <RecentSection />
           </Sidebar>
@@ -69,9 +70,9 @@ test.describe("recent entries", () => {
     await mount(
       <SidebarProvider>
         <TestRouter paths={paths}>
-          <RecentRecorder entry={workItem("1")} />
-          <RecentRecorder entry={workItem("2")} />
-          <RecentRecorder entry={workItem("1")} />
+          <RecentRecorder key="a" entry={workItem("1")} />
+          <RecentRecorder key="b" entry={workItem("2")} />
+          <RecentRecorder key="c" entry={workItem("1")} />
           <Sidebar>
             <RecentSection />
           </Sidebar>
@@ -89,7 +90,7 @@ test.describe("recent entries", () => {
     await mount(
       <SidebarProvider>
         <TestRouter paths={paths}>
-          <RecentRecorder entry={workItem("1")} />
+          <RecentRecorder key="a" entry={workItem("1")} />
           <Sidebar>
             <RecentSection />
           </Sidebar>

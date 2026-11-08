@@ -9,6 +9,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    UniqueConstraint,
     Uuid,
     false,
 )
@@ -201,3 +202,21 @@ class ApiKeyRow(Base):
     last_used_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     revoked_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+
+
+class RecentHistoryRow(Base):
+    """One item a user has opened recently. A repeat visit updates the same row."""
+
+    __tablename__ = "recent_history"
+    __table_args__ = (UniqueConstraint("owner", "type", "item_id"),)
+
+    owner: Mapped[str] = mapped_column(String, index=True)
+    type: Mapped[str] = mapped_column(String)
+    item_id: Mapped[str] = mapped_column(String)
+    title: Mapped[str] = mapped_column(String)
+    parent: Mapped[str | None] = mapped_column(String, nullable=True)
+    to: Mapped[str] = mapped_column(String)
+    params: Mapped[dict[str, str]] = mapped_column(JSON)
+    search: Mapped[dict[str, str]] = mapped_column(
+        JSON, default=dict, server_default="{}"
+    )

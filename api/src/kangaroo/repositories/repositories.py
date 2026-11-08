@@ -6,6 +6,7 @@ from uuid import UUID, uuid7
 from pydantic import BaseModel
 from sqlalchemy import (
     Select,
+    delete,
     func,
     or_,
     select,
@@ -22,6 +23,7 @@ from kangaroo.repositories.tables import (
     InvocationRow,
     KnowledgeBaseRow,
     ProjectRow,
+    RecentHistoryRow,
     StatusRow,
     StatusTransitionRow,
     WorkItemRow,
@@ -53,6 +55,7 @@ from kangaroo.schemas import (
     ProjectReplace,
     ProjectStatus,
     ProjectUpdate,
+    RecentEntryCreate,
     StatusCreate,
     StatusReplace,
     StatusTransition,
@@ -520,3 +523,84 @@ class ApiKeyRepository:
         row.last_used_at = now
         self._session.flush()
         return row
+
+
+class RecentHistoryRepository:
+    """Storage for each user's recent history, newest visit first."""
+
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def upsert(self, owner: str, entry: RecentEntryCreate) -> None:
+        """Record a visit: update the existing row for this item, or add one."""
+        now = utc_now()
+        row = self._session.scalars(
+            select(RecentHistoryRow).where(
+                RecentHistoryRow.owner == owner,
+                RecentHistoryRow.type == entry.type,
+                RecentHistoryRow.item_id == entry.item_id,
+            )
+        ).first()
+        if row is None:
+            row = RecentHistoryRow(
+                id=uuid7(),
+                owner=owner,
+                type=entry.type,
+                item_id=entry.item_id,
+                created_at=now,
+            )
+            self._session.add(row)
+        row.title = entry.title
+        row.parent = entry.parent
+        row.to = entry.to
+        row.params = entry.params
+        row.search = entry.search
+        row.modified_at = now
+        self._session.flush()
+
+    def list_for(
+        self, owner: str, search: str | None, limit: int
+    ) -> list[RecentHistoryRow]:
+        """Return the owner's newest entries, optionally matching ``search`` on title or parent."""
+        stmt = select(RecentHistoryRow).where(RecentHistoryRow.owner == owner)
+        if search is not None:
+            pattern = f"%{_escape_like(search)}%"
+            stmt = stmt.where(
+                or_(
+                    RecentHistoryRow.title.ilike(pattern, escape="\\"),
+                    RecentHistoryRow.parent.ilike(pattern, escape="\\"),
+                )
+            )
+        stmt = stmt.order_by(
+            RecentHistoryRow.modified_at.desc(), RecentHistoryRow.id
+        ).limit(limit)
+        return list(self._session.scalars(stmt))
+
+    def truncate(self, owner: str, keep: int) -> None:
+        """Delete all but the newest ``keep`` entries of the owner."""
+        keep_ids = (
+            select(RecentHistoryRow.id)
+            .where(RecentHistoryRow.owner == owner)
+            .order_by(RecentHistoryRow.modified_at.desc(), RecentHistoryRow.id)
+            .limit(keep)
+        )
+        self._session.execute(
+            delete(RecentHistoryRow).where(
+                RecentHistoryRow.owner == owner,
+                RecentHistoryRow.id.not_in(keep_ids),
+            )
+        )
+
+    def delete(self, owner: str, type: str, item_id: str) -> None:
+        self._session.execute(
+            delete(RecentHistoryRow).where(
+                RecentHistoryRow.owner == owner,
+                RecentHistoryRow.type == type,
+                RecentHistoryRow.item_id == item_id,
+            )
+        )
+
+    def clear(self, owner: str) -> None:
+        self._session.execute(
+            delete(RecentHistoryRow).where(RecentHistoryRow.owner == owner)
+        )

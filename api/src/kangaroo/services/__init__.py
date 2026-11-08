@@ -6,6 +6,7 @@ from kangaroo.services.functions import FunctionService
 from kangaroo.services.invocations import InvocationService
 from kangaroo.services.knowledge_bases import KnowledgeBaseService
 from kangaroo.services.projects import ProjectService
+from kangaroo.services.recent_history import RecentHistoryService
 from kangaroo.services.reports import ReportService
 from kangaroo.services.work_items import WorkItemService
 from kangaroo.services.workflow import WorkflowService
@@ -19,6 +20,7 @@ __all__ = [
     "InvocationService",
     "KnowledgeBaseService",
     "ProjectService",
+    "RecentHistoryService",
     "ReportService",
     "WorkItemService",
     "WorkflowService",
