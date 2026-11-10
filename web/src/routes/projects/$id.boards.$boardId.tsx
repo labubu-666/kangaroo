@@ -1,4 +1,9 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { DragDropProvider, useDroppable } from "@dnd-kit/react";
@@ -20,7 +25,18 @@ import { FilterPreview } from "../../components/boards/FilterPreview";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { Loading } from "../../components/shared/Loading";
 
-export const Route = createFileRoute("/projects/$id_/boards/$boardId")({
+export const Route = createFileRoute("/projects/$id/boards/$boardId")({
+  // Keeps the project's Boards tab selected when the board is opened from a link without a tab
+  beforeLoad: ({ params, search }) => {
+    if (!("tab" in search)) {
+      throw redirect({
+        to: "/projects/$id/boards/$boardId",
+        params,
+        search: { tab: "boards" },
+        replace: true,
+      });
+    }
+  },
   component: BoardDetail,
 });
 
@@ -110,8 +126,9 @@ function BoardDetail() {
     },
     {
       label: "Boards",
-      to: "/boards",
-      search: { filter: `project.id == '${id}'` },
+      to: "/projects/$id",
+      params: { id },
+      search: { tab: "boards" },
     },
     { label: board?.name ?? "Loading..." },
   ]);
@@ -143,7 +160,7 @@ function BoardDetail() {
   };
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6">
       {error && <ErrorBanner>Error loading board</ErrorBanner>}
 
       {viewError && <ErrorBanner>Error loading board items</ErrorBanner>}
