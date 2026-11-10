@@ -11,23 +11,27 @@ import {
   statusIdFromFilter,
   withStatus,
 } from "../../lib/filter-bubbles";
+import { WORK_ITEM_DEFAULT_SORT, WORK_ITEM_SORTS } from "../../lib/work-items";
 
 export const Route = createFileRoute("/work-items/")({
   component: WorkItemsList,
-  validateSearch: (search: Record<string, unknown>): { filter?: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { filter?: string; sort?: string } => ({
     filter: typeof search.filter === "string" ? search.filter : undefined,
+    sort: WORK_ITEM_SORTS.find((option) => option.value === search.sort)?.value,
   }),
 });
 
 function WorkItemsList() {
-  const { filter } = Route.useSearch();
+  const { filter, sort = WORK_ITEM_DEFAULT_SORT } = Route.useSearch();
   useBreadcrumbs([{ label: "Work items" }]);
   const navigate = useNavigate();
 
   const { data: projects } = useProjectOptions();
 
   const setFilter = (next: string | undefined) => {
-    navigate({ to: "/work-items", search: { filter: next } });
+    navigate({ to: "/work-items", search: { filter: next, sort } });
   };
 
   // "New work item" pre-selects the project when the filter shows just one
@@ -55,14 +59,39 @@ function WorkItemsList() {
         />
       )}
 
-      <FilterBubbles
-        filter={filter}
-        onChange={setFilter}
-        projects={projects?.results ?? []}
-        fields={WORK_ITEM_FIELDS}
-      />
+      <div className="flex items-start gap-4">
+        <div className="min-w-0 flex-1">
+          <FilterBubbles
+            filter={filter}
+            onChange={setFilter}
+            projects={projects?.results ?? []}
+            fields={WORK_ITEM_FIELDS}
+          />
+        </div>
+        <select
+          aria-label="Sort work items"
+          value={sort}
+          onChange={(e) => {
+            navigate({
+              to: "/work-items",
+              search: { filter, sort: e.target.value },
+            });
+          }}
+          className="shrink-0 rounded border border-border-strong px-3 py-2"
+        >
+          {WORK_ITEM_SORTS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      <WorkItemList key={filter ?? ""} filter={filter} />
+      <WorkItemList
+        key={`${filter ?? ""}|${sort}`}
+        filter={filter}
+        sort={sort}
+      />
     </div>
   );
 }
