@@ -63,6 +63,19 @@ export interface WorkItemUpdate {
 }
 export const WORK_ITEM_LIMIT = 10;
 
+export const WORK_ITEM_DEFAULT_SORT = "-modified_at";
+
+export const WORK_ITEM_SORTS = [
+  { value: "-modified_at", label: "Recently modified" },
+  { value: "modified_at", label: "Least recently modified" },
+  { value: "-created_at", label: "Newest created" },
+  { value: "created_at", label: "Oldest created" },
+  { value: "summary", label: "Summary A–Z" },
+  { value: "-summary", label: "Summary Z–A" },
+  { value: "due_at", label: "Due soonest" },
+  { value: "-due_at", label: "Due latest" },
+];
+
 // The date input works in local time with no zone, so convert at its edges.
 export function dueAtToInput(dueAt: string | null): string {
   if (!dueAt) return "";
@@ -83,6 +96,7 @@ export interface WorkItemFilters {
   filter?: string;
   dueFrom?: string;
   dueTo?: string;
+  sort?: string;
 }
 
 // Live items by default; trashed=true selects only trashed items;
@@ -110,6 +124,7 @@ export function fetchWorkItems(
   if (filters.search) params.set("search", filters.search);
   if (filters.dueFrom) params.set("due_from", filters.dueFrom);
   if (filters.dueTo) params.set("due_to", filters.dueTo);
+  if (filters.sort) params.set("sort", filters.sort);
   const filter = trashFilter(filters.trashed, filters.filter);
   if (filter) params.set("filter", filter);
   return apiJson(`/api/v1/work-items/?${params}`, "Failed to fetch work items");

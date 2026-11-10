@@ -72,6 +72,23 @@ test.describe("WorkItemList selection", () => {
     await expect(component.getByTestId("total")).toHaveText("42");
   });
 
+  test("sends sort to the API", async ({ mount, page }) => {
+    const requests: URL[] = [];
+    await page.route("**/api/v1/work-items/**", (route) => {
+      requests.push(new URL(route.request().url()));
+      route.fulfill({
+        json: { results: ITEMS, limit: 10, offset: 0, total: 2 },
+      });
+    });
+    const component = await mount(
+      <TestRouter paths={["/"]}>
+        <WorkItemList sort="summary" />
+      </TestRouter>,
+    );
+    await expect(component).toContainText("First item");
+    expect(requests.at(-1)?.searchParams.get("sort")).toBe("summary");
+  });
+
   test("shows no checkboxes without a selection", async ({ mount, page }) => {
     await page.route("**/api/v1/work-items/**", (route) =>
       route.fulfill({

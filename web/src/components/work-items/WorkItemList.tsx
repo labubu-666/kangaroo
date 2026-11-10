@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { WorkItem } from "../../lib/work-items";
+import type { WorkItemListItem } from "../../lib/work-items";
 import { WORK_ITEM_LIMIT, fetchWorkItems } from "../../lib/work-items";
 
 import { CopyId } from "../shared/CopyId";
@@ -14,6 +14,7 @@ import { TypeIcon } from "../shared/TypeIcon";
 type WorkItemListProps = {
   projectId?: string;
   filter?: string;
+  sort?: string;
   trashed?: boolean | "all";
   // When set, rows get checkboxes and the parent owns the selection
   selection?: {
@@ -26,6 +27,7 @@ type WorkItemListProps = {
 export function WorkItemList({
   projectId,
   filter,
+  sort,
   trashed,
   selection,
   onTotalChange,
@@ -33,16 +35,17 @@ export function WorkItemList({
   const [offset, setOffset] = useState(0);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["work-items", offset, projectId, filter, trashed],
+    queryKey: ["work-items", offset, projectId, filter, sort, trashed],
     queryFn: () =>
       fetchWorkItems(WORK_ITEM_LIMIT, offset, {
         projectId,
         filter,
+        sort,
         trashed,
       }),
   });
 
-  const items: WorkItem[] = data?.results ?? [];
+  const items: WorkItemListItem[] = data?.results ?? [];
   const total = data?.total ?? 0;
 
   useEffect(() => {
