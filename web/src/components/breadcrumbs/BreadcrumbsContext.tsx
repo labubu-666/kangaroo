@@ -25,15 +25,18 @@ export function BreadcrumbsProvider({ children }: { children: ReactNode }) {
 }
 
 // Called by a page to publish its breadcrumbs; they are cleared when the page unmounts
-export function useBreadcrumbs(items: BreadcrumbItem[]) {
+// Passing undefined publishes nothing, so a parent layout can yield to a nested page
+export function useBreadcrumbs(items: BreadcrumbItem[] | undefined) {
   const context = useContext(BreadcrumbsContext);
   if (!context)
     throw new Error("useBreadcrumbs must be used inside BreadcrumbsProvider");
   const { setItems } = context;
   // Compare by value so pages can pass a new array on every render without looping
-  const serialized = JSON.stringify(items);
+  const serialized = JSON.stringify(items ?? null);
   useEffect(() => {
-    setItems(JSON.parse(serialized));
+    const next: BreadcrumbItem[] | null = JSON.parse(serialized);
+    if (!next) return;
+    setItems(next);
     return () => setItems([]);
   }, [serialized, setItems]);
 }

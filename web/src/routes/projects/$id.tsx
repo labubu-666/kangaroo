@@ -1,4 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useChildMatches,
+} from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { deleteProject, fetchProject, updateProject } from "../../lib/projects";
@@ -26,9 +31,11 @@ type ProjectTab =
 
 export const Route = createFileRoute("/projects/$id")({
   component: ProjectDetail,
-  validateSearch: (search: Record<string, unknown>): { tab?: ProjectTab } => ({
-    tab: TABS.find((t) => t.value === search.tab)?.value ?? "work-items",
-  }),
+  // No default here: this also runs for nested routes, which would write the default into their URLs
+  validateSearch: (search: Record<string, unknown>): { tab?: ProjectTab } => {
+    const tab = TABS.find((t) => t.value === search.tab)?.value;
+    return tab ? { tab } : {};
+  },
 });
 
 const TABS: { value: ProjectTab; label: string }[] = [
@@ -42,7 +49,10 @@ const TABS: { value: ProjectTab; label: string }[] = [
 
 function ProjectDetail() {
   const { id } = Route.useParams();
-  const { tab = "work-items" } = Route.useSearch();
+  const { tab: searchTab } = Route.useSearch();
+  // A nested page (e.g. a board) replaces the tab content and keeps the header and tabs
+  const nestedOpen = useChildMatches().length > 0;
+  const tab = nestedOpen ? "boards" : (searchTab ?? "work-items");
   const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -82,22 +92,28 @@ function ProjectDetail() {
     }
   };
 
-  useBreadcrumbs([
-    { label: "Projects", to: "/projects" },
-    { label: project?.name ?? "Loading..." },
-  ]);
-  useDocumentTitle(project?.name);
+  useBreadcrumbs(
+    nestedOpen
+      ? undefined
+      : [
+          { label: "Projects", to: "/projects" },
+          { label: project?.name ?? "Loading..." },
+        ],
+  );
+  useDocumentTitle(nestedOpen ? undefined : project?.name);
 
   useRecordRecent(
-    project && {
-      type: "project-tab",
-      id: `${project.id}:${tab}`,
-      title: TABS.find((t) => t.value === tab)?.label ?? "Work items",
-      parent: project.name,
-      to: "/projects/$id",
-      params: { id: project.id },
-      search: { tab },
-    },
+    nestedOpen
+      ? undefined
+      : project && {
+          type: "project-tab",
+          id: `${project.id}:${tab}`,
+          title: TABS.find((t) => t.value === tab)?.label ?? "Work items",
+          parent: project.name,
+          to: "/projects/$id",
+          params: { id: project.id },
+          search: { tab },
+        },
   );
 
   return (
@@ -209,18 +225,22 @@ function ProjectDetail() {
             ) : tab === "calendar" ? (
               <CalendarPage projectId={project.id} />
             ) : tab === "boards" ? (
-              <>
-                <div className="flex justify-end">
-                  <Link
-                    to="/projects/$id/boards/create"
-                    params={{ id: project.id }}
-                    className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover"
-                  >
-                    New board
-                  </Link>
-                </div>
-                <BoardList projectId={project.id} />
-              </>
+              nestedOpen ? (
+                <Outlet />
+              ) : (
+                <>
+                  <div className="flex justify-end">
+                    <Link
+                      to="/projects/$id/boards/create"
+                      params={{ id: project.id }}
+                      className="rounded bg-primary px-4 py-2 font-medium text-on-primary hover:bg-primary-hover"
+                    >
+                      New board
+                    </Link>
+                  </div>
+                  <BoardList projectId={project.id} />
+                </>
+              )
             ) : (
               <>
                 <div className="flex justify-end">
