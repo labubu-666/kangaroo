@@ -9,3 +9,5 @@ wheels/
 *.egg-info
 *.db
 *.db.*.bak
+supervisord.log
+supervisord.pid

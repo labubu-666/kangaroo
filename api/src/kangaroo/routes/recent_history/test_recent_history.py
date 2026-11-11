@@ -1,7 +1,4 @@
-from sqlalchemy import func, select
-
 from kangaroo.app import app
-from kangaroo.repositories.tables import RecentHistoryRow
 from kangaroo.routes.auth import require_user
 
 OTHER_USER = {"email": "other@example.com"}
@@ -66,14 +63,6 @@ def test_list_shows_at_most_ten_newest(client):
     items = client.get(BASE).json()
     assert len(items) == 10
     assert items[0]["item_id"] == "w11"
-
-
-def test_list_truncates_storage_to_one_hundred(client, session):
-    for index in range(105):
-        visit(client, f"w{index}")
-    client.get(BASE)
-    count = session.scalar(select(func.count()).select_from(RecentHistoryRow))
-    assert count == 100
 
 
 def test_search_matches_title_and_parent_beyond_first_ten(client):

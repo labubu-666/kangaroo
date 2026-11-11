@@ -1,3 +1,4 @@
+from datetime import timedelta
 from uuid import uuid4
 
 import pytest
@@ -14,8 +15,9 @@ from kangaroo.repositories import (
     ProjectRepository,
     create_engine_for,
 )
-from kangaroo.repositories.repositories import utc_now
+from kangaroo.repositories.repositories import RecentHistoryRepository, utc_now
 from kangaroo.repositories.tables import (
+    RecentHistoryRow,
     StatusRow,
     StatusTransitionRow,
     WorkItemRow,
@@ -387,4 +389,38 @@ def test_deleting_project_removes_its_statuses_and_types(engine, projects):
         assert session.scalar(select(func.count()).select_from(WorkItemTypeRow)) == 0
         assert (
             session.scalar(select(func.count()).select_from(StatusTransitionRow)) == 0
+        )
+
+
+def test_recent_history_prune_keeps_newest_per_owner(engine):
+    now = utc_now()
+    with Session(engine) as session, session.begin():
+        session.add_all(
+            RecentHistoryRow(
+                id=uuid4(),
+                owner=owner,
+                type="work-item",
+                item_id=f"w{index}",
+                title=f"Item {index}",
+                to="/x",
+                params={},
+                search={},
+                created_at=now,
+                modified_at=now - timedelta(minutes=index),
+            )
+            for owner, count in [("a", 5), ("b", 2)]
+            for index in range(count)
+        )
+
+    with Session(engine) as session, session.begin():
+        RecentHistoryRepository(session).prune(keep=3)
+
+    with Session(engine) as session:
+        kept = session.scalars(
+            select(RecentHistoryRow.item_id).where(RecentHistoryRow.owner == "a")
+        ).all()
+        assert sorted(kept) == ["w0", "w1", "w2"]
+        assert (
+            session.scalar(select(func.count()).where(RecentHistoryRow.owner == "b"))
+            == 2
         )

@@ -59,3 +59,21 @@ def test_serve_custom_options(monkeypatch):
         "reload": True,
         "log_level": "debug",
     }
+
+
+def test_worker_starts_scheduler(monkeypatch):
+    """Test worker command builds the scheduler from settings and starts it."""
+    calls = []
+
+    class FakeScheduler:
+        def start(self):
+            calls.append("started")
+
+    monkeypatch.setattr("kangaroo.cli.build_scheduler", lambda engine: FakeScheduler())
+    monkeypatch.setattr("kangaroo.cli.create_engine_for", lambda url: url)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["worker"])
+
+    assert result.exit_code == 0
+    assert calls == ["started"]

@@ -576,18 +576,20 @@ class RecentHistoryRepository:
         ).limit(limit)
         return list(self._session.scalars(stmt))
 
-    def truncate(self, owner: str, keep: int) -> None:
-        """Delete all but the newest ``keep`` entries of the owner."""
-        keep_ids = (
-            select(RecentHistoryRow.id)
-            .where(RecentHistoryRow.owner == owner)
-            .order_by(RecentHistoryRow.modified_at.desc(), RecentHistoryRow.id)
-            .limit(keep)
-        )
+    def prune(self, keep: int) -> None:
+        """Delete all but the newest ``keep`` entries of every owner."""
+        ranked = select(
+            RecentHistoryRow.id,
+            func.row_number()
+            .over(
+                partition_by=RecentHistoryRow.owner,
+                order_by=(RecentHistoryRow.modified_at.desc(), RecentHistoryRow.id),
+            )
+            .label("rank"),
+        ).subquery()
         self._session.execute(
             delete(RecentHistoryRow).where(
-                RecentHistoryRow.owner == owner,
-                RecentHistoryRow.id.not_in(keep_ids),
+                RecentHistoryRow.id.in_(select(ranked.c.id).where(ranked.c.rank > keep))
             )
         )
 
