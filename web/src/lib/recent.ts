@@ -7,6 +7,7 @@ export type RecentType =
   | "board"
   | "work-item"
   | "function"
+  | "pipeline"
   | "article"
   | "knowledge-base"
   | "calendar"
@@ -34,6 +35,7 @@ export type RecentEntry = RecentBase &
         params: { id: string };
       }
     | { type: "function"; to: "/functions/$id"; params: { id: string } }
+    | { type: "pipeline"; to: "/pipelines/$id"; params: { id: string } }
     | {
         type: "article";
         parent: string;

@@ -24,6 +24,7 @@ from kangaroo.errors import (
     InvalidTemplateError,
     NotFoundError,
 )
+from kangaroo.pipeline_graph import InvalidPipelineError
 from kangaroo.routes import api_internal_v1_router, api_v1_router
 from kangaroo.routes.auth import require_user
 from kangaroo.routes.auth import router as auth_router
@@ -121,6 +122,7 @@ ERROR_STATUS_CODES: dict[type[Exception], int] = {
     InvalidSortError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     InvalidTemplateError: status.HTTP_400_BAD_REQUEST,
     InvalidBackupError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+    InvalidPipelineError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     RunnerUnavailableError: status.HTTP_503_SERVICE_UNAVAILABLE,
 }
 for error_type, status_code in ERROR_STATUS_CODES.items():

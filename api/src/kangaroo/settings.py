@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # How often the background job trims each user's recent history.
     recent_history_prune_interval_minutes: int = 60
 
+    # How often the worker advances running pipelines by one step.
+    orchestrator_interval_seconds: int = 2
+
     # Upper limit on the total uncompressed size of a restored backup. Guards
     # against zip bombs that would fill the disk when extracted.
     backup_max_uncompressed_bytes: int = 10 * 1024**3

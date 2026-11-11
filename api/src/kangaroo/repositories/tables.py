@@ -220,3 +220,46 @@ class RecentHistoryRow(Base):
     search: Mapped[dict[str, str]] = mapped_column(
         JSON, default=dict, server_default="{}"
     )
+
+
+class PipelineRow(Base):
+    """A saved pipeline: a named graph of functions that reference each other."""
+
+    __tablename__ = "pipelines"
+
+    name: Mapped[str] = mapped_column(String)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
+    steps: Mapped[dict[str, Any]] = mapped_column(JSON)
+    labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+
+
+class PipelineRunRow(Base):
+    """One run of a pipeline. Its status is PENDING, RUNNING, SUCCESS or FAILURE."""
+
+    __tablename__ = "pipeline_runs"
+
+    pipeline_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("pipelines.id", ondelete="CASCADE"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(String)
+    # The user claims that started the run. Steps mint their token for this user.
+    started_by: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+
+
+class PipelineStepRow(Base):
+    """One step of a run. The orchestrator claims PENDING steps from this table."""
+
+    __tablename__ = "pipeline_steps"
+
+    pipeline_run_id: Mapped[UUID] = mapped_column(
+        Uuid,
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    step: Mapped[str] = mapped_column(String)
+    status: Mapped[str] = mapped_column(String, index=True)
+    invocation_id: Mapped[UUID | None] = mapped_column(
+        Uuid, ForeignKey("invocations.id", ondelete="SET NULL"), nullable=True
+    )
+    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)

@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from sqlalchemy.orm import Session
 
@@ -13,7 +15,8 @@ from kangaroo.testing import new_task, seed_project
 
 
 def create_function(client, code="print(1 + 1)"):
-    response = client.post("/api/v1/functions", json={"name": "Hello", "code": code})
+    name = f"Function {uuid4()}"
+    response = client.post("/api/v1/functions", json={"name": name, "code": code})
     return response.json()["id"]
 
 

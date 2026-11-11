@@ -16,6 +16,7 @@ const ICON_PATHS: Record<RecentType, string> = {
   "project-tab":
     "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
   function: "M16 18l6-6-6-6M8 6l-6 6 6 6",
+  pipeline: "M4 6h5v5H4zM15 13h5v5h-5zM9 8.5h3a3 3 0 0 1 3 3v0",
   article: "M6 2h9l5 5v15H6zM14 2v6h6M9 13h6M9 17h6",
   calendar: "M3 4h18v18H3zM16 2v4M8 2v4M3 10h18",
   "knowledge-base":

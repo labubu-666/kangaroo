@@ -22,6 +22,9 @@ from kangaroo.repositories.tables import (
     FunctionRow,
     InvocationRow,
     KnowledgeBaseRow,
+    PipelineRow,
+    PipelineRunRow,
+    PipelineStepRow,
     ProjectRow,
     RecentHistoryRow,
     StatusRow,
@@ -50,6 +53,10 @@ from kangaroo.schemas import (
     KnowledgeBaseReplace,
     KnowledgeBaseUpdate,
     PaginatedResponse,
+    Pipeline,
+    PipelineCreate,
+    PipelineReplace,
+    PipelineUpdate,
     Project,
     ProjectCreate,
     ProjectReplace,
@@ -523,6 +530,88 @@ class ApiKeyRepository:
         row.last_used_at = now
         self._session.flush()
         return row
+
+
+class PipelineRepository(
+    Repository[Pipeline, PipelineCreate, PipelineUpdate, PipelineReplace]
+):
+    entity = "Pipeline"
+    filter_fields = frozenset(Pipeline.model_fields)
+    search_fields = ("name", "description")
+    model_type = Pipeline
+    row_type = PipelineRow
+
+
+class PipelineStepRepository:
+    """Storage for the step queue of pipeline runs."""
+
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def create_run(
+        self,
+        pipeline_id: UUID,
+        steps: list[str],
+        started_by: dict[str, Any] | None = None,
+    ) -> UUID:
+        """Queue a run of a pipeline, with one PENDING step row per step."""
+        now = utc_now()
+        run = PipelineRunRow(
+            id=uuid7(),
+            pipeline_id=pipeline_id,
+            status="RUNNING",
+            started_by=started_by,
+            created_at=now,
+            modified_at=now,
+        )
+        self._session.add(run)
+        self._session.add_all(
+            PipelineStepRow(
+                id=uuid7(),
+                pipeline_run_id=run.id,
+                step=name,
+                status="PENDING",
+                created_at=now,
+                modified_at=now,
+            )
+            for name in steps
+        )
+        self._session.flush()
+        return run.id
+
+    def steps_for(self, run_id: UUID) -> dict[str, PipelineStepRow]:
+        rows = self._session.scalars(
+            select(PipelineStepRow).where(PipelineStepRow.pipeline_run_id == run_id)
+        ).all()
+        return {row.step: row for row in rows}
+
+    def running_run_ids(self) -> list[UUID]:
+        return list(
+            self._session.scalars(
+                select(PipelineRunRow.id).where(PipelineRunRow.status == "RUNNING")
+            ).all()
+        )
+
+    def get_run(self, run_id: UUID) -> PipelineRunRow | None:
+        return self._session.get(PipelineRunRow, run_id)
+
+    def list_runs(
+        self, limit: int, offset: int, pipeline_id: UUID | None = None
+    ) -> tuple[list[PipelineRunRow], int]:
+        """Return one page of runs, newest first, and the total.
+
+        Only the runs of ``pipeline_id`` are returned when it is given.
+        """
+        base = select(PipelineRunRow)
+        if pipeline_id is not None:
+            base = base.where(PipelineRunRow.pipeline_id == pipeline_id)
+        total = self._session.scalar(select(func.count()).select_from(base.subquery()))
+        rows = self._session.scalars(
+            base.order_by(PipelineRunRow.created_at.desc(), PipelineRunRow.id.desc())
+            .limit(limit)
+            .offset(offset)
+        ).all()
+        return list(rows), total or 0
 
 
 class RecentHistoryRepository:
