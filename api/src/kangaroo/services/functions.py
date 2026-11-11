@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
+from kangaroo.errors import ConflictError
 from kangaroo.repositories import (
     FunctionRepository,
     InvocationRepository,
@@ -35,7 +36,14 @@ class FunctionService:
         self._runner = runner
 
     def create(self, item: FunctionCreate) -> Function:
+        self._check_name_free(item.name)
         return self._functions.create(item)
+
+    def _check_name_free(self, name: str, except_id: UUID | None = None) -> None:
+        """Function names are unique, because pipelines refer to functions by name."""
+        for existing in self._functions.list_all(name=name):
+            if existing.id != except_id:
+                raise ConflictError(f"A function named {name!r} already exists")
 
     def get(self, item_id: UUID) -> Function:
         return self._functions.get_by_id(item_id)
@@ -50,9 +58,12 @@ class FunctionService:
         return self._functions.list_paginated(limit, offset, search, sort)
 
     def replace(self, item_id: UUID, replace: FunctionReplace) -> Function:
+        self._check_name_free(replace.name, except_id=item_id)
         return self._functions.replace(item_id, replace)
 
     def update(self, item_id: UUID, update: FunctionUpdate) -> Function:
+        if update.name is not None:
+            self._check_name_free(update.name, except_id=item_id)
         return self._functions.update(item_id, update)
 
     def delete(self, item_id: UUID) -> None:

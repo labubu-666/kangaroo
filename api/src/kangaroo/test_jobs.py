@@ -43,3 +43,11 @@ def test_build_scheduler_registers_prune_job(engine):
     assert job is not None
     assert job.max_instances == 1
     assert job.coalesce is True
+
+
+def test_build_scheduler_registers_advance_pipelines_job(engine):
+    scheduler = build_scheduler(engine)
+    job = scheduler.get_job("advance_pipelines")
+    assert job is not None
+    assert job.max_instances == 1
+    assert job.coalesce is True

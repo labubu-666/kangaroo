@@ -6,7 +6,7 @@ const paths = [
   "/",
   "/projects",
   "/work-items",
-  "/functions",
+  "/pipelines",
   "/knowledge-bases",
 ];
 
@@ -23,7 +23,7 @@ test.describe("SectionNav", () => {
     ).toBeVisible();
   });
 
-  test("renders links to home, projects, work items and functions only", async ({
+  test("renders links to home, projects, work items and pipelines only", async ({
     mount,
   }) => {
     const component = await mount(
@@ -42,8 +42,8 @@ test.describe("SectionNav", () => {
       component.getByRole("link", { name: "Work items" }),
     ).toHaveAttribute("href", "/work-items");
     await expect(
-      component.getByRole("link", { name: "Functions" }),
-    ).toHaveAttribute("href", "/functions");
+      component.getByRole("link", { name: "Pipelines" }),
+    ).toHaveAttribute("href", "/pipelines");
     await expect(
       component.getByRole("link", { name: "Knowledge bases" }),
     ).toHaveAttribute("href", "/knowledge-bases");

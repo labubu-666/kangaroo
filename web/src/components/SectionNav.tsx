@@ -29,11 +29,11 @@ export function SectionNav() {
         Work items
       </Link>
       <Link
-        to="/functions"
+        to="/pipelines"
         className="font-medium hover:underline"
         activeProps={{ className: "text-primary" }}
       >
-        Functions
+        Pipelines
       </Link>
       <Link
         to="/knowledge-bases"

@@ -8,6 +8,7 @@ from pydantic import (
     ConfigDict,
     Field,
     computed_field,
+    field_serializer,
     field_validator,
     model_validator,
 )
@@ -490,6 +491,76 @@ class Invocation(Timestamped):
     error: str | None = None
 
 
+class PipelineStep(BaseModel):
+    """One step in a pipeline: a saved function, and the steps that run next.
+
+    ``on_success``/``on_failure`` name the next steps. A missing reference means the
+    run ends on that outcome. The same function may appear in several steps, so
+    the step's key, not the function's name, identifies the step.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    function_id: UUID
+    on_success: list[str] = Field(default_factory=list)
+    on_failure: list[str] = Field(default_factory=list)
+
+    # Steps are stored as a JSON column, which cannot hold a UUID object.
+    @field_serializer("function_id")
+    def _serialize_function_id(self, function_id: UUID) -> str:
+        return str(function_id)
+
+
+class PipelineCreate(BaseModel):
+    """A pipeline: a map from step name to its definition."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    description: str | None = None
+    steps: dict[str, PipelineStep]
+    labels: Labels = Field(default_factory=list)
+
+
+class PipelineReplace(PipelineCreate):
+    pass
+
+
+class PipelineUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    steps: dict[str, PipelineStep] | None = None
+    labels: Labels = Field(default_factory=list)
+
+    _reject_null_name = field_validator("name")(reject_null)
+    _reject_null_steps = field_validator("steps")(reject_null)
+
+
+class Pipeline(PipelineCreate, Timestamped):
+    id: UUID
+
+
+PipelineRunStatus = Literal["PENDING", "RUNNING", "SUCCESS", "FAILURE"]
+PipelineStepStatus = Literal["PENDING", "RUNNING", "SUCCESS", "FAILURE", "SKIPPED"]
+
+
+class PipelineStepRun(BaseModel):
+    """One step of a run: its status and the invocation that ran it, if any."""
+
+    step: str
+    status: PipelineStepStatus
+    invocation_id: UUID | None
+
+
+class PipelineRun(Timestamped):
+    """A run of a pipeline, with the status of each of its steps."""
+
+    id: UUID
+    pipeline_id: UUID
+    status: PipelineRunStatus
+    steps: list[PipelineStepRun]
+
+
 MAX_RUN_TIMEOUT_SECONDS = 15
 
 
@@ -592,6 +663,7 @@ RecentType = Literal[
     "board",
     "work-item",
     "function",
+    "pipeline",
     "article",
     "knowledge-base",
     "calendar",

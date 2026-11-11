@@ -40,7 +40,7 @@ function InvocationDetail() {
 
   useBreadcrumbs([
     { label: "Functions", to: "/functions" },
-    { label: "Invocations", to: "/functions", search: { tab: "invocations" } },
+    { label: "Invocations", to: "/invocations" },
     { label: fn?.name ?? "Loading..." },
   ]);
 
