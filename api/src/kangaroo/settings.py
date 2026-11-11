@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     # sqlite://memory is an in-memory database; sqlite:///path.db is a file.
     database_url: str = "sqlite://memory"
 
+    # How often the background job trims each user's recent history.
+    recent_history_prune_interval_minutes: int = 60
+
     # Upper limit on the total uncompressed size of a restored backup. Guards
     # against zip bombs that would fill the disk when extracted.
     backup_max_uncompressed_bytes: int = 10 * 1024**3

@@ -1,6 +1,10 @@
 import click
 import uvicorn
 
+from kangaroo.jobs import build_scheduler
+from kangaroo.repositories import create_engine_for
+from kangaroo.settings import settings
+
 
 @click.group()
 def cli() -> None:
@@ -19,3 +23,9 @@ def serve(host: str, port: int, reload: bool, log_level: str) -> None:
     uvicorn.run(
         "kangaroo.app:app", host=host, port=port, reload=reload, log_level=log_level
     )
+
+
+@cli.command()
+def worker() -> None:
+    """Run background jobs. Blocks until stopped."""
+    build_scheduler(create_engine_for(settings.database_url)).start()

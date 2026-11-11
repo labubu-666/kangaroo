@@ -18,14 +18,13 @@ class RecentHistoryService:
         self._history.upsert(owner_id(user), entry)
 
     def list_for(self, user: dict[str, Any], search: str | None) -> list[RecentEntry]:
-        """Trim the stored history to SAVED, then return the newest matches up to SHOWN.
-
-        Trimming happens on every read so storage never grows past SAVED per user.
-        """
-        owner = owner_id(user)
-        self._history.truncate(owner, keep=SAVED)
-        rows = self._history.list_for(owner, search, limit=SHOWN)
+        """Return the newest matches up to SHOWN."""
+        rows = self._history.list_for(owner_id(user), search, limit=SHOWN)
         return [RecentEntry.model_validate(row, from_attributes=True) for row in rows]
+
+    def prune(self) -> None:
+        """Keep only the newest SAVED entries of every user."""
+        self._history.prune(keep=SAVED)
 
     def remove(self, user: dict[str, Any], type: str, item_id: str) -> None:
         self._history.delete(owner_id(user), type, item_id)

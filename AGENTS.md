@@ -11,5 +11,18 @@
 - Prefer simple solutions to complicated ones.
 - Only do what was asked, dont wander off into tangents.
 - Comments show explain `why` if you think the code needs explaining. Otherwise the code should describe itself.
+# Server
+Run the API, the background worker and the web dev server together. The API and worker reload when code changes, and Vite hot-reloads the web app.
 
+```sh
+uv run supervisord -c supervisord.dev.conf
+```
+
+Stop everything with `Ctrl+C`. To restart one process, use `supervisorctl restart api`, `supervisorctl restart web` or `supervisorctl restart worker`.
+
+## Production
+
+```sh
+uv run supervisord -c supervisord.prod.conf
+```
 
