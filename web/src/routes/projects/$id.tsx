@@ -11,6 +11,7 @@ import { useDismiss } from "../../lib/use-dismiss";
 import { useBreadcrumbs } from "../../components/breadcrumbs/BreadcrumbsContext";
 import { removeRecent, useRecordRecent } from "../../lib/recent";
 import { useDocumentTitle } from "../../lib/use-document-title";
+import { WORK_ITEM_DEFAULT_SORT, WORK_ITEM_SORTS } from "../../lib/work-items";
 
 import { BacklogPage } from "../../components/backlog/BacklogPage";
 import { BoardList } from "../../components/boards/BoardList";
@@ -18,7 +19,7 @@ import { CalendarPage } from "../../components/calendar/CalendarPage";
 import { ErrorBanner } from "../../components/shared/ErrorBanner";
 import { InlineEdit } from "../../components/InlineEdit";
 import { Loading } from "../../components/shared/Loading";
-import { WorkItemList } from "../../components/work-items/WorkItemList";
+import { ProjectWorkItemList } from "../../components/work-items/ProjectWorkItemList";
 import { WorkflowPage } from "../../components/workflow/WorkflowPage";
 
 type ProjectTab =
@@ -32,16 +33,31 @@ type ProjectTab =
 export const Route = createFileRoute("/projects/$id")({
   component: ProjectDetail,
   // No default here: this also runs for nested routes, which would write the default into their URLs
-  validateSearch: (search: Record<string, unknown>): { tab?: ProjectTab } => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): {
+    tab?: ProjectTab;
+    filter?: string;
+    sort?: string;
+    offset?: number;
+  } => {
     const tab = TABS.find((t) => t.value === search.tab)?.value;
-    return tab ? { tab } : {};
+    const offset = Number(search.offset);
+    return {
+      ...(tab ? { tab } : {}),
+      ...(typeof search.filter === "string" ? { filter: search.filter } : {}),
+      ...(WORK_ITEM_SORTS.some((option) => option.value === search.sort)
+        ? { sort: search.sort as string }
+        : {}),
+      ...(Number.isInteger(offset) && offset > 0 ? { offset } : {}),
+    };
   },
 });
 
 const TABS: { value: ProjectTab; label: string }[] = [
+  { value: "backlog", label: "Backlog" },
   { value: "work-items", label: "Work items" },
   { value: "boards", label: "Boards" },
-  { value: "backlog", label: "Backlog" },
   { value: "calendar", label: "Calendar" },
   { value: "types", label: "Work item types" },
   { value: "statuses", label: "Work item statuses" },
@@ -49,11 +65,27 @@ const TABS: { value: ProjectTab; label: string }[] = [
 
 function ProjectDetail() {
   const { id } = Route.useParams();
-  const { tab: searchTab } = Route.useSearch();
+  const {
+    tab: searchTab,
+    filter,
+    sort = WORK_ITEM_DEFAULT_SORT,
+    offset = 0,
+  } = Route.useSearch();
   // A nested page (e.g. a board) replaces the tab content and keeps the header and tabs
   const nestedOpen = useChildMatches().length > 0;
   const tab = nestedOpen ? "boards" : (searchTab ?? "work-items");
   const navigate = Route.useNavigate();
+
+  // Changing the filter or sort leaves the page out, so the list starts again at page 1
+  const setWorkItemFilter = (next: string | undefined) => {
+    navigate({ search: { tab: "work-items", filter: next, sort } });
+  };
+
+  const setWorkItemOffset = (next: number) => {
+    navigate({
+      search: { tab: "work-items", filter, sort, offset: next || undefined },
+    });
+  };
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
@@ -252,7 +284,19 @@ function ProjectDetail() {
                     New work item
                   </Link>
                 </div>
-                <WorkItemList projectId={project.id} />
+                <ProjectWorkItemList
+                  projectId={project.id}
+                  filter={filter}
+                  sort={sort}
+                  offset={offset}
+                  onFilterChange={setWorkItemFilter}
+                  onSortChange={(next) =>
+                    navigate({
+                      search: { tab: "work-items", filter, sort: next },
+                    })
+                  }
+                  onOffsetChange={setWorkItemOffset}
+                />
               </>
             )}
           </div>

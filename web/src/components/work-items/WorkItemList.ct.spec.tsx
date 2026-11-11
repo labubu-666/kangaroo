@@ -89,6 +89,33 @@ test.describe("WorkItemList selection", () => {
     expect(requests.at(-1)?.searchParams.get("sort")).toBe("summary");
   });
 
+  test("uses the page from the parent and reports page changes", async ({
+    mount,
+    page,
+  }) => {
+    const requests: URL[] = [];
+    await page.route("**/api/v1/work-items/**", (route) => {
+      requests.push(new URL(route.request().url()));
+      route.fulfill({
+        json: { results: ITEMS, limit: 10, offset: 10, total: 25 },
+      });
+    });
+    const changes: number[] = [];
+    const component = await mount(
+      <TestRouter paths={["/"]}>
+        <WorkItemList
+          offset={10}
+          onOffsetChange={(next) => changes.push(next)}
+        />
+      </TestRouter>,
+    );
+    await expect(component).toContainText("First item");
+    expect(requests.at(-1)?.searchParams.get("offset")).toBe("10");
+
+    await component.getByRole("button", { name: "1", exact: true }).click();
+    expect(changes).toEqual([0]);
+  });
+
   test("shows no checkboxes without a selection", async ({ mount, page }) => {
     await page.route("**/api/v1/work-items/**", (route) =>
       route.fulfill({

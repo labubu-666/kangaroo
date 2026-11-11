@@ -22,6 +22,9 @@ type WorkItemListProps = {
     onChange: (selected: Set<string>) => void;
   };
   onTotalChange?: (total: number) => void;
+  // Set by a parent that keeps the page in its own state, such as the URL
+  offset?: number;
+  onOffsetChange?: (offset: number) => void;
 };
 
 export function WorkItemList({
@@ -31,8 +34,12 @@ export function WorkItemList({
   trashed,
   selection,
   onTotalChange,
+  offset: controlledOffset,
+  onOffsetChange,
 }: WorkItemListProps) {
-  const [offset, setOffset] = useState(0);
+  const [localOffset, setLocalOffset] = useState(0);
+  const offset = controlledOffset ?? localOffset;
+  const setOffset = onOffsetChange ?? setLocalOffset;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["work-items", offset, projectId, filter, sort, trashed],
