@@ -33,6 +33,6 @@ dev = [
     "httpx==0.28.1",
     "pytest==9.2.0",
     "ruff==0.17.4",
-    "starlette==1.7.0",
+    "starlette==1.10.0",
     "ty==0.0.100",
 ]
