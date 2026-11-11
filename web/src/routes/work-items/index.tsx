@@ -17,21 +17,38 @@ export const Route = createFileRoute("/work-items/")({
   component: WorkItemsList,
   validateSearch: (
     search: Record<string, unknown>,
-  ): { filter?: string; sort?: string } => ({
-    filter: typeof search.filter === "string" ? search.filter : undefined,
-    sort: WORK_ITEM_SORTS.find((option) => option.value === search.sort)?.value,
-  }),
+  ): { filter?: string; sort?: string; offset?: number } => {
+    const offset = Number(search.offset);
+    return {
+      filter: typeof search.filter === "string" ? search.filter : undefined,
+      sort: WORK_ITEM_SORTS.find((option) => option.value === search.sort)
+        ?.value,
+      offset: Number.isInteger(offset) && offset > 0 ? offset : undefined,
+    };
+  },
 });
 
 function WorkItemsList() {
-  const { filter, sort = WORK_ITEM_DEFAULT_SORT } = Route.useSearch();
+  const {
+    filter,
+    sort = WORK_ITEM_DEFAULT_SORT,
+    offset = 0,
+  } = Route.useSearch();
   useBreadcrumbs([{ label: "Work items" }]);
   const navigate = useNavigate();
 
   const { data: projects } = useProjectOptions();
 
+  // Changing the filter or sort leaves the page out, so the list starts again at page 1
   const setFilter = (next: string | undefined) => {
     navigate({ to: "/work-items", search: { filter: next, sort } });
+  };
+
+  const setOffset = (next: number) => {
+    navigate({
+      to: "/work-items",
+      search: { filter, sort, offset: next || undefined },
+    });
   };
 
   // "New work item" pre-selects the project when the filter shows just one
@@ -88,9 +105,10 @@ function WorkItemsList() {
       </div>
 
       <WorkItemList
-        key={`${filter ?? ""}|${sort}`}
         filter={filter}
         sort={sort}
+        offset={offset}
+        onOffsetChange={setOffset}
       />
     </div>
   );
