@@ -35,7 +35,7 @@ jobs:
   frontend-test:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
     defaults:
       run:
         working-directory: web
