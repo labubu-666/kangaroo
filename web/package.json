@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@playwright/experimental-ct-react": "1.62.1",
-    "@playwright/test": "1.62.1",
+    "@playwright/test": "1.65.1",
     "@tanstack/react-router-devtools": "1.167.3",
     "@tanstack/router-plugin": "1.169.0",
     "@types/node": "24.19.2",
