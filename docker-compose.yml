@@ -1,6 +1,6 @@
 services:
   nuclio-dashboard:
-    image: quay.io/nuclio/dashboard:1.16.12-amd64
+    image: quay.io/nuclio/dashboard:1.17.12-amd64
     ports:
       - "8070:8070"
     volumes:
