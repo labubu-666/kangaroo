@@ -17,7 +17,7 @@ dependencies = [
     "nh3==0.3.7",
     "pydantic==2.14.3",
     "pydantic-settings==2.15.0",
-    "python-multipart==0.0.33",
+    "python-multipart==0.0.34",
     "requests==2.34.2",
     "sqlalchemy==2.1.8",
     "supervisor==4.3.0",
