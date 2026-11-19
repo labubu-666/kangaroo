@@ -40,5 +40,5 @@ dev = [
     "pytest-testcontainers==0.3.3",
     "ruff==0.17.6",
     "starlette==1.10.0",
-    "ty==0.0.101",
+    "ty==0.0.107",
 ]
