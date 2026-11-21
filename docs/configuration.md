@@ -6,7 +6,7 @@ the field names in upper case.
 | Variable | Default | Description |
 | --- | --- | --- |
 | `ENV` | `production` | Environment name. `development` proxies `/web` to the Vite dev server; anything else serves `web/dist`. |
-| `DATABASE_URL` | `sqlite://memory` | Database URL. `sqlite://memory` is an in-memory database; `sqlite:///path.db` is a file. |
+| `DATABASE_URL` | none (required) | PostgreSQL URL, for example `postgresql+psycopg://user:password@host/database`. `postgresql://` is also accepted. |
 | `FUNCTION_RUNNER` | `local` | Where saved functions run. `local` runs them on the API host; `nuclio` runs them in the Nuclio runner at `NUCLIO_RUNNER_URL`. |
 | `NUCLIO_RUNNER_URL` | unset | URL of the Nuclio runner. Required when `FUNCTION_RUNNER=nuclio`. |
 | `SESSION_SECRET_KEY` | `dev-only-change-me` | Signs the session cookie. Use a long random value in every deployed environment. |

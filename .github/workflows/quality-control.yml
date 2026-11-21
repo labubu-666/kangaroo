@@ -93,4 +93,8 @@ jobs:
         run: uv sync --dev
 
       - name: Test
+        # Settings is read at import, before conftest runs. The tests start their
+        # own PostgreSQL container, so this URL is never connected to.
+        env:
+          DATABASE_URL: postgresql+psycopg://unused@localhost/unused
         run: uv run pytest -vvv

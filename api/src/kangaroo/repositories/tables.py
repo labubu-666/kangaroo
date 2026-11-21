@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -14,29 +14,8 @@ from sqlalchemy import (
     false,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
-from sqlalchemy.types import TypeDecorator
 
 from kangaroo.utils import markdown_to_plain
-
-
-class UTCDateTime(TypeDecorator):
-    """Store datetimes as naive UTC and read them back as aware UTC.
-
-    SQLite has no timezone type, so the offset would otherwise be lost.
-    """
-
-    impl = DateTime
-    cache_ok = True
-
-    def process_bind_param(self, value: datetime | None, dialect) -> datetime | None:
-        if value is None:
-            return None
-        return value.astimezone(UTC).replace(tzinfo=None)
-
-    def process_result_value(self, value: datetime | None, dialect) -> datetime | None:
-        if value is None:
-            return None
-        return value.replace(tzinfo=UTC)
 
 
 class Base(DeclarativeBase):
@@ -46,8 +25,8 @@ class Base(DeclarativeBase):
     trashed: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=false()
     )
-    created_at: Mapped[datetime] = mapped_column(UTCDateTime)
-    modified_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    modified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class ProjectRow(Base):
@@ -67,19 +46,40 @@ class WorkItemRow(Base):
         String, nullable=True, info={"derived_from": "description"}
     )
     project_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("projects.id", ondelete="RESTRICT"), nullable=False
+        Uuid,
+        ForeignKey(
+            "projects.id", ondelete="RESTRICT", deferrable=True, initially="IMMEDIATE"
+        ),
+        nullable=False,
     )
     type_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("work_item_types.id", ondelete="RESTRICT"), nullable=False
+        Uuid,
+        ForeignKey(
+            "work_item_types.id",
+            ondelete="RESTRICT",
+            deferrable=True,
+            initially="IMMEDIATE",
+        ),
+        nullable=False,
     )
     status_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("statuses.id", ondelete="RESTRICT"), nullable=False
+        Uuid,
+        ForeignKey(
+            "statuses.id", ondelete="RESTRICT", deferrable=True, initially="IMMEDIATE"
+        ),
+        nullable=False,
     )
     parent_id: Mapped[UUID | None] = mapped_column(
-        Uuid, ForeignKey("work_items.id", ondelete="RESTRICT"), nullable=True
+        Uuid,
+        ForeignKey(
+            "work_items.id", ondelete="RESTRICT", deferrable=True, initially="IMMEDIATE"
+        ),
+        nullable=True,
     )
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
-    due_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    due_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     @validates("description")
     def _sync_plain_description(self, _key, value):
@@ -94,7 +94,11 @@ class BoardRow(Base):
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     filter: Mapped[str | None] = mapped_column(String, nullable=True)
     project_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("projects.id", ondelete="RESTRICT"), nullable=False
+        Uuid,
+        ForeignKey(
+            "projects.id", ondelete="RESTRICT", deferrable=True, initially="IMMEDIATE"
+        ),
+        nullable=False,
     )
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
     status_order: Mapped[list[str]] = mapped_column(
@@ -109,7 +113,11 @@ class WorkItemTypeRow(Base):
     __tablename__ = "work_item_types"
 
     project_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+        Uuid,
+        ForeignKey(
+            "projects.id", ondelete="CASCADE", deferrable=True, initially="IMMEDIATE"
+        ),
+        nullable=False,
     )
     name: Mapped[str] = mapped_column(String)
     position: Mapped[int] = mapped_column(Integer)
@@ -119,7 +127,11 @@ class StatusRow(Base):
     __tablename__ = "statuses"
 
     project_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+        Uuid,
+        ForeignKey(
+            "projects.id", ondelete="CASCADE", deferrable=True, initially="IMMEDIATE"
+        ),
+        nullable=False,
     )
     name: Mapped[str] = mapped_column(String)
     category: Mapped[str] = mapped_column(String)
@@ -130,13 +142,25 @@ class StatusTransitionRow(Base):
     __tablename__ = "status_transitions"
 
     project_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+        Uuid,
+        ForeignKey(
+            "projects.id", ondelete="CASCADE", deferrable=True, initially="IMMEDIATE"
+        ),
+        nullable=False,
     )
     from_status_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("statuses.id", ondelete="CASCADE"), nullable=False
+        Uuid,
+        ForeignKey(
+            "statuses.id", ondelete="CASCADE", deferrable=True, initially="IMMEDIATE"
+        ),
+        nullable=False,
     )
     to_status_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("statuses.id", ondelete="CASCADE"), nullable=False
+        Uuid,
+        ForeignKey(
+            "statuses.id", ondelete="CASCADE", deferrable=True, initially="IMMEDIATE"
+        ),
+        nullable=False,
     )
 
 
@@ -144,7 +168,11 @@ class InvocationRow(Base):
     __tablename__ = "invocations"
 
     function_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("functions.id", ondelete="CASCADE"), nullable=False
+        Uuid,
+        ForeignKey(
+            "functions.id", ondelete="CASCADE", deferrable=True, initially="IMMEDIATE"
+        ),
+        nullable=False,
     )
     status: Mapped[str] = mapped_column(String)
     logs: Mapped[str] = mapped_column(String)
@@ -173,7 +201,14 @@ class ArticleRow(Base):
     __tablename__ = "articles"
 
     knowledge_base_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("knowledge_bases.id", ondelete="RESTRICT"), nullable=False
+        Uuid,
+        ForeignKey(
+            "knowledge_bases.id",
+            ondelete="RESTRICT",
+            deferrable=True,
+            initially="IMMEDIATE",
+        ),
+        nullable=False,
     )
     title: Mapped[str] = mapped_column(String)
     body: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -181,7 +216,9 @@ class ArticleRow(Base):
         String, nullable=True, info={"derived_from": "body"}
     )
     labels: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
-    viewed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    viewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     @validates("body")
     def _sync_plain_body(self, _key, value):
@@ -199,9 +236,15 @@ class ApiKeyRow(Base):
     owner: Mapped[str] = mapped_column(String, index=True)
     owner_email: Mapped[str | None] = mapped_column(String, nullable=True)
     owner_name: Mapped[str | None] = mapped_column(String, nullable=True)
-    last_used_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
-    expires_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
-    revoked_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
 
 class RecentHistoryRow(Base):
@@ -239,7 +282,11 @@ class PipelineRunRow(Base):
     __tablename__ = "pipeline_runs"
 
     pipeline_id: Mapped[UUID] = mapped_column(
-        Uuid, ForeignKey("pipelines.id", ondelete="CASCADE"), nullable=False
+        Uuid,
+        ForeignKey(
+            "pipelines.id", ondelete="CASCADE", deferrable=True, initially="IMMEDIATE"
+        ),
+        nullable=False,
     )
     status: Mapped[str] = mapped_column(String)
     # The user claims that started the run. Steps mint their token for this user.
@@ -253,13 +300,27 @@ class PipelineStepRow(Base):
 
     pipeline_run_id: Mapped[UUID] = mapped_column(
         Uuid,
-        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        ForeignKey(
+            "pipeline_runs.id",
+            ondelete="CASCADE",
+            deferrable=True,
+            initially="IMMEDIATE",
+        ),
         nullable=False,
         index=True,
     )
     step: Mapped[str] = mapped_column(String)
     status: Mapped[str] = mapped_column(String, index=True)
     invocation_id: Mapped[UUID | None] = mapped_column(
-        Uuid, ForeignKey("invocations.id", ondelete="SET NULL"), nullable=True
+        Uuid,
+        ForeignKey(
+            "invocations.id",
+            ondelete="SET NULL",
+            deferrable=True,
+            initially="IMMEDIATE",
+        ),
+        nullable=True,
     )
-    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

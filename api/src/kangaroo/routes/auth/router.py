@@ -50,8 +50,8 @@ def _user_from_api_key(request: Request, engine: Engine) -> dict[str, Any] | Non
     """Return the owner of a valid ``kg_`` API key sent as a bearer token.
 
     Recording the key's use commits in its own transaction. Done in the request's
-    transaction, it would hold SQLite's write lock until the request ends, and a
-    function run's own writes would fail with "database is locked".
+    transaction, it would hold row locks until the request ends, and a function
+    run's own writes could block on them.
     """
     scheme, _, token = request.headers.get("authorization", "").partition(" ")
     if scheme.lower() != "bearer" or not token.startswith(API_KEY_PREFIX):

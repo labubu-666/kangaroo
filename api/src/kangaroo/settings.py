@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     # "development" proxies /web to the Vite dev server; anything else serves web/dist.
     env: str = "production"
 
-    # sqlite://memory is an in-memory database; sqlite:///path.db is a file.
-    database_url: str = "sqlite://memory"
+    # PostgreSQL URL, for example postgresql+psycopg://user:password@host/database.
+    database_url: str
 
     # How often the background job trims each user's recent history.
     recent_history_prune_interval_minutes: int = 60
