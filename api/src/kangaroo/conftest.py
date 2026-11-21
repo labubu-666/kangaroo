@@ -1,14 +1,15 @@
 import os
 
-# The app reads DATABASE_URL when its engine is first used. Point it at an
-# in-memory database before any test runs.
-os.environ["DATABASE_URL"] = "sqlite://memory"
+# The app reads DATABASE_URL when its engine is first used. Tests replace the
+# engine through get_engine, so this value only has to be a valid URL.
+os.environ["DATABASE_URL"] = "postgresql+psycopg://unused@localhost/unused"
 
 from collections.abc import Iterator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import Engine
+from pytest_testcontainers import make_postgres
+from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session
 
 from kangaroo.app import app
@@ -25,6 +26,7 @@ from kangaroo.repositories import (
     WorkItemTypeRepository,
     create_engine_for,
 )
+from kangaroo.repositories.tables import Base
 from kangaroo.routes.auth import require_user
 from kangaroo.routes.dependencies import get_engine
 from kangaroo.testing import seed_project
@@ -44,10 +46,28 @@ def logged_out(monkeypatch) -> None:
     monkeypatch.delitem(app.dependency_overrides, require_user)
 
 
+@pytest.fixture(scope="session")
+def pg_18():
+    """One PostgreSQL 18 container for the whole test run."""
+    with make_postgres(image="postgres:18.7-alpine") as pg:
+        yield pg
+
+
+@pytest.fixture(scope="session")
+def database_engine(pg_18) -> Iterator[Engine]:
+    """One engine for the whole run, with the schema created once."""
+    engine = create_engine_for(pg_18.get_connection_url(driver="psycopg"))
+    yield engine
+    engine.dispose()
+
+
 @pytest.fixture
-def engine() -> Engine:
-    """A fresh, empty in-memory database for each test."""
-    return create_engine_for("sqlite://memory")
+def engine(database_engine) -> Engine:
+    """Empty tables for each test. A test that fails leaves its rows for inspection."""
+    tables = ", ".join(table.name for table in Base.metadata.sorted_tables)
+    with database_engine.begin() as connection:
+        connection.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
+    return database_engine
 
 
 @pytest.fixture

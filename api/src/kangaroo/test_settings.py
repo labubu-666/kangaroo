@@ -1,19 +1,26 @@
+import pytest
+from pydantic import ValidationError
+
 from kangaroo.settings import Settings
 
+POSTGRES_URL = "postgresql+psycopg://kangaroo:secret@localhost/kangaroo"
 
-def test_database_url_defaults_to_sqlite_memory(monkeypatch):
+
+def test_database_url_is_required(monkeypatch):
+    """There is no default database, so a missing DATABASE_URL is an error."""
     monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.setenv("SESSION_SECRET_KEY", "test-only")
-    assert Settings(_env_file=None, env="development").database_url == "sqlite://memory"
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, env="development")
 
 
 def test_database_url_read_from_env_file(monkeypatch, tmp_path):
     monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.setenv("SESSION_SECRET_KEY", "test-only")
     env_file = tmp_path / ".env"
-    env_file.write_text("DATABASE_URL=sqlite:///kangaroo.db\n")
+    env_file.write_text(f"DATABASE_URL={POSTGRES_URL}\n")
     settings = Settings(_env_file=env_file, env="development")
-    assert settings.database_url == "sqlite:///kangaroo.db"
+    assert settings.database_url == POSTGRES_URL
 
 
 def test_default_oidc_secret_used_when_unset(monkeypatch):
@@ -51,5 +58,5 @@ def test_nuclio_runner_is_used_when_set(monkeypatch):
 
 
 def test_database_url_read_from_environment(monkeypatch):
-    monkeypatch.setenv("DATABASE_URL", "sqlite://memory")
-    assert Settings().database_url == "sqlite://memory"
+    monkeypatch.setenv("DATABASE_URL", POSTGRES_URL)
+    assert Settings().database_url == POSTGRES_URL

@@ -2,7 +2,7 @@ from datetime import timedelta
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import func, inspect, select
+from sqlalchemy import func, insert, inspect, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -39,25 +39,48 @@ from kangaroo.schemas import (
 from kangaroo.testing import new_child, new_task, seed_project
 
 
-@pytest.mark.parametrize("url", ["sqlite://memo", "sqlite:///", "memory://", "sqlite:"])
-def test_engine_rejects_urls_that_are_not_memory_or_a_file(url):
-    """A typo such as sqlite://memo is refused instead of giving a lost database."""
+@pytest.mark.parametrize(
+    "url",
+    [
+        "sqlite:///kangaroo.db",
+        "sqlite://memory",
+        "mysql+pymysql://host/db",
+        "postgresq://host/db",
+    ],
+)
+def test_engine_rejects_urls_that_are_not_postgresql(url):
+    """Only PostgreSQL URLs are accepted, so a typo cannot pick another database."""
     with pytest.raises(ValueError, match="Unsupported DATABASE_URL"):
         create_engine_for(url)
 
 
-def test_engine_accepts_a_file_url(tmp_path):
-    """sqlite:///path.db creates a file database at that path."""
-    path = tmp_path / "kangaroo.db"
-    engine = create_engine_for(f"sqlite:///{path}")
-    engine.dispose()
-    assert path.exists()
+def test_engine_accepts_postgresql_url_without_driver(pg_18):
+    """postgresql:// is normalised to the psycopg driver."""
+    url = pg_18.get_connection_url(driver="psycopg").replace(
+        "postgresql+psycopg://", "postgresql://"
+    )
+    engine = create_engine_for(url)
+    try:
+        assert engine.dialect.driver == "psycopg"
+    finally:
+        engine.dispose()
 
 
-def test_foreign_keys_enabled(engine):
-    """Every connection has foreign key enforcement turned on."""
-    with engine.connect() as conn:
-        assert conn.exec_driver_sql("PRAGMA foreign_keys").scalar() == 1
+def test_foreign_keys_are_enforced(engine, session):
+    """A work item cannot point at a project that does not exist."""
+    with pytest.raises(IntegrityError), engine.begin() as connection:
+        connection.execute(
+            insert(WorkItemRow).values(
+                id=uuid4(),
+                summary="Orphan",
+                project_id=uuid4(),
+                type_id=uuid4(),
+                status_id=uuid4(),
+                trashed=False,
+                created_at=utc_now(),
+                modified_at=utc_now(),
+            )
+        )
 
 
 def test_create_and_get_project(projects):
@@ -335,9 +358,10 @@ def test_article_round_trip(session):
     assert fetched.labels == ["howto"]
 
 
-def test_deleting_project_removes_its_statuses_and_types(engine, projects):
+def test_deleting_project_removes_its_statuses_and_types(engine, session, projects):
     """Statuses and types go with their project, and transitions with their status."""
     project = projects.create(ProjectCreate(name="Alpha"))
+    session.commit()
     now = utc_now()
     status_a = StatusRow(
         id=uuid4(),
@@ -357,8 +381,8 @@ def test_deleting_project_removes_its_statuses_and_types(engine, projects):
         created_at=now,
         modified_at=now,
     )
-    with Session(engine) as session:
-        session.add_all(
+    with Session(engine) as writer:
+        writer.add_all(
             [
                 status_a,
                 status_b,
@@ -380,16 +404,15 @@ def test_deleting_project_removes_its_statuses_and_types(engine, projects):
                 ),
             ]
         )
-        session.commit()
+        writer.commit()
 
     projects.delete(project.id)
+    session.commit()
 
-    with Session(engine) as session:
-        assert session.scalar(select(func.count()).select_from(StatusRow)) == 0
-        assert session.scalar(select(func.count()).select_from(WorkItemTypeRow)) == 0
-        assert (
-            session.scalar(select(func.count()).select_from(StatusTransitionRow)) == 0
-        )
+    with Session(engine) as check:
+        assert check.scalar(select(func.count()).select_from(StatusRow)) == 0
+        assert check.scalar(select(func.count()).select_from(WorkItemTypeRow)) == 0
+        assert check.scalar(select(func.count()).select_from(StatusTransitionRow)) == 0
 
 
 def test_recent_history_prune_keeps_newest_per_owner(engine):

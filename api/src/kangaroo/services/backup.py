@@ -12,13 +12,13 @@ from typing import IO, Any
 from uuid import UUID
 
 from pydantic_core import to_jsonable_python
-from sqlalchemy import Table, Uuid, insert, select, text
-from sqlalchemy.exc import StatementError
+from sqlalchemy import DateTime, Table, Uuid, insert, select, text
+from sqlalchemy.exc import IntegrityError, StatementError
 from sqlalchemy.orm import Session
 from sqlalchemy.types import TypeEngine
 
 from kangaroo.errors import InvalidBackupError
-from kangaroo.repositories.tables import Base, UTCDateTime
+from kangaroo.repositories.tables import Base
 from kangaroo.utils import markdown_to_plain
 
 BACKUP_VERSION = 1
@@ -48,8 +48,8 @@ class BackupService:
     def restore(self, source: IO[bytes]) -> None:
         """Replace all data with the backup in ``source``.
 
-        Runs in the request's transaction. Foreign keys are checked at the end,
-        so a backup can list work items in any order. Any problem raises
+        Runs in the request's transaction. Foreign keys are checked at commit, so
+        a backup can list work items in any order. Any problem raises
         InvalidBackupError, which rolls back the whole restore.
         """
         try:
@@ -63,7 +63,7 @@ class BackupService:
             self._check_manifest(archive)
 
             try:
-                self.session.execute(text("PRAGMA defer_foreign_keys=ON"))
+                self.session.execute(text("SET CONSTRAINTS ALL DEFERRED"))
                 for table in reversed(tables):
                     self.session.execute(table.delete())
                 for table in tables:
@@ -76,10 +76,12 @@ class BackupService:
                     "The backup does not fit the database."
                 ) from exc
 
-            if self.session.execute(text("PRAGMA foreign_key_check")).first():
+            try:
+                self.session.execute(text("SET CONSTRAINTS ALL IMMEDIATE"))
+            except IntegrityError as exc:
                 raise InvalidBackupError(
                     "The backup has rows that refer to rows it does not contain."
-                )
+                ) from exc
 
     def _export_table(self, archive: zipfile.ZipFile, table: Table) -> None:
         statement = select(table).execution_options(yield_per=BATCH_SIZE)
@@ -162,6 +164,8 @@ def _from_json(column_type: TypeEngine, value: Any) -> Any:
         return None
     if isinstance(column_type, Uuid):
         return UUID(value)
-    if isinstance(column_type, UTCDateTime):
-        return datetime.fromisoformat(value)
+    if isinstance(column_type, DateTime):
+        moment = datetime.fromisoformat(value)
+        # Backups made before timestamps carried an offset store naive UTC.
+        return moment if moment.tzinfo else moment.replace(tzinfo=UTC)
     return value

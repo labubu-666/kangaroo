@@ -77,8 +77,8 @@ class FunctionService:
         ``env`` is added to the script's environment, for example its API token.
 
         Each write commits in its own short transaction. The script calls back into
-        this API, and a transaction left open here would hold SQLite's write lock
-        and make those calls fail with "database is locked".
+        this API, and a transaction left open here would hold row locks that those
+        calls could block on.
 
         Raises:
             RunnerUnavailableError: If the runner cannot be reached. The invocation
